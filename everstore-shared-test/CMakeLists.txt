@@ -13,4 +13,4 @@ if(MSVC)
 endif()
 
 ## Copy test-resources into bin test-directory
-file(COPY test-resources DESTINATION "${EXECUTABLE_OUTPUT_PATH}/")
+file(COPY test-resources DESTINATION "${EXECUTABLE_OUTPUT_PATH}/everstore-shared-test/")
