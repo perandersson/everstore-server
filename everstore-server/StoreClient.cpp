@@ -99,6 +99,24 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, Bytes* bytes) {
 		// Send the request to the supplied worker
 		err = mIpcHost->send(workerId, bytes);
 	}
+	else if (header->type == REQ_JOURNAL_EXISTS) {
+		// Memorize and reset the memory block
+		bytes->memorize();
+		bytes->reset();
+
+		// Load data about the new transaction
+		const auto request = bytes->get<JournalExists::Request>();
+		const auto journalName = IntrusiveBytesString(request->journalStringLength, bytes);
+
+		// Figure out the worker for the requested journal
+		const auto workerId = mIpcHost->workerId(journalName.str, journalName.length);
+
+		// Restore the memorized position
+		bytes->restore();
+
+		// Send the request to the supplied worker
+		err = mIpcHost->send(workerId, bytes);
+	}
 
 	return err;
 }

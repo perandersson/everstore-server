@@ -9,7 +9,7 @@ bool isInternalRequestType(ESRequestType type) {
 }
 
 bool isRequestTypeInitiallyForHost(ESRequestType type) {
-	return type == REQ_AUTHENTICATE || type == REQ_NEW_TRANSACTION;
+	return type == REQ_AUTHENTICATE || type == REQ_NEW_TRANSACTION || type == REQ_JOURNAL_EXISTS;
 }
 
 bool isRequestTypeValid(ESRequestType type) {

@@ -131,5 +131,25 @@ struct ReadJournal {
 static_assert(sizeof(ReadJournal::Request) == 12, "Expected ReadJournal::Request to be 12 byte(s)");
 static_assert(sizeof(ReadJournal::Response) == 4, "Expected ReadJournal::Response to be 4 byte(s)");
 
+struct JournalExists {
+	static const ESRequestType TYPE = REQ_JOURNAL_EXISTS;
+	struct Header : ESHeader {
+		Header(uint32_t requestId, ChildProcessId workerId)
+		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+		~Header() {}
+	};
+	struct Request {
+		uint32_t journalStringLength; // Length of the journal name
+	};
+	struct Response {
+		char exists;
+
+		Response(bool exists) : exists(exists ? 1 : 0) {}
+		~Response() {}
+	};
+};
+
+static_assert(sizeof(JournalExists::Request) == 4, "Expected JournalExists::Request to be 4 byte(s)");
+static_assert(sizeof(JournalExists::Response) == 1, "Expected JournalExists::Response to be 1 byte(s)");
 
 #endif

@@ -39,6 +39,8 @@ private:
 
 	ESErrorCode readJournal(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
 
+	ESErrorCode checkIfJournalExists(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+
 	// Read and send the journal as multiple responses
 	ESErrorCode readJournalParts(const AttachedConnection* socket, uint32_t requestUID,
 		bool includeTimestamp, FileInputStream* stream, Bytes* memory);

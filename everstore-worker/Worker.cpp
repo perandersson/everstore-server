@@ -188,6 +188,9 @@ ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* co
 	case REQ_READ_JOURNAL:
 		err = readJournal(header, connection, memory);
 		break;
+	case REQ_JOURNAL_EXISTS:
+		err = checkIfJournalExists(header, connection, memory);
+		break;
 	default:
 		log("Unknown type: %d", header->type);
 		break;
@@ -432,6 +435,33 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 	}
 	
 	return ESERR_NO_ERROR;
+}
+
+ESErrorCode Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+	assert(header != nullptr);
+	assert(connection != nullptr);
+	assert(memory != nullptr);
+
+	// Read the request from the socket
+	const auto request = memory->get<JournalExists::Request>();
+
+	// Get journal name and make sure that it's valid
+	string journalName;
+	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
+	if (err != ESERR_NO_ERROR) return err;
+
+	// Retrieve the journal and then create a transaction for it
+	auto journal = mJournals.getOrCreate(journalName);
+
+	// Write the response
+	const JournalExists::Header responseHeader(header->requestUID, id());
+	const JournalExists::Response response(journal->exists());
+	memory->reset();
+	memory->put(&responseHeader);
+	memory->put(&response);
+
+	// Okay!
+	return sendBytesToClient(connection, memory);
 }
 
 bit_mask Worker::transactionTypes(vector<string>& types) {

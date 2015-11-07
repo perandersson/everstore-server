@@ -17,6 +17,7 @@ enum ESRequestType : uint32_t  {
 	REQ_COMMIT_TRANSACTION,
 	REQ_ROLLBACK_TRANSACTION,
 	REQ_READ_JOURNAL,
+	REQ_JOURNAL_EXISTS,
 
 	//
 	// Internal request types
