@@ -1,7 +1,5 @@
-#ifndef _EVERSTORE_EVENT_H_
-#define _EVERSTORE_EVENT_H_
+#pragma once
 
-#include "es_config.h"
 #include "Timestamp.h"
 #include "FileUtils.h"
 
@@ -17,5 +15,3 @@ struct Event {
 		return size;
 	}
 };
-
-#endif

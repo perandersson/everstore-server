@@ -3,7 +3,8 @@
 #include "Timestamp.h"
 #include "Journal.h"
 
-FileOutputStream::FileOutputStream(const string& fileName, uint32_t byteOffset) : mByteOffset(byteOffset), mFileHandle(0) {
+FileOutputStream::FileOutputStream(const string& fileName, uint32_t byteOffset) : mByteOffset(byteOffset),
+                                                                                  mFileHandle(0) {
 	// Create file if it does not exists
 	auto tmpFile = fopen(fileName.c_str(), "a");
 	fclose(tmpFile);
@@ -62,8 +63,8 @@ uint32_t FileOutputStream::writeEvents(const Timestamp* t, IntrusiveBytesString 
 void FileOutputStream::replaceWithNL(uint32_t pos) {
 	// Replace a character somewhere on the stream with a new-line character
 	auto currentPos = ftell(mFileHandle) + 1;
-	fseek(mFileHandle, pos, SEEK_SET);
-	fwrite(&FileUtils::NL, FileUtils::NL_SIZE, 1, mFileHandle);
+	fseek(mFileHandle, (long) pos, SEEK_SET);
+	fwrite(&FileUtils::NL, (size_t) FileUtils::NL_SIZE, 1, mFileHandle);
 	fseek(mFileHandle, currentPos, SEEK_SET);
 }
 

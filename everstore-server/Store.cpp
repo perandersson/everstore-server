@@ -68,9 +68,7 @@ ESErrorCode Store::initialize() {
 	FileUtils::createFolder(FileUtils::getTempDirectory());
 
 	// Initialize sockets
-	err = socket_init();
-	if (isError(err))
-		return err;
+	SharableSocket::init();
 
 	// Create a new authenticator
 	mAuthenticator = new Authenticator();

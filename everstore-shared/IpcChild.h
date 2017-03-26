@@ -6,8 +6,12 @@
 #include "Process.h"
 #include "ChildProcessId.h"
 
-struct IpcChild {
+#include <mutex>
 
+using std::mutex;
+
+struct IpcChild
+{
 	IpcChild(const ChildProcessId id);
 
 	virtual ~IpcChild();
@@ -16,7 +20,7 @@ struct IpcChild {
 
 	// Send a message over the IPC pipe
 	ESErrorCode sendTo(const ESHeader* header);
-	
+
 	// Send a message over the IPC pipe
 	ESErrorCode sendTo(const Bytes* bytes);
 
@@ -36,7 +40,7 @@ struct IpcChild {
 
 	// Close pipe
 	void close();
-	
+
 private:
 	const ChildProcessId mId;
 	process_t mProcess;

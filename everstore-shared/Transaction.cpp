@@ -3,7 +3,9 @@
 
 const string NEW_JOURNAL_TRANSACTION_TYPE("ES_NewJournal");
 
-Transaction::Transaction(const TransactionId id, Journal* journal) : mId(id), mJournal(journal), mTransactionTypesBeforeCommit(BIT_NONE) {
+Transaction::Transaction(const TransactionId id, Journal* journal)
+		: mId(id), mJournal(journal), mTransactionTypesBeforeCommit(BIT_NONE) {
+	assert(journal != nullptr);
 	mJournalSize = journal->journalSize();
 }
 
@@ -12,7 +14,7 @@ Transaction::~Transaction() {
 
 void Transaction::save(IntrusiveBytesString eventsString) {
 	// Ignore if no events are to be committed
-	if (eventsString.length == 0) return;
+	if (eventsString.empty()) return;
 
 	// Increase reference counter to the journal
 	auto fileSize = mJournal->addRef();

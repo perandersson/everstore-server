@@ -1,103 +1,135 @@
-//
-// Created by Per on 2015-07-08.
-//
+#pragma once
 
-#ifndef EVENTSTORE_FILEUTILS_H
-#define EVENTSTORE_FILEUTILS_H
-
-#include "es_config.h"
+#include <cstdio>
 #include "StringUtils.h"
 
-using namespace std;
-
-struct FileUtils {
+struct FileUtils
+{
+	// Represents an empty string
 	static const char EMPTY;
-	static const char SPACE;
-	static const int SPACE_SIZE;
-	static const char NL;
-	static const int NL_SIZE;
-	static const char* PATH_DELIM;
 
+	// Represents a space character
+	static const char SPACE;
+
+	// The size of a space character
+	static const int SPACE_SIZE;
+
+	// Represents a new line
+	static const char NL;
+
+	// Represents the size of a new line
+	static const int NL_SIZE;
+
+	// Represents a path delimiter
+	static const string PATH_DELIM;
 
 	/**
 	* Returns the file size for the supplied file
 	*
 	* \return The file size; 0 if file does not exists
 	*/
-	static uint32_t getFileSize(FILE* file) {
-		const auto begin = ftell(file);
-		fseek(file, 0, SEEK_END);
-		const auto end = ftell(file);
-		fseek(file, 0, SEEK_SET);
-		return (uint32_t)(end - begin);
-	}
+	static uint32_t getFileSize(FILE* file);
 
-	static char* empty() {
-		return (char*)&EMPTY;
-	}
+	/**
+	 * Check to see if the supplied file exists
+	 *
+	 * @param filePath The path to the file
+	 * @return <code>true</code> if the file exists
+	 */
+	static bool fileExists(const string& filePath);
 
-	static bool fileExists(const string& fileName) {
-		FILE* f = fopen(fileName.c_str(), "r");
-		if (f != NULL) fclose(f);
-		return f != 0;
-	}
+	/**
+	 * Truncate the file with the supplied filename - discards all other bytes
+	 *
+	 * @param filePath The path to the file
+	 * @param newLength The maximum length of the file
+	 */
+	static void truncate(const string& filePath, long newLength);
 
-	static void truncate(const string& fileName, long newLength);
-
+	/**
+	 * Truncates the supplied <code>FILE</code> pointer
+	 *
+	 * @param f
+	 * @param newLength
+	 */
 	static void truncate(FILE* f, long newLength);
 
-	// 
-	// Returns the file size for file with the supplied filename
-	static uint32_t getFileSize(const string& fileName) {
-		FILE* file = fopen(fileName.c_str(), "r+b");
-		if (file != 0) {
-			auto size = getFileSize(file);
-			fclose(file);
-			return size;
-		}
-		else return 0;
-	}
+	/**
+	 * @param filePath The path to the file
+	 * @return The size of the file - 0 if no file is found.
+	 */
+	static uint32_t getFileSize(const string& filePath);
 
-	static int remove(const string& fileName) {
-		return ::remove(fileName.c_str());
-	}
+	/**
+	 * Remove the file with the supplied path
+	 *
+	 * @param filePath The path to the file we want to remove
+	 * @return
+	 */
+	static int remove(const string& filePath);
 
+	/**
+	 * Create a specific folder
+	 *
+	 * @param path
+	 */
 	static void createFolder(const string& path);
 
-	static void createFullForPath(const string& path) {
-		vector<string> paths;
-		StringUtils::split(path, '/', paths);
-		if (paths.size() > 1) {
-			string totalPath;
-			const uint32_t size = paths.size() - 1;
-			for (uint32_t i = 0; i < size; ++i) {
-				totalPath += paths[i] + string(FileUtils::PATH_DELIM);
-				FileUtils::createFolder(totalPath);
-			}
-		}
-	}
+	/**
+	 * Create all folders required for the supplied path to exist
+	 *
+	 * @param path The full path
+	 */
+	static void createFolders(const string& path);
 
-	// Set the current directory for the application
+	/**
+	 * Change the current working directory for the application
+	 *
+	 * @param path The new application directory
+	 * @return <code>true</code> if the change was successful.
+	 */
 	static bool setCurrentDirectory(const string& path);
 
-	// Retrieves the path to the directory path
+	/**
+	 * @return The path to the directory path where temporary files are located
+	 */
 	static string getTempDirectory();
 
-	// Retrieves a path to a temporary file (will be different every time)
+	/**
+	 * Generate a new path to a temporary file.
+	 *
+	 * @return
+	 */
 	static string getTempFile();
 
-	// Clear the target directory
+	/**
+	 * Clean- and delete the content of the supplied directory
+	 *
+	 * @param path Directory path
+	 */
 	static void clearAndDeleteDirectory(const string& path);
 
-	// 
+	/**
+	 * Copy the content of the supplied file into a new file
+	 *
+	 * @param srcFile The file we want to copy
+	 * @param destFile Where to copy the file into
+	 * @return <code>true</code> if the copy was successful
+	 */
 	static bool copyFile(const string& srcFile, const string& destFile);
 
-	// 
-	static string getTempFileWithoutPath();
+	/**
+	 * @return The generated filename of a temporary file
+	 */
+	static string getTempFileName();
 
-	static vector<string> findFilesEndingWith(const string& path, const string& sufix);
+	/**
+	 * Gather all filenames that ends with a supplied suffix
+	 *
+	 * @param path
+	 * @param suffix
+	 * @return
+	 */
+	static vector<string> findFilesEndingWith(const string& path, const string& suffix);
 };
 
-
-
-#endif //EVENTSTORE_FILEUTILS_H

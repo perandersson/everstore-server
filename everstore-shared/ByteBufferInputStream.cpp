@@ -1,4 +1,5 @@
 #include "ByteBufferInputStream.h"
+#include <cassert>
 
 ByteBufferInputStream::ByteBufferInputStream(Bytes* buffer) {
 	mStart = buffer->ptr();

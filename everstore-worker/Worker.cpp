@@ -110,13 +110,10 @@ ESErrorCode Worker::initialize() {
 	log("port = %d", mProperties.port);
 	log("maxJournalLifeTime = %d", mProperties.maxJournalLifeTime);
 
-	ESErrorCode err = socket_init();
-	if (isError(err)) {
-		return err;
-	}
+	SharableSocket::init();
 
 	log("Opening pipe to host");
-	err = connectToHost();
+	ESErrorCode err = connectToHost();
 	if (isError(err)) {
 		return err;
 	}

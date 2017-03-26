@@ -10,7 +10,8 @@
 #include "Bytes.h"
 
 
-struct FileOutputStream {
+struct FileOutputStream
+{
 	friend struct Journal;
 
 	// Destructor

@@ -3,8 +3,16 @@
 
 #include <everstore.h>
 #include "StoreServer.h"
+#include <atomic>
+#include <vector>
+#include <thread>
 
-struct Store {
+using std::atomic_bool;
+using std::vector;
+using std::thread;
+
+struct Store
+{
 
 	Store(const Properties& props);
 

@@ -1,10 +1,13 @@
 #include "Timestamp.h"
+#include <chrono>
+#include <cstdio>
+#include <cstring>
 
 using namespace std;
 using namespace chrono;
 
-
-namespace {
+namespace
+{
 	// http://mingw.5.n7.nabble.com/Porting-localtime-r-and-gmtime-r-td12634.html
 	// Windows variants of gmtime and localtime are thread-safe because they use thread-local storage
 #if !HAVE_TIME_R
@@ -17,6 +20,7 @@ namespace {
 
 		return p;
 	}
+
 #endif
 
 	void populateTimestamp(char* _out) {
@@ -30,7 +34,7 @@ namespace {
 		strftime(_out, Timestamp::MAX_LENGTH, "%Y-%m-%dT%H:%M:%S.000", &utc_tm);
 
 		static const char* FRACTAL_FORMAT = "%03d";
-		char fractals[4] = { 0 };
+		char fractals[4] = {0};
 		sprintf(fractals, FRACTAL_FORMAT, fractional_seconds);
 		memcpy(&_out[Timestamp::FRACTAL_POS], fractals, 3);
 	}

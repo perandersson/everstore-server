@@ -1,8 +1,10 @@
 #include "Bytes.h"
+#include <cstring>
+#include <cassert>
 
 Bytes::Bytes(uint32_t initialSize) : mMemory(nullptr), mCapacity(initialSize), mCurrentOffset(0), mSavedOffset(0) {
 	assert(initialSize > 0);
-	mMemory = (char*)malloc(mCapacity);
+	mMemory = (char*) malloc(mCapacity);
 }
 
 Bytes::~Bytes() {
@@ -34,7 +36,7 @@ void Bytes::ensureCapacity(uint32_t size) {
 	const uint32_t requiredSize = mCurrentOffset + size;
 	if (requiredSize > mCapacity) {
 		mCapacity = requiredSize;
-		mMemory = (char*)realloc(mMemory, mCapacity);
+		mMemory = (char*) realloc(mMemory, mCapacity);
 	}
 }
 

@@ -1,7 +1,6 @@
 #ifndef _EVERSTORE_H_
 #define _EVERSTORE_H_
 
-#include "es_config.h"
 #include "IpcHost.h"
 #include "Socket.h"
 #include "ESHeader.h"

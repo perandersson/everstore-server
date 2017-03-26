@@ -1,10 +1,10 @@
-#ifndef _EVERSTORE_IPC_CHILD_PROCESS_H_
-#define _EVERSTORE_IPC_CHILD_PROCESS_H_
+#pragma once
 
 #include "ESErrorCodes.h"
 #include "IpcChild.h"
 
-struct IpcChildProcess {
+struct IpcChildProcess
+{
 
 	IpcChildProcess(const ChildProcessId id);
 
@@ -24,7 +24,9 @@ struct IpcChildProcess {
 
 	inline IpcChild& child() { return mChild; }
 
-	inline const ChildProcessId id() { return mChild.id(); }
+	inline const ChildProcessId id() const {
+		return mChild.id();
+	}
 
 	inline process_t* handle() { return mChild.process(); }
 
@@ -34,7 +36,8 @@ private:
 	IpcChild mChild;
 };
 
-struct IpcChildProcesses : vector<IpcChildProcess*> {
+struct IpcChildProcesses : vector<IpcChildProcess*>
+{
 	IpcChildProcesses();
 
 	~IpcChildProcesses();
@@ -51,5 +54,3 @@ struct IpcChildProcesses : vector<IpcChildProcess*> {
 	// Retrieves child process based on the worker ID
 	IpcChildProcess* get(const ChildProcessId id);
 };
-
-#endif

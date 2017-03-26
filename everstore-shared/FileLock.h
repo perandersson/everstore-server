@@ -1,12 +1,20 @@
-#ifndef _EVERSTORE_FILE_LOCK_H_
-#define _EVERSTORE_FILE_LOCK_H_
+#pragma once
 
-#include "es_config.h"
+#include <string>
+#include <cinttypes>
+#include <atomic>
+#include <mutex>
 
-//
-// Reference counted file lock. Useful for knowing when a journal is in use or not.
-struct FileLock {
+using std::string;
+using std::atomic;
+using std::mutex;
 
+/**
+ * Reference counted file lock. Useful for knowing when a journal is in use or not.
+ */
+class FileLock
+{
+public:
 	FileLock(const string& path);
 
 	~FileLock();
@@ -21,7 +29,7 @@ struct FileLock {
 	static bool exists(const string& path);
 
 	// Check to see if the supplied file-lock exists
-	static bool exists(const char* path) {
+	inline static bool exists(const char* path) {
 		return exists(string(path));
 	}
 
@@ -34,7 +42,5 @@ struct FileLock {
 private:
 	mutex mMutex;
 	string mPath;
-	volatile int mCount;
+	atomic<uint32_t> mCount;
 };
-
-#endif

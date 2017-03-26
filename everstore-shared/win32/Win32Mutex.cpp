@@ -1,5 +1,9 @@
 #include "Win32Mutex.h"
 #include "../ESErrorCodes.h"
+#include <cassert>
+#include <string>
+
+using std::string;
 
 mutex_t mutex_create(const string& name) {
 	SECURITY_ATTRIBUTES sec;

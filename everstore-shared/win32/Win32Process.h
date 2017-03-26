@@ -3,10 +3,15 @@
 
 #include "../ESErrorCodes.h"
 
+#define WIN32_LEAN_AND_MEAN
+
+#include <windows.h>
+
 #define INVALID_PIPE INVALID_HANDLE_VALUE
 #define PIPE HANDLE
 
-struct process_t {
+struct process_t
+{
 	PROCESS_INFORMATION processInfo;
 	STARTUPINFO startupInfo;
 	bool running;

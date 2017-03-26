@@ -1,22 +1,31 @@
-#ifndef _CHILD_PROCESS_ID_H_
-#define _CHILD_PROCESS_ID_H_
+#pragma once
 
-#include "es_config.h"
 #include "StringUtils.h"
+#include <cassert>
 
-//
-struct ChildProcessId {
+/**
+ * Type that represents a single process
+ */
+struct ChildProcessId
+{
 	const uint32_t value;
 
-	ChildProcessId(const uint32_t value) :value(value) {
+	ChildProcessId(const uint32_t value) : value(value) {
 		assert(value != 0);
 	}
 
-	const bool operator != (const ChildProcessId& rhs) const { return value != rhs.value; }
-	const bool operator == (const ChildProcessId& rhs) const { return value == rhs.value; }
+	ChildProcessId(const ChildProcessId& rhs) : value(rhs.value) {}
 
-	// Converts this id value to a string
-	inline const string toString() const { return StringUtils::toString(value); }
+	const bool operator!=(const ChildProcessId& rhs) const { return value != rhs.value; }
+
+	const bool operator==(const ChildProcessId& rhs) const { return value == rhs.value; }
+
+	/**
+	 * Stringify this object
+	 *
+	 * @return A string that represents this object
+	 */
+	inline const string toString() const {
+		return StringUtils::toString(value);
+	}
 };
-
-#endif

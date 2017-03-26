@@ -10,11 +10,24 @@
 #include "FileOutputStream.h"
 #include "ChildProcessId.h"
 
-static const char JOURNAL_EOF = 0; // Use NULL as EOF marker
+#include <chrono>
+
+using namespace std::chrono;
+
+/**
+ * Use a <code>nullptr</code> as an EOF marker
+ */
+static const char JOURNAL_EOF = 0;
+
+/**
+ * Length of the EOF marker
+ */
 static const uint32_t JOURNAL_EOF_LEN = 1;
 
-struct OpenTransactions : vector<Transaction*> {
+static_assert(JOURNAL_EOF_LEN == 1, "The safety mechanism of the journals only works if the EOF-marker is 1 byte");
 
+struct OpenTransactions : vector<Transaction*>
+{
 	OpenTransactions();
 
 	~OpenTransactions();
@@ -23,7 +36,7 @@ struct OpenTransactions : vector<Transaction*> {
 	// 
 	// \param journal
 	// \return A unique ID for the journal
-	const TransactionId open(Journal* journal);
+	TransactionId open(Journal* journal);
 
 	// Retrieve the transaction with the given id
 	Transaction* get(const TransactionId id);
@@ -32,10 +45,11 @@ struct OpenTransactions : vector<Transaction*> {
 	void close(const TransactionId id);
 };
 
-struct Journal {
+struct Journal
+{
 	LinkedListLink<Journal> link;
 
-	Journal(const string& path); 
+	Journal(const string& path);
 
 	Journal(const string& path, const ChildProcessId childProcessId);
 
@@ -89,19 +103,21 @@ struct Journal {
 
 	// Retrieves the path to the journal (on the HDD)
 	inline const string& path() const { return mJournalFileName; }
-	
-	// When was the journal used last?
-	inline const chrono::system_clock::time_point& timeSinceLastUsed() const { return mTimeSinceLastUsed; }
+
+	/**
+	 * @return The point in time since this journal was last used
+	 */
+	inline const system_clock::time_point& timeSinceLastUsed() const { return mTimeSinceLastUsed; }
 
 private:
 	string mName;
 	string mJournalFileName;
 	FileLock mFileLock;
-	chrono::system_clock::time_point  mTimeSinceLastUsed;
+	system_clock::time_point mTimeSinceLastUsed;
 	uint32_t mJournalSize;
 	OpenTransactions mTransactions;
 
-	
+
 };
 
 

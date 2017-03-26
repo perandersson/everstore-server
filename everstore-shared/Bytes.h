@@ -3,10 +3,12 @@
 
 #include "es_config.h"
 
+#include <cinttypes>
+
 //
 // Structure representing raw memory
-struct Bytes {
-
+struct Bytes
+{
 	Bytes(uint32_t initialSize);
 
 	~Bytes();
@@ -50,7 +52,7 @@ struct Bytes {
 	// Retrieves a memory block with large enough for the requested type
 	template<typename T>
 	T* get() {
-		return (T*)get(sizeof(T));
+		return (T*) get(sizeof(T));
 	}
 
 	inline uint32_t capacity() const { return mCapacity; }
@@ -80,17 +82,33 @@ private:
 	uint32_t mSavedOffset;
 };
 
-//
-// Intrusive string directly connected to it's associated Bytes.
-//
-// \remark This might become invalidated when the associated ByteBuffer is resetted.
-//
-struct IntrusiveBytesString {
-	uint32_t length; // The length of the string.
-	const char* str; // A pointer to the first character in the string. The string itself might not end with NULL.
+/**
+ * Intrusive string directly connected to it's original memory location in the byte array
+ *
+ * The content of this string might become invalidated when the associated ByteBuffer is resetted.
+ */
+struct IntrusiveBytesString
+{
+	/**
+	 * The length of the string.
+	 */
+	const uint32_t length;
+
+	/**
+	 * A pointer to the first character in the string. The string itself might not end with <code>nullptr</code>.
+	 */
+	const char* str;
 
 	IntrusiveBytesString(uint32_t length, Bytes* b) : length(length), str(b->get(length)) {}
-	~IntrusiveBytesString() {}
+
+	IntrusiveBytesString(const IntrusiveBytesString& rhs) : length(rhs.length), str(rhs.str) {}
+
+	/**
+	 * @return <code>true</code> if this string is empty
+	 */
+	inline bool empty() const {
+		return length == 0;
+	}
 };
 
 #endif

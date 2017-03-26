@@ -1,65 +1,78 @@
-#ifndef _EVERSTORE_STRING_UTILS_H_
-#define _EVERSTORE_STRING_UTILS_H_
+#pragma once
 
-#include "es_config.h"
+#include <string>
+#include <vector>
+#include <cinttypes>
 
-struct StringUtils {
+using std::string;
+using std::vector;
 
-	static string toString(int i) {
-		char tmp[16] = { 0 };
-		sprintf(tmp, "%d", i);
-		return string(tmp);
-	}
+struct StringUtils
+{
+	/**
+	 * Convert an unsigned 32 bit value to a string
+	 *
+	 * @param i The integer value
+	 * @return The string
+	 */
+	static string toString(int32_t i);
 
-	static string toString(uint32_t i) {
-		char tmp[16] = { 0 };
-		sprintf(tmp, "%d", i);
-		return string(tmp);
-	}
+	/**
+	 * Convert a signed 32 bit value to a string
+	 *
+	 * @param i The integer value
+	 * @return The string
+	 */
+	static string toString(uint32_t i);
 
-	static string toString(uint16_t i) {
-		return toString((uint32_t)i);
-	}
+	/**
+	 * Convert a 16 bit unsigned short value into a string
+	 *
+	 * @param i The short (16 bit) value
+	 * @return A string
+	 */
+	static string toString(uint16_t i);
 
-	static uint16_t toUint16(const string& v) {
-		return (uint16_t)atoi(v.c_str());
-	}
+	/**
+	 * Convert a string into an unsigned 16 bit integer
+	 *
+	 * @param v The string
+	 * @return The unsigned 16 bit value
+	 */
+	static uint16_t toUint16(const string& v);
 
-	static uint32_t toUint32(const string& v) {
-		return (uint32_t)atoi(v.c_str());
-	}
+	/**
+	 * Convert a string into an unsigned 32 bit integer
+	 *
+	 * @param v The string
+	 * @return The unsigned 16 bit value
+	 */
+	static uint32_t toUint32(const string& v);
 
-	static void replaceAll(string& value, const string::value_type replace, const string::value_type newval) {
-		const uint32_t size = value.size();
-		for (uint32_t i = 0; i < size; ++i) {
-			if (value[i] == replace) {
-				value[i] = newval;
-			}
-		}
-	}
+	/**
+	 * Replace all occurrences of a supplied characterwith another character
+	 *
+	 * @param value The original value
+	 * @param replace The character we want to replace
+	 * @param newval The replacement character
+	 */
+	static void replaceAll(string& value, const string::value_type replace, const string::value_type newval);
 
-	static bool endsWith(std::string const &fullString, std::string const &ending) {
-		if (ending.empty())
-			return true;
-		if (fullString.length() >= ending.length()) {
-			return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
-		} else {
-			return false;
-		}
-	}
+	/**
+	 * Check to see if the supplied string ends with another string
+	 *
+	 * @param fullString The string we want to compare with
+	 * @param ending
+	 * @return
+	 */
+	static bool endsWith(const string& fullString, const string& ending);
 
-	static void split(const string& str, const char delimiters, vector<string>& tokens)
-	{
-		string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-		string::size_type pos = str.find_first_of(delimiters, lastPos);
-
-		while (string::npos != pos || string::npos != lastPos) {
-			tokens.push_back(str.substr(lastPos, pos - lastPos));
-			lastPos = str.find_first_not_of(delimiters, pos);
-			pos = str.find_first_of(delimiters, lastPos);
-		}
-	}
-
+	/**
+	 * Split the supplied string into multiple tokens with a delimiter
+	 *
+	 * @param str The string value we want to split into tokens
+	 * @param delimiters The delimiter
+	 * @param tokens where to put the generated tokens
+	 */
+	static void split(const string& str, const char delimiters, vector<string>& tokens);
 };
-
-#endif

@@ -3,6 +3,8 @@
 
 #include "es_config.h"
 
+#include <cinttypes>
+
 enum ESRequestType : uint32_t  {
 	REQ_INVALID = 0,
 	REQ_ERROR,

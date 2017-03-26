@@ -1,15 +1,19 @@
-#ifndef _EVERSTORE_ERROR_CODES_H_
-#define _EVERSTORE_ERROR_CODES_H_
+#pragma once
 
-#include "es_config.h"
+#include <cinttypes>
 
-// Error code
+/**
+ * Type that represents an error code
+ */
 typedef uint32_t ESErrorCode;
 
-// Fatal error codes
-//
-// When a fatal error occures then a gracefull shutdown of the server should happen.
-enum ESFatalErrorCodes : ESErrorCode {
+/**
+ * Fatal error codes.
+ *
+ * These types of codes results in a graceful shutdown if possible
+ */
+enum ESFatalErrorCodes : ESErrorCode
+{
 	ESERR_FATAL = 1000,
 
 	ESERR_FILESYSTEM_CHANGEPATH,
@@ -23,7 +27,7 @@ enum ESFatalErrorCodes : ESErrorCode {
 	ESERR_PROCESS_CREATE_CHILD,
 	ESSER_PROCESS_SHARE_SOCKET,
 	ESERR_PROCESS_ATTACH_SHARED_SOCKET,
-	
+
 	ESERR_PIPE_READ,
 	ESERR_PIPE_WRITE,
 	ESERR_PIPE_CREATE,
@@ -36,7 +40,7 @@ enum ESFatalErrorCodes : ESErrorCode {
 	ESERR_MUTEX_ATTACH,
 	ESERR_MUTEX_LOCK_FAILED,
 	ESERR_MUTEX_UNLOCK_FAILED,
-	
+
 	ESERR_STORE_ALREADY_RUNNING,
 	ESERR_STORE_CONSISTENCY_CHECK_FAILED,
 
@@ -47,10 +51,13 @@ enum ESFatalErrorCodes : ESErrorCode {
 	ESERR_FATAL_COUNT
 };
 
-// Error codes that occures due to client problems. 
-// 
-// When this type of problem occurs then a gracefull disconnect of the client should happen.
-enum ESErrorCodes : ESErrorCode {
+/**
+ * Non-fatal error codes.
+ *
+ * These types of problems results in a graceful shutdown of the connected client.
+ */
+enum ESErrorCodes : ESErrorCode
+{
 	ESERR_NO_ERROR = 0,
 	ESERR_UNKNOWN,
 
@@ -71,7 +78,7 @@ enum ESErrorCodes : ESErrorCode {
 	ESERR_COUNT,
 };
 
-static_assert((uint32_t)ESERR_COUNT < (uint32_t)ESERR_FATAL,
+static_assert((uint32_t) ESERR_COUNT < (uint32_t) ESERR_FATAL,
               "If this fails then it means that the fatal error index is part of the non-fatal error list");
 
 // Convert the supplied error code into a readable string
@@ -85,5 +92,3 @@ bool isError(ESErrorCode code);
 
 // Check if an error code has occured, but it's not fatal
 bool IsErrorButNotFatal(ESErrorCode code);
-
-#endif

@@ -1,68 +1,120 @@
-#ifndef _ES_SOCKET_H_
-#define _ES_SOCKET_H_
+#pragma once
 
-#ifdef WIN32
-#include "win32/Win32Socket.h"
-#else
-#include "gcc/GCCSocket.h"
+#include <cinttypes>
+#include <string>
+
+#include "es_config.h"
+#include "ESErrorCodes.h"
+
+using std::string;
+
+#if defined(ES_WINDOWS)
+
+#   include <winsock2.h>
+#   include <windows.h>
+
+#elif defined(ES_GCC)
+
+#   include "gcc/GCCSocket.h"
+
+#   include <sys/socket.h>
+#   include <sys/ioctl.h>
+#   include <sys/fcntl.h>
+#   include <sys/un.h>
+#   include <netinet/in.h>
+#   include <netinet/tcp.h>
+#   include <arpa/inet.h>
+#   include <netdb.h>
+
+#ifndef SOCKET
+#   define SOCKET int
 #endif
 
-// Initialize 
-ESErrorCode socket_init();
+#endif
 
-// Cleanup the socket library
-void socket_cleanup();
-
-// Make the supplied socket blocking
-ESErrorCode socket_setblocking(SOCKET socket);
-
-// Set socket timeout
-ESErrorCode socket_settimeout(SOCKET socket, uint32_t millis);
-
-// Set the socket property to NO-DELAY
-ESErrorCode socket_nodelay(SOCKET socket);
-
-// Set send- and receive buffer size
-ESErrorCode socket_setbufsize(SOCKET socket, uint32_t sizeInBytes);
-
-// Create a new blocking socket
-SOCKET socket_create_blocking();
-
-// Accept an incomming blocking socket
-SOCKET socket_accept_blocking(SOCKET serverSocket);
-
-// Receive all bytes from the socket 
-uint32_t socket_recvall(SOCKET socket, char* bytes, uint32_t size);
-
-template<uint32_t max>
-uint32_t socket_recvstring(SOCKET socket, _OUT string* s, uint32_t length) {
-	// Clamp length
-	length = length >= max ? max - 1 : length;
-
-	// Read the characters
-	char temp[max] = { 0 };
-	uint32_t recv = socket_recvall(socket, temp, length);
-	if (recv == 0) return 0;
-
-	// Set and return the string
-	*s = string(temp);
-	return recv;
-}
-
-template<typename T>
-uint32_t socket_recvall(SOCKET socket, T* object) {
-	return socket_recvall(socket, (char*)object, (uint32_t)sizeof(T));
-}
-
-// Send all bytes on the socket
-uint32_t socket_sendall(SOCKET socket, const char* bytes, uint32_t size);
-
-template<typename T>
-uint32_t socket_sendall(SOCKET socket, const T* object) {
-	return socket_sendall(socket, (const char*)object, (uint32_t)sizeof(T));
-}
-
-// Check if this machine is handles integers in little-endian mode
+/**
+ * @return <true>If this machine handles numbers in little-endian mode
+ */
 bool is_little_endian();
 
-#endif
+struct Properties;
+
+/**
+ * A class that represents a sharable socket
+ */
+class SharableSocket
+{
+public:
+	SharableSocket(SOCKET socket, uint32_t bufferSize);
+
+	~SharableSocket();
+
+	/*
+	 * Accept a new sharable and blocking socket
+	 */
+	SharableSocket* accept();
+
+	template<uint32_t max>
+	inline uint32_t receiveClamped(string* s, uint32_t length) {
+		// Clamp length
+		length = length >= max ? max - 1 : length;
+
+		// Read the characters
+		char temp[max] = {0};
+		uint32_t recv = receive(temp, length);
+		if (recv == 0) return 0;
+
+		// Set and return the string
+		*s = string(temp);
+		return recv;
+	}
+
+	template<typename T>
+	inline uint32_t receiveObject(T* object) {
+		return receive((char*) object, (uint32_t) sizeof(T));
+	}
+
+	template<typename T>
+	inline uint32_t sendObject(const T* object) {
+		return send((const char*) object, (uint32_t) sizeof(T));
+	}
+
+	uint32_t receive(char* bytes, uint32_t size);
+
+	uint32_t send(const char* bytes, uint32_t size);
+
+public:
+	/**
+	 * Initialize the socket library
+	 */
+	static void init();
+
+	/**
+	 * Cleanup the socket library
+	 */
+	static void cleanup();
+
+	/**
+	 * Create a new socket
+	 *
+	 * @param p
+	 * @return
+	 */
+	static SharableSocket* create(const Properties& p);
+
+private:
+	static bool blocking(SOCKET socket);
+
+	static void close(SOCKET socket);
+
+	static bool nodelay(SOCKET socket);
+
+	static bool bufferSize(SOCKET socket, uint32_t sizeInBytes);
+
+	static bool setTimeout(SOCKET socket, uint32_t millis);
+
+private:
+	SOCKET mSocket;
+	uint32_t mBufferSize;
+};
+

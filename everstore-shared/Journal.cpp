@@ -4,6 +4,9 @@
 #include "Transaction.h"
 #include "ByteBufferInputStream.h"
 #include "AutoClosable.h"
+#include <chrono>
+
+using namespace std::chrono;
 
 OpenTransactions::OpenTransactions() {
 
@@ -16,9 +19,9 @@ OpenTransactions::~OpenTransactions() {
 	clear();
 }
 
-const TransactionId OpenTransactions::open(Journal* journal) {
+TransactionId OpenTransactions::open(Journal* journal) {
 	// Try to reuse a transaction id
-	const uint32_t num = size();
+	const uint32_t num = (uint32_t) size();
 	for (uint32_t i = 0; i < num; ++i) {
 		auto t = operator[](i);
 		if (t == nullptr) {
@@ -29,7 +32,7 @@ const TransactionId OpenTransactions::open(Journal* journal) {
 	}
 
 	// Create a new transaction id
-	const TransactionId id = size();
+	const TransactionId id((uint32_t) size());
 	Transaction* t = new Transaction(id, journal);
 	push_back(t);
 	return id;
@@ -60,22 +63,23 @@ void OpenTransactions::close(const TransactionId id) {
 	}
 }
 
-Journal::Journal(const string& name) : mName(name), mJournalFileName(name + string(".log")),
-mFileLock(name + string(".lock")),
-mTimeSinceLastUsed(chrono::system_clock::now()),
-mJournalSize(0),
-mTransactions() {
+Journal::Journal(const string& name)
+		: mName(name), mJournalFileName(name + string(".log")),
+		  mFileLock(name + string(".lock")),
+		  mTimeSinceLastUsed(system_clock::now()),
+		  mJournalSize(0),
+		  mTransactions() {
 	// The journal size is assumed to be the file size. Only one journal instance can exists for the same file and
 	// since the consistency check is done before, then the file size is the same as the journal size
 	mJournalSize = FileUtils::getFileSize(mJournalFileName);
 }
 
-Journal::Journal(const string& name, ChildProcessId workerId) :
-mName(name), mJournalFileName(name + string(".log")),
-mFileLock(name + string(".") + workerId.toString() + string(".lock")),
-mTimeSinceLastUsed(chrono::system_clock::now()),
-mJournalSize(0),
-mTransactions() {
+Journal::Journal(const string& name, ChildProcessId workerId)
+		: mName(name), mJournalFileName(name + string(".log")),
+		  mFileLock(name + string(".") + workerId.toString() + string(".lock")),
+		  mTimeSinceLastUsed(system_clock::now()),
+		  mJournalSize(0),
+		  mTransactions() {
 	// The journal size is assumed to be the file size. Only one journal instance can exists for the same file and
 	// since the consistency check is done before, then the file size is the same as the journal size
 	mJournalSize = FileUtils::getFileSize(mJournalFileName);
@@ -87,7 +91,7 @@ Journal::~Journal() {
 bool Journal::performConsistencyCheck() {
 	// Lock file still exists, which means that this journals might be inconsistent.
 	if (exists() && mFileLock.exists()) {
-		
+
 		// Open and read the journal file into memory
 		Bytes buffer(mJournalSize);
 		ESErrorCode err = AutoClosable<FileInputStream>(inputStream(0))->readBytes(&buffer);
@@ -105,8 +109,7 @@ bool Journal::performConsistencyCheck() {
 			auto result = ::remove(mJournalFileName.c_str());
 			if (result != 0) return false;
 			mJournalSize = 0;
-		}
-		else if ((uint32_t)eof == mJournalSize - 1) {
+		} else if ((uint32_t) eof == mJournalSize - 1) {
 			// If the last character is a EOF-marker then crash occurred when lock file is being created or being removed.
 			// I.e. we don't have to do anything, or we might have to search for the next marker
 
@@ -127,7 +130,7 @@ bool Journal::performConsistencyCheck() {
 		} else {
 			// Remove the unfinished written transaction from the journal file
 			FileUtils::truncate(mJournalFileName, eof + 1);
-			mJournalSize = (uint32_t)eof + 1;
+			mJournalSize = (uint32_t) eof + 1;
 		}
 
 		auto result = remove(mFileLock.path().c_str());
@@ -138,7 +141,7 @@ bool Journal::performConsistencyCheck() {
 }
 
 void Journal::refresh() {
-	mTimeSinceLastUsed = chrono::system_clock::now();
+	mTimeSinceLastUsed = system_clock::now();
 }
 
 const TransactionId Journal::openTransaction() {
@@ -156,7 +159,7 @@ ESErrorCode Journal::tryCommit(const TransactionId id, transaction_types types, 
 
 	// Set neccessary bit if the journal is to be created
 	if (t->createJournal()) {
-		FileUtils::createFullForPath(path());
+		FileUtils::createFolders(path());
 		BIT_SET(types, NEW_JOURNAL_TRANSACTION_TYPE_BIT);
 	}
 

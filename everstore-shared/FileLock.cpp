@@ -1,5 +1,8 @@
 #include "FileLock.h"
 #include "FileUtils.h"
+#include <cassert>
+
+using std::lock_guard;
 
 FileLock::FileLock(const string& path) : mPath(path), mCount(0) {
 }
