@@ -5,7 +5,8 @@
 #include "Journals.h"
 #include "AttachedSockets.h"
 
-struct Worker : IpcChild {
+struct Worker
+{
 
 	Worker(ChildProcessId childProcessId, const Properties& properties);
 
@@ -14,6 +15,15 @@ struct Worker : IpcChild {
 	ESErrorCode start();
 
 	void stop();
+
+	// Logging
+	void log(const char* str, ...);
+
+	// Logging
+	void error(const char* str, ...);
+
+	// Log an error message
+	void error(ESErrorCode err);
 
 private:
 
@@ -43,7 +53,7 @@ private:
 
 	// Read and send the journal as multiple responses
 	ESErrorCode readJournalParts(const AttachedConnection* socket, uint32_t requestUID,
-		bool includeTimestamp, FileInputStream* stream, Bytes* memory);
+	                             bool includeTimestamp, FileInputStream* stream, Bytes* memory);
 
 	// Convert the types into transaction types
 	bit_mask transactionTypes(vector<string>& types);
@@ -57,7 +67,13 @@ private:
 	// Load a path from the bytes block
 	ESErrorCode readAndValidatePath(const uint32_t length, Bytes* memory, _OUT string* s);
 
+	// Retrieves this child's unique id
+	inline const ChildProcessId id() const { return mIpcChild.id(); }
+
+	inline process_t* process() { return mIpcChild.process(); }
+
 private:
+	IpcChild mIpcChild;
 	atomic_bool mRunning;
 	Journals mJournals;
 	AttachedSockets mAttachedSockets;

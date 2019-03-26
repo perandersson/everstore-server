@@ -4,7 +4,9 @@
 #include "../Shared/Transaction.h"
 
 Worker::Worker(ChildProcessId childProcessId, const Properties& properties)
-: IpcChild(childProcessId), mJournals(childProcessId, properties.maxJournalLifeTime), mNextTransactionTypeBit(1), mProperties(properties) {
+		: mIpcChild(childProcessId), mJournals(childProcessId, properties.maxJournalLifeTime),
+		  mNextTransactionTypeBit(1),
+		  mProperties(properties) {
 }
 
 Worker::~Worker() {
@@ -42,13 +44,11 @@ ESErrorCode Worker::start() {
 		if (!isError(err)) {
 			if (isInternalRequestType(type)) {
 				err = handleHostMessage(header);
-			}
-			else {
+			} else {
 				const AttachedConnection* attachedSocket = mAttachedSockets.get(header->client);
-				if (attachedSocket->socket != INVALID_SOCKET){
+				if (attachedSocket->socket != INVALID_SOCKET) {
 					err = handleMessage(header, attachedSocket, &memory);
-				}
-				else {
+				} else {
 					err = ESERR_SOCKET_NOT_ATTACHED;
 				}
 
@@ -84,6 +84,30 @@ void Worker::stop() {
 	mRunning.store(false, memory_order_relaxed);
 }
 
+void Worker::log(const char* str, ...) {
+	va_list arglist;
+	va_start(arglist, str);
+	char tmp[5096];
+	vsprintf(tmp, str, arglist);
+	va_end(arglist);
+
+	printf("%02d [INFO]: %s\n", mIpcChild.id().value, tmp);
+}
+
+void Worker::error(const char* str, ...) {
+	va_list arglist;
+	va_start(arglist, str);
+	char tmp[5096];
+	vsprintf(tmp, str, arglist);
+	va_end(arglist);
+
+	printf("%02d [ERROR]: %s\n", mIpcChild.id().value, tmp);
+}
+
+void Worker::error(ESErrorCode err) {
+	printf("%02d [ERROR]: %s\n", mIpcChild.id().value, parseErrorCode(err));
+}
+
 ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, const Bytes* memory) {
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -116,7 +140,7 @@ ESErrorCode Worker::initialize() {
 	}
 
 	log("Opening pipe to host");
-	err = connectToHost();
+	err = mIpcChild.connectToHost();
 	if (isError(err)) {
 		return err;
 	}
@@ -138,7 +162,7 @@ ESErrorCode Worker::initialize() {
 }
 
 void Worker::release() {
-	close();
+	mIpcChild.close();
 	mAttachedSockets.clear();
 	socket_cleanup();
 }
@@ -176,24 +200,24 @@ ESErrorCode Worker::handleHostMessage(const ESHeader* header) {
 ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
 	ESErrorCode err = ESERR_NO_ERROR;
 	switch (header->type) {
-	case REQ_NEW_TRANSACTION: 
-		err = newTransaction(header, connection, memory);
-		break;
-	case REQ_COMMIT_TRANSACTION:
-		err = commitTransaction(header, connection, memory);
-		break;
-	case REQ_ROLLBACK_TRANSACTION:
-		err = rollbackTransaction(header, connection, memory);
-		break;
-	case REQ_READ_JOURNAL:
-		err = readJournal(header, connection, memory);
-		break;
-	case REQ_JOURNAL_EXISTS:
-		err = checkIfJournalExists(header, connection, memory);
-		break;
-	default:
-		log("Unknown type: %d", header->type);
-		break;
+		case REQ_NEW_TRANSACTION:
+			err = newTransaction(header, connection, memory);
+			break;
+		case REQ_COMMIT_TRANSACTION:
+			err = commitTransaction(header, connection, memory);
+			break;
+		case REQ_ROLLBACK_TRANSACTION:
+			err = rollbackTransaction(header, connection, memory);
+			break;
+		case REQ_READ_JOURNAL:
+			err = readJournal(header, connection, memory);
+			break;
+		case REQ_JOURNAL_EXISTS:
+			err = checkIfJournalExists(header, connection, memory);
+			break;
+		default:
+			log("Unknown type: %d", header->type);
+			break;
 	}
 
 	return err;
@@ -263,7 +287,7 @@ ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConn
 
 	// Load types that the client sent to us
 	const auto typeString = IntrusiveBytesString(request->typeSize, memory);
-	
+
 	// Convert the types into bit masks, used to identify different event types
 	vector<string> typeStrings;
 	string tmp;
@@ -331,7 +355,8 @@ ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedCo
 }
 
 // The amount of bytes left after the header and the response header is written to buffer
-const uint32_t BYTES_LEFT_AFTER_HEADERS = DEFAULT_MAX_DATA_SEND_SIZE - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
+const uint32_t BYTES_LEFT_AFTER_HEADERS =
+		DEFAULT_MAX_DATA_SEND_SIZE - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
 
 ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
 	assert(header != nullptr);
@@ -380,8 +405,7 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 			if (includeTimestamp) {
 				const ESErrorCode err = stream->readBytes(memory, readBytes);
 				if (isError(err)) return err;
-			}
-			else {
+			} else {
 				const ESErrorCode err = stream->readJournalBytes(memory, readBytes, &response->bytes);
 				if (isError(err)) return err;
 			}
@@ -389,15 +413,14 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 
 		// Send the data to the client
 		return sendBytesToClient(connection, memory);
-	}
-	else {
+	} else {
 		auto stream = AutoClosable<FileInputStream>(journal->inputStream(offset));
 		return readJournalParts(connection, requestUID, includeTimestamp, stream.get(), memory);
 	}
 }
 
 ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint32_t requestUID, bool includeTimestamp,
-	FileInputStream* stream, Bytes* memory) {
+                                     FileInputStream* stream, Bytes* memory) {
 	assert(connection != nullptr);
 	assert(memory != nullptr);
 
@@ -406,7 +429,7 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 		const uint32_t bytesLeft = stream->bytesLeft();
 		const ESHeaderProperties properties = bytesLeft > BYTES_LEFT_AFTER_HEADERS ? ESPROP_MULTIPART : ESPROP_NONE;
 		const uint32_t sendSize = bytesLeft > BYTES_LEFT_AFTER_HEADERS ? BYTES_LEFT_AFTER_HEADERS : bytesLeft;
-		
+
 		// Write and send header and the read-journal responses first
 		memory->reset();
 		memory->ensureCapacity(DEFAULT_MAX_DATA_SEND_SIZE);
@@ -419,21 +442,20 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 		if (includeTimestamp) {
 			const ESErrorCode err = stream->readBytes(memory, sendSize);
 			if (isError(err)) return err;
-		}
-		else {
+		} else {
 			const ESErrorCode err = stream->readJournalBytes(memory, sendSize, &bytesWritten);
 			if (isError(err)) return err;
 		}
 
 		// TODO: Make this better!!! Update response header
-		auto tm = (ReadJournal::Response*)(memory->ptr() + sizeof(ReadJournal::Header));
+		auto tm = (ReadJournal::Response*) (memory->ptr() + sizeof(ReadJournal::Header));
 		tm->bytes = bytesWritten;
 
 		// Send to client
 		const ESErrorCode err = sendBytesToClient(connection, memory);
 		if (isError(err)) return err;
 	}
-	
+
 	return ESERR_NO_ERROR;
 }
 
@@ -472,8 +494,7 @@ bit_mask Worker::transactionTypes(vector<string>& types) {
 			transactionType |= mNextTransactionTypeBit;
 			mTransactionTypes.insert(make_pair(type, mNextTransactionTypeBit));
 			mNextTransactionTypeBit = mNextTransactionTypeBit << 1;
-		}
-		else {
+		} else {
 			transactionType |= mask->second;
 		}
 	}
@@ -493,7 +514,7 @@ ESHeader* Worker::loadHeaderFromHost(Bytes* memory) {
 	memory->memorize();
 
 	// Read the header from host process
-	if (process_read(process(), (char*)header, sizeof(ESHeader)) != sizeof(ESHeader))
+	if (process_read(process(), (char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
 		return &INVALID_HEADER;
 
 	// Validate request
@@ -505,7 +526,7 @@ ESHeader* Worker::loadHeaderFromHost(Bytes* memory) {
 			return &INVALID_HEADER;
 		}
 	}
-	
+
 	// Restore to the body position
 	memory->restore();
 
