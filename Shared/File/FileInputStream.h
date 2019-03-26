@@ -8,7 +8,7 @@
 #include "../es_config.h"
 #include "../ESErrorCodes.h"
 #include "../Memory/ByteBuffer.h"
-#include "../Properties.h"
+#include "../Config.h"
 
 struct FileInputStream {
 	friend struct Journal;

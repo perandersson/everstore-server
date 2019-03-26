@@ -7,8 +7,8 @@ void handleSingal(int signal) {
 	gWorker->stop();
 }
 
-int start(ChildProcessId idx, const Properties& props) {
-	gWorker = new Worker(idx, props);
+int start(ChildProcessId idx, const Config& config) {
+	gWorker = new Worker(idx, config);
 	ESErrorCode err = gWorker->start();
 	if (isError(err))
 		gWorker->error(err);
@@ -27,9 +27,9 @@ int main(int argc, char** argv) {
 	}
 
 	// Read the neccessary configuration for the worker
-	const string rootPath = Properties::getWorkingDirectory(argv[0]);
+	const string rootPath = Config::getWorkingDirectory(argv[0]);
 	const string configFileName(argv[2]);
-	const Properties p = Properties::readFromConfigFile(rootPath, configFileName);
+	const Config p = Config::readFromConfigFile(rootPath, configFileName);
 
 	// Start the worker
 	return start(atoi(argv[1]), p);

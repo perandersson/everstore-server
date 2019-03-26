@@ -1,10 +1,10 @@
-#include "Properties.h"
+#include "Config.h"
 #include "File/FileUtils.h"
 #include <fstream>
 #include <algorithm>
 using namespace std;
 
-string Properties::getWorkingDirectory(char* command) {
+string Config::getWorkingDirectory(char* command) {
 	string result(command);
 	auto idx = result.find_last_of('/');
 	if (idx == -1)
@@ -12,7 +12,7 @@ string Properties::getWorkingDirectory(char* command) {
 	return result.substr(0, idx);
 }
 
-Properties Properties::readFromConfigFile(const string& rootDir, const string& configFileName) {
+Config Config::readFromConfigFile(const string& rootDir, const string& configFileName) {
 	string journalDir = DEFAULT_JOURNAL_DIR;
 	uint32_t numWorkers = DEFAULT_NUM_WORKERS;
 	uint32_t maxConnections = DEFAULT_MAX_CONNECTIONS;
@@ -53,5 +53,5 @@ Properties Properties::readFromConfigFile(const string& rootDir, const string& c
 		file.close();
 	}
 
-	return Properties(rootDir, configFileName, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime);
+	return Config(rootDir, configFileName, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime);
 }

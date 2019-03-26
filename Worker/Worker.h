@@ -8,7 +8,7 @@
 struct Worker
 {
 
-	Worker(ChildProcessId childProcessId, const Properties& properties);
+	Worker(ChildProcessId childProcessId, const Config& config);
 
 	~Worker();
 
@@ -65,7 +65,7 @@ private:
 	ESErrorCode sendBytesToClient(const AttachedConnection* connection, const ByteBuffer* memory);
 
 	// Load a path from the bytes block
-	ESErrorCode readAndValidatePath(const uint32_t length, ByteBuffer* memory, _OUT string* s);
+	ESErrorCode readAndValidatePath(uint32_t length, ByteBuffer* memory, _OUT string* s);
 
 	// Retrieves this child's unique id
 	inline const ChildProcessId id() const { return mIpcChild.id(); }
@@ -82,7 +82,7 @@ private:
 	bit_mask mNextTransactionTypeBit;
 	unordered_map<string, bit_mask> mTransactionTypes;
 
-	const Properties mProperties;
+	const Config mConfig;
 };
 
 #endif

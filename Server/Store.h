@@ -6,7 +6,7 @@
 
 struct Store {
 
-	Store(const Properties& props);
+	Store(const Config& config);
 
 	~Store();
 
@@ -32,7 +32,7 @@ private:
 	bool performConsistencyCheck();
 
 private:
-	const Properties& mProperties;
+	const Config& mConfig;
 	atomic_bool mRunning;
 	IpcHost* mHost;
 	StoreServer* mServer;

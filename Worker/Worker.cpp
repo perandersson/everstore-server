@@ -3,10 +3,10 @@
 #include "../Shared/Database/Journal.h"
 #include "../Shared/Database/Transaction.h"
 
-Worker::Worker(ChildProcessId childProcessId, const Properties& properties)
-		: mIpcChild(childProcessId), mJournals(childProcessId, properties.maxJournalLifeTime),
+Worker::Worker(ChildProcessId childProcessId, const Config& config)
+		: mIpcChild(childProcessId), mJournals(childProcessId, config.maxJournalLifeTime),
 		  mNextTransactionTypeBit(1),
-		  mProperties(properties) {
+		  mConfig(config) {
 }
 
 Worker::~Worker() {
@@ -127,12 +127,12 @@ ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, cons
 ESErrorCode Worker::initialize() {
 	log("Initializing worker");
 
-	log("Trying to load configuration from path: \"%s\"", mProperties.configFilename.c_str());
-	log("journalDir = \"%s\"", mProperties.journalDir.c_str());
-	log("numWorker = %d", mProperties.numWorkers);
-	log("maxConnections = %d", mProperties.maxConnections);
-	log("port = %d", mProperties.port);
-	log("maxJournalLifeTime = %d", mProperties.maxJournalLifeTime);
+	log("Trying to load configuration from path: \"%s\"", mConfig.configFilename.c_str());
+	log("journalDir = \"%s\"", mConfig.journalDir.c_str());
+	log("numWorker = %d", mConfig.numWorkers);
+	log("maxConnections = %d", mConfig.maxConnections);
+	log("port = %d", mConfig.port);
+	log("maxJournalLifeTime = %d", mConfig.maxJournalLifeTime);
 
 	ESErrorCode err = socket_init();
 	if (isError(err)) {
@@ -145,7 +145,7 @@ ESErrorCode Worker::initialize() {
 		return err;
 	}
 
-	const auto path = mProperties.rootDir + string(FileUtils::PATH_DELIM) + mProperties.journalDir;
+	const auto path = mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir;
 	log("Changing working directory to: %s", path.c_str());
 	if (!FileUtils::setCurrentDirectory(path)) {
 		return ESERR_FILESYSTEM_CHANGEPATH;
@@ -169,7 +169,7 @@ void Worker::release() {
 
 bool Worker::performConsistencyCheck() {
 	const string lockSufix(string(".") + id().toString() + string(".lock"));
-	auto files = FileUtils::findFilesEndingWith(mProperties.journalDir, lockSufix);
+	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir, lockSufix);
 	for (auto& file : files) {
 		const string journalFile = file.substr(0, file.length() - lockSufix.length());
 		log("Validating consistency for journal: %s", journalFile.c_str());
@@ -267,7 +267,8 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	return sendBytesToClient(connection, memory);
 }
 
-ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
+ESErrorCode
+Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -325,7 +326,8 @@ ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConn
 	return sendBytesToClient(connection, memory);
 }
 
-ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
+ESErrorCode
+Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -459,7 +461,8 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
+ESErrorCode
+Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);

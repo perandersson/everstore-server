@@ -6,7 +6,7 @@ TEST_SUITE(Properties) {
 		const string rootDir(".");
 		const string configFilename("test-resources/filenotfound.properties");
 
-		const Properties p = Properties::readFromConfigFile(rootDir, configFilename);
+		const Config p = Config::readFromConfigFile(rootDir, configFilename);
 
 		assertEquals(rootDir, p.rootDir);
 		assertEquals(configFilename, p.configFilename);
@@ -18,7 +18,7 @@ TEST_SUITE(Properties) {
 	}
 
 	UNIT_TEST(overrideAllPropertiesFromFile) {
-		const Properties p = Properties::readFromConfigFile(string("."), 
+		const Config p = Config::readFromConfigFile(string("."), 
 			string("test-resources/override_all.properties"));
 
 		assertEquals(string("path/to/journal"), p.journalDir);
@@ -29,7 +29,7 @@ TEST_SUITE(Properties) {
 	}
 
 	UNIT_TEST(overrideOnePropertyFromFile) {
-		const Properties p = Properties::readFromConfigFile(string("."),
+		const Config p = Config::readFromConfigFile(string("."),
 			string("test-resources/override_one.properties"));
 
 		assertEquals(string(DEFAULT_JOURNAL_DIR), p.journalDir);

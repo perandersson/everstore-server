@@ -5,7 +5,7 @@
 #include "Ipc/IpcHost.h"
 #include "Socket.h"
 #include "Message/ESHeader.h"
-#include "Properties.h"
+#include "Config.h"
 #include "File/FileLock.h"
 #include "Memory/ByteBuffer.h"
 #include "Messages.h"

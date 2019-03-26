@@ -23,19 +23,19 @@ string getConfigPath(const string& rootPath, int argc, char** argv) {
 	return configFileName;
 }
 
-void printServerProperties(const Properties& props) {
-	printf("Trying to load configuration from path: \"%s\"\n", props.configFilename.c_str());
-	printf("journalDir = \"%s\"\n", props.journalDir.c_str());
-	printf("numWorker = %d\n", props.numWorkers);
-	printf("maxConnections = %d\n", props.maxConnections);
-	printf("port = %d\n", props.port);
-	printf("maxJournalLifeTime = %d\n", props.maxJournalLifeTime);
+void printServerProperties(const Config& config) {
+	printf("Trying to load configuration from path: \"%s\"\n", config.configFilename.c_str());
+	printf("journalDir = \"%s\"\n", config.journalDir.c_str());
+	printf("numWorker = %d\n", config.numWorkers);
+	printf("maxConnections = %d\n", config.maxConnections);
+	printf("port = %d\n", config.port);
+	printf("maxJournalLifeTime = %d\n", config.maxJournalLifeTime);
 }
 
 int main(int argc, char** argv) {
-	const string rootPath = Properties::getWorkingDirectory(argv[0]);
+	const string rootPath = Config::getWorkingDirectory(argv[0]);
 	const string configFileName = getConfigPath(rootPath, argc, argv);
-	const Properties props = Properties::readFromConfigFile(rootPath, configFileName);
+	const Config props = Config::readFromConfigFile(rootPath, configFileName);
 
 	gEventStore = new Store(props);
 	printf("Starting up Server\n");

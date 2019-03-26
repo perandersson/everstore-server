@@ -1,7 +1,7 @@
 #include "Store.h"
 #include "Auth/FixedUserAuthenticator.hpp"
 
-Store::Store(const Properties& props) : mProperties(props), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
+Store::Store(const Config& config) : mConfig(config), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
 	mRunning.store(true, memory_order_relaxed);
 }
 
@@ -24,7 +24,7 @@ Store::~Store() {
 
 ESErrorCode Store::start() {
 	// Create the root directory if missing
-	FileUtils::createFolder(mProperties.rootDir + string(FileUtils::PATH_DELIM) + mProperties.journalDir);
+	FileUtils::createFolder(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir);
 
 	// Make sure that we are not already running the everstore
 	const auto applicationLockPath = "everstore.lock";
@@ -77,17 +77,17 @@ ESErrorCode Store::initialize() {
 	mAuthenticator = new FixedUserAuthenticator(string("admin"), string("passwd"));
 
 	// Create host
-	mHost = new IpcHost(mProperties.rootDir, mProperties.configFilename, mProperties.numWorkers);
+	mHost = new IpcHost(mConfig.rootDir, mConfig.configFilename, mConfig.numWorkers);
 
 	// Create worker processes
-	const uint32_t numWorkers = mProperties.numWorkers;
+	const uint32_t numWorkers = mConfig.numWorkers;
 	for (uint32_t i = 0; i < numWorkers; ++i) {
 		err = mHost->addWorker();
 		if (isError(err)) return err;
 	}
 
 	// Listen for incomming database connections
-	mServer = new StoreServer(mProperties.port, mProperties.maxConnections, mHost, mAuthenticator);
+	mServer = new StoreServer(mConfig.port, mConfig.maxConnections, mHost, mAuthenticator);
 	err = mServer->listen();
 	if (isError(err))
 		return err;
@@ -112,7 +112,7 @@ void Store::release() {
 
 bool Store::performConsistencyCheck() {
 	const string lockSufix(".lock");
-	auto files = FileUtils::findFilesEndingWith(mProperties.rootDir + string(FileUtils::PATH_DELIM) + mProperties.journalDir, lockSufix);
+	auto files = FileUtils::findFilesEndingWith(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir, lockSufix);
 	for (auto& file : files) {
 		const uint32_t del = file.find_last_of('.');
 		const uint32_t del2 = file.find_last_of('.', del - 1);
