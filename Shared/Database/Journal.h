@@ -8,36 +8,18 @@
 #include "../LinkedList.h"
 #include "../File/FileInputStream.h"
 #include "../File/FileOutputStream.h"
-#include "../Ipc/ChildProcessId.h"
+#include "../Ipc/ChildProcessID.h"
+#include "OpenTransactions.hpp"
 
 static const char JOURNAL_EOF = 0; // Use NULL as EOF marker
 static const uint32_t JOURNAL_EOF_LEN = 1;
-
-struct OpenTransactions : vector<Transaction*> {
-
-	OpenTransactions();
-
-	~OpenTransactions();
-
-	// Open a new transaction for the supplied journal
-	// 
-	// \param journal
-	// \return A unique ID for the journal
-	const TransactionId open(Journal* journal);
-
-	// Retrieve the transaction with the given id
-	Transaction* get(const TransactionId id);
-
-	// Close the supplied transaction
-	void close(const TransactionId id);
-};
 
 struct Journal {
 	LinkedListLink<Journal> link;
 
 	Journal(const string& path); 
 
-	Journal(const string& path, const ChildProcessId childProcessId);
+	Journal(const string& path, const ChildProcessID childProcessId);
 
 	~Journal();
 
@@ -48,13 +30,13 @@ struct Journal {
 	void refresh();
 
 	// Open a new transaction and return a unique id for it
-	const TransactionId openTransaction();
+	const TransactionID openTransaction();
 
 	// Rollback the supplied transaction
-	void rollback(const TransactionId id);
+	void rollback(const TransactionID id);
 
 	// Try to commit a transaction
-	ESErrorCode tryCommit(const TransactionId id, transaction_types types, IntrusiveBytesString eventsString);
+	ESErrorCode tryCommit(const TransactionID id, transaction_types types, IntrusiveBytesString eventsString);
 
 	// Increase the reference count of this journal and returns the size of the journal
 	//

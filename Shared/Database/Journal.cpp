@@ -5,61 +5,6 @@
 #include "../Memory/ByteBufferInputStream.h"
 #include "../AutoClosable.h"
 
-OpenTransactions::OpenTransactions() {
-
-}
-
-OpenTransactions::~OpenTransactions() {
-	for (auto t : *this) {
-		delete t;
-	}
-	clear();
-}
-
-const TransactionId OpenTransactions::open(Journal* journal) {
-	// Try to reuse a transaction id
-	const uint32_t num = size();
-	for (uint32_t i = 0; i < num; ++i) {
-		auto t = operator[](i);
-		if (t == nullptr) {
-			Transaction* t = new Transaction(i, journal);
-			operator[](i) = t;
-			return i;
-		}
-	}
-
-	// Create a new transaction id
-	const TransactionId id = size();
-	Transaction* t = new Transaction(id, journal);
-	push_back(t);
-	return id;
-}
-
-Transaction* OpenTransactions::get(const TransactionId id) {
-	const auto value = id.value;
-
-	// Ensure that we do not try to open a non-existing transaction
-	if (value >= size()) return nullptr;
-
-	// Make sure that the transaction actually matches what we are requesting
-	auto t = operator[](value);
-	return t;
-}
-
-void OpenTransactions::close(const TransactionId id) {
-	const auto value = id.value;
-
-	// Ensure that we do not try to close a non-existing transaction
-	if (value >= size()) return;
-
-	// Remove the memory associated with the transaction
-	auto t = operator[](value);
-	if (t != nullptr) {
-		delete t;
-		operator[](value) = nullptr;
-	}
-}
-
 Journal::Journal(const string& name) : mName(name), mJournalFileName(name + string(".log")),
 mFileLock(name + string(".lock")),
 mTimeSinceLastUsed(chrono::system_clock::now()),
@@ -70,7 +15,7 @@ mTransactions() {
 	mJournalSize = FileUtils::getFileSize(mJournalFileName);
 }
 
-Journal::Journal(const string& name, ChildProcessId workerId) :
+Journal::Journal(const string& name, ChildProcessID workerId) :
 mName(name), mJournalFileName(name + string(".log")),
 mFileLock(name + string(".") + workerId.toString() + string(".lock")),
 mTimeSinceLastUsed(chrono::system_clock::now()),
@@ -141,15 +86,15 @@ void Journal::refresh() {
 	mTimeSinceLastUsed = chrono::system_clock::now();
 }
 
-const TransactionId Journal::openTransaction() {
+const TransactionID Journal::openTransaction() {
 	return mTransactions.open(this);
 }
 
-void Journal::rollback(const TransactionId id) {
+void Journal::rollback(const TransactionID id) {
 	mTransactions.close(id);
 }
 
-ESErrorCode Journal::tryCommit(const TransactionId id, transaction_types types, IntrusiveBytesString eventsString) {
+ESErrorCode Journal::tryCommit(const TransactionID id, transaction_types types, IntrusiveBytesString eventsString) {
 	// Retrieve the active transaction
 	auto t = mTransactions.get(id);
 	if (t == nullptr) return ESERR_JOURNAL_TRANSACTION_DOES_NOT_EXIST;
@@ -170,11 +115,7 @@ ESErrorCode Journal::tryCommit(const TransactionId id, transaction_types types, 
 	mTransactions.close(id);
 
 	// Notify all open transactions that another transaction has been committed
-	for (auto trans : mTransactions) {
-		if (trans != nullptr) {
-			trans->onTransactionCommitted(types);
-		}
-	}
+	mTransactions.onTransactionCommitted(types);
 
 	return ESERR_NO_ERROR;
 }

@@ -8,8 +8,6 @@ class ByteBufferInputStream
 public:
 	explicit ByteBufferInputStream(ByteBuffer* buffer);
 
-	~ByteBufferInputStream();
-
 	int32_t lastIndexOf(char c);
 
 private:

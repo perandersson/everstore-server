@@ -3,7 +3,7 @@
 
 const string NEW_JOURNAL_TRANSACTION_TYPE("ES_NewJournal");
 
-Transaction::Transaction(const TransactionId id, Journal* journal) : mId(id), mJournal(journal), mTransactionTypesBeforeCommit(BIT_NONE) {
+Transaction::Transaction(const TransactionID id, Journal* journal) : mId(id), mJournal(journal), mTransactionTypesBeforeCommit(BIT_NONE) {
 	mJournalSize = journal->journalSize();
 }
 

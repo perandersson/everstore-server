@@ -78,30 +78,6 @@ typedef uint64_t bit_mask;
 #define BIT_NONE 0
 #endif
 
-// How many child processes is started up by default
-#define DEFAULT_NUM_WORKERS 5
-
-// The default connection port for clients
-#define DEFAULT_PORT 6929
-
-// How many simulatnious connections are allowed at the same time
-#define DEFAULT_MAX_CONNECTIONS 10
-
-// Default data directory
-#define DEFAULT_JOURNAL_DIR "journals"
-
-// Default config filename
-#define DEFAULT_CONFIG_FILENAME "settings.conf"
-
-// How large is the maximum data-block size sent over the network (64kb)
-#define DEFAULT_MAX_DATA_SEND_SIZE 65536
-
-// The default socket timeout for reading and writing
-//#define DEFAULT_SOCKET_TIMEOUT 2000
-
-// How many seconds we wait until un-accessed journals are deleted
-#define DEFAULT_JOURNAL_GC_SECONDS 60
-
 #ifndef BOOL
 #define BOOL int
 #endif

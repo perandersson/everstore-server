@@ -11,7 +11,7 @@ struct Event {
 
 	inline long size() const {
 		long size = 0;
-		size += Timestamp::BYTES_LENGTH;
+		size += Timestamp::BytesLength;
 		size += FileUtils::SPACE_SIZE;
 		size += data.length();
 		return size;

@@ -16,7 +16,8 @@ extern string PIPE_NAME_PREFIX;
 void process_init(process_t* p);
 
 // Start a new process with a two-way pipe
-ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory, const vector<string>& arguments, process_t* p);
+ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory,
+		const vector<string>& arguments, uint32_t pipeMaxBufferSize, process_t* p);
 
 // Close and wait for the supplied process to stop
 ESErrorCode process_close(process_t* p);

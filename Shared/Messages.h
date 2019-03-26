@@ -2,7 +2,7 @@
 #define _EVERSTORE_MESSAGES_H_
 
 #include "Message/ESHeader.h"
-#include "Database/TransactionId.h"
+#include "Database/TransactionID.h"
 
 struct Authentication {
 	static const ESRequestType TYPE = REQ_AUTHENTICATE;
@@ -27,12 +27,12 @@ struct NewTransaction {
 		uint32_t journalSize;			// The size of the journal when this transaction was created
 		uint32_t transactionUID;		// A unique identifier for the current transaction
 
-		Response(uint32_t journalSize, const TransactionId id)
+		Response(uint32_t journalSize, const TransactionID id)
 			: journalSize(journalSize), transactionUID(id.value) {}
 		~Response() {}
 	};
 	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessId workerId) 
+		Header(uint32_t requestId, ChildProcessID workerId) 
 		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 		~Header() {}
 	};
@@ -60,7 +60,7 @@ struct CommitTransaction {
 		~Response() {}
 	};
 	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessId workerId) 
+		Header(uint32_t requestId, ChildProcessID workerId) 
 		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 		~Header() {}
 	};
@@ -82,7 +82,7 @@ struct RollbackTransaction {
 		~Response() {}
 	};
 	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessId workerId) 
+		Header(uint32_t requestId, ChildProcessID workerId) 
 		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 		~Header() {}
 	};
@@ -100,7 +100,7 @@ struct RequestError {
 		~Response() {}
 	};
 	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessId workerId) 
+		Header(uint32_t requestId, ChildProcessID workerId) 
 		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 		~Header() {}
 	};
@@ -111,7 +111,7 @@ static_assert(sizeof(RequestError::Response) == 4, "Expected RequestError::Reque
 struct ReadJournal {
 	static const ESRequestType TYPE = REQ_READ_JOURNAL;
 	struct Header : ESHeader {
-		Header(uint32_t requestId, ESHeaderProperties properties, ChildProcessId workerId) 
+		Header(uint32_t requestId, ESHeaderProperties properties, ChildProcessID workerId) 
 		: ESHeader(TYPE, sizeof(Response), requestId, properties, workerId) {}
 		~Header() {}
 	};
@@ -134,7 +134,7 @@ static_assert(sizeof(ReadJournal::Response) == 4, "Expected ReadJournal::Respons
 struct JournalExists {
 	static const ESRequestType TYPE = REQ_JOURNAL_EXISTS;
 	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessId workerId)
+		Header(uint32_t requestId, ChildProcessID workerId)
 		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 		~Header() {}
 	};

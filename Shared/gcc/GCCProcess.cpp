@@ -51,7 +51,8 @@ void process_init(process_t* p) {
 	p->pipe = INVALID_PIPE;
 }
 
-ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory, const vector<string>& arguments, process_t* p) {
+ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory,
+		const vector<string>& arguments, uint32_t pipeMaxBufferSize, process_t* p) {
 	// Open the pipe first
 	ESErrorCode err = _gcc_pipe_open(name, &p->pipe);
 	if (isError(err)) {
@@ -82,7 +83,7 @@ ESErrorCode process_start(const string& name, const string& command, const strin
 	}
 
 	SOCKET pipe = p->pipe;
-	p->pipe = socket_accept_blocking(pipe);
+	p->pipe = socket_accept_blocking(pipe, pipeMaxBufferSize);
 	socket_close(pipe);
 	return p->pipe < 0 ? ESERR_PIPE_CONNECT : ESERR_NO_ERROR;
 }

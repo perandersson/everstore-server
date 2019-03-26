@@ -6,7 +6,7 @@ TEST_SUITE(Journal) {
 	UNIT_TEST(emptyJournalForNonExistingFile) {
 
 		const string tempPath = FileUtils::getTempFile();
-		Journal j(tempPath, 1);
+		Journal j(tempPath, ChildProcessID(1));
 
 		assertEquals(0U, j.journalSize());
 		assertEquals((tempPath + string(".log")), j.path());
@@ -15,7 +15,7 @@ TEST_SUITE(Journal) {
 	UNIT_TEST(persistenceCheckOkEmptyJournal) {
 
 		const string tempPath = FileUtils::getTempFile();
-		Journal j(tempPath, 1);
+		Journal j(tempPath, ChildProcessID(1));
 
 		assertTrue(j.performConsistencyCheck());
 	}

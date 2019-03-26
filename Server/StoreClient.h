@@ -3,15 +3,16 @@
 
 #include "../Shared/everstore.h"
 
-struct StoreClient {
-
-	StoreClient(SOCKET client, IpcHost* host);
+class StoreClient
+{
+public:
+	StoreClient(SOCKET client, IpcHost* host, uint32_t maxBufferSize);
 
 	~StoreClient();
 
 	// Disconnect the client and stop this client thread
 	void stop();
-	
+
 	// Start the client thread
 	ESErrorCode start();
 
@@ -39,13 +40,15 @@ private:
 
 private:
 	SOCKET mClientSocket;
-	mutex_t mClientLock;
 	IpcHost* mIpcHost;
+	uint32_t mMaxBufferSize;
+	mutex_t mClientLock;
 	atomic_bool mRunning;
 	thread mThread;
 };
 
-struct StoreClients : list<StoreClient*> {
+struct StoreClients : list<StoreClient*>
+{
 
 	StoreClients();
 

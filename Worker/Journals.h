@@ -8,7 +8,7 @@
 class Journals
 {
 public:
-	Journals(ChildProcessId childProcessId, uint32_t maxJournalLifeTime);
+	Journals(ChildProcessID childProcessId, uint32_t maxJournalLifeTime);
 
 	~Journals();
 
@@ -24,7 +24,7 @@ public:
 	void gc();
 
 private:
-	const ChildProcessId mChildProcessId;
+	const ChildProcessID mChildProcessId;
 	const uint32_t mMaxJournalLifeTime;
 	unordered_map<string, Journal*> mJournals;
 

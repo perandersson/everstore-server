@@ -3,11 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-IpcHost::IpcHost(const string& rootDir, const string& configFileName, uint32_t numWorkers) 
-: mRootDir(rootDir), mConfigFileName(configFileName), mNumWorkers(numWorkers) {
+IpcHost::IpcHost(const string& rootDir, const string& configFileName, uint32_t maxBufferSize)
+		: mRootDir(rootDir), mConfigFileName(configFileName), mMaxBufferSize() {
 }
 
 IpcHost::~IpcHost() {
+	for (auto client : mProcesses) {
+		client->stop();
+		delete client;
+	}
 }
 
 void IpcHost::close() {
@@ -20,22 +24,23 @@ void IpcHost::close() {
 	}
 
 	// Wait for the process to shutdown and then close all host handles
-	mProcesses.waitAndClose();
+	waitAndClose();
 }
 
 ESErrorCode IpcHost::send(const ESHeader* message) {
 	ESErrorCode err = ESERR_NO_ERROR;
 	const uint32_t numProcesses = mProcesses.size() + 1;
-	for (uint32_t i = 1; i < numProcesses; ++i) {
-		auto process = mProcesses.get(i);
+	for (uint32_t i = 1u; i < numProcesses; ++i) {
+		const ChildProcessID id(i);
+		auto process = mProcesses[id.asIndex()];
 		err = process->child().sendTo(message);
 		if (isError(err)) {
 			// Log the problem
 			error(err);
-			log("Trying to restart process: %d", i);
+			log("Trying to restart process: %d", id);
 
 			// Try to restart the worker
-			err = tryRestartWorker(i);
+			err = tryRestartWorker(id);
 			if (!isError(err)) {
 				err = process->child().sendTo(message);
 			}
@@ -44,13 +49,13 @@ ESErrorCode IpcHost::send(const ESHeader* message) {
 	return err;
 }
 
-ESErrorCode IpcHost::send(const ChildProcessId childProcessId, const ByteBuffer* bytes) {
+ESErrorCode IpcHost::send(const ChildProcessID childProcessId, const ByteBuffer* bytes) {
 	assert(bytes != nullptr);
 
-	if (!mProcesses.workerExists(childProcessId))
+	if (!workerExists(childProcessId))
 		return ESERR_WORKER_UNKNOWN;
 
-	auto process = mProcesses.get(childProcessId);
+	auto process = mProcesses[childProcessId.asIndex()];
 	ESErrorCode err = process->child().sendTo(bytes);
 	if (isError(err)) {
 		// Log the problem
@@ -67,12 +72,12 @@ ESErrorCode IpcHost::send(const ChildProcessId childProcessId, const ByteBuffer*
 }
 
 ESErrorCode IpcHost::addWorker() {
-	const auto process = mProcesses.createProcess();
+	const auto process = createProcess();
 
 	// Start the worker process
-	const vector<string> arguments = { 
-		process->id().toString(), 
-		string("\"") + mConfigFileName + string("\"") 
+	const vector<string> arguments = {
+			process->id().toString(),
+			string("\"") + mConfigFileName + string("\"")
 	};
 	return process->start(string("everstore-worker"), mRootDir, arguments);
 }
@@ -85,8 +90,8 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 
 	log("Client %d is now fully connected", socket);
 	const uint32_t numProcesses = mProcesses.size() + 1;
-	for (uint32_t i = 1; i < numProcesses; ++i) {
-		auto process = mProcesses.get(i);
+	for (uint32_t i = 1u; i < numProcesses; ++i) {
+		auto process = mProcesses[i - 1u];
 		ESErrorCode err = process_share_socket(process->handle(), socket, lock);
 		if (isError(err)) {
 			// Log the problem
@@ -94,7 +99,7 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 			log("Trying to restart process: %d", i);
 
 			// Try to restart the worker
-			err = tryRestartWorker(i);
+			err = tryRestartWorker(ChildProcessID(i));
 			if (isError(err)) {
 				return err;
 			}
@@ -116,7 +121,7 @@ ESErrorCode IpcHost::onClientDisconnected(SOCKET socket) {
 	log("Client %d disconnected", socket);
 	auto it = mActiveSockets.begin();
 	const auto end = mActiveSockets.end();
-	for(; it != end; ++it) {
+	for (; it != end; ++it) {
 		if (it->socket == socket) {
 			mActiveSockets.erase(it);
 			break;
@@ -127,39 +132,74 @@ ESErrorCode IpcHost::onClientDisconnected(SOCKET socket) {
 	ESHeader header;
 	header.type = REQ_CLOSED_CONNECTION;
 	header.client = socket;
-
-	// Send message
-	for (auto process : mProcesses) {
-		const ESErrorCode err = process->child().sendTo(&header);
-		if (isError(err)) {
-			return err;
-		}
-	}
+	sendToAll(&header);
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode IpcHost::tryRestartWorker(const ChildProcessId id) {
-	if (!mProcesses.workerExists(id))
-		return ESERR_WORKER_UNKNOWN;
-
-	// Kill the worker
-	auto process = mProcesses.get(id);
-	process->kill();
-
-	// Start the worker process
-	const vector<string> arguments = {
-		process->id().toString(),
-		string("\"") + mConfigFileName + string("\"")
-	};
-	return process->start(string("everstore-worker"), mRootDir, arguments);
-}
-
-const ChildProcessId IpcHost::workerId(const char* str, uint32_t length) const {
+ChildProcessID IpcHost::workerId(const char* str, uint32_t length) const {
 	const char* end = str + length;
 	uint32_t hash = 0;
 	for (; str != end; ++str)
 		hash += *str;
-	return ChildProcessId((uint32_t)(hash % mNumWorkers) + 1);
+	return ChildProcessID((uint32_t) (hash % mProcesses.size()) + 1);
+}
+
+ESErrorCode IpcHost::tryRestartWorker(ChildProcessID id) {
+	if (!workerExists(id))
+		return ESERR_WORKER_UNKNOWN;
+
+	// Kill the worker
+	auto process = mProcesses[id.asIndex()];
+	process->kill();
+
+	// Start the worker process
+	const vector<string> arguments = {
+			process->id().toString(),
+			string("\"") + mConfigFileName + string("\"")
+	};
+	return process->start(string("everstore-worker"), mRootDir, arguments);
+}
+
+ESErrorCode IpcHost::sendToAll(const ESHeader* header) {
+	ESErrorCode error = ESERR_NO_ERROR;
+	// Send message to all processes
+	for (auto process : mProcesses) {
+		error = process->child().sendTo(header);
+		if (isError(error)) {
+			return error;
+		}
+	}
+	return error;
+}
+
+ESErrorCode IpcHost::sendToAll(const ByteBuffer* bytes) {
+	ESErrorCode error = ESERR_NO_ERROR;
+	// Send message to all processes
+	for (auto process : mProcesses) {
+		error = process->child().sendTo(bytes);
+		if (isError(error)) {
+			return error;
+		}
+	}
+	return error;
+}
+
+IpcChildProcess* IpcHost::createProcess() {
+	IpcChildProcess* process = new IpcChildProcess(ChildProcessID(mProcesses.size() + 1), mMaxBufferSize);
+	mProcesses.push_back(process);
+	return process;
+}
+
+bool IpcHost::workerExists(ChildProcessID id) {
+	const auto worker = id.value - 1;
+	auto processes = mProcesses.size();
+	return processes > worker;
+}
+
+void IpcHost::waitAndClose() {
+	for (auto client : mProcesses) {
+		client->waitAndClose();
+	}
 }
 
 void IpcHost::log(const char* str, ...) {

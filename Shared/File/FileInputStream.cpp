@@ -3,7 +3,7 @@
 #include "../Database/Timestamp.h"
 
 static const uint32_t TEMP_READ_BLOCK_SIZE = 4096;
-static const uint32_t TIMESTAMP_AND_SPACE_LEN = Timestamp::BYTES_LENGTH + 1;
+static const uint32_t TIMESTAMP_AND_SPACE_LEN = Timestamp::BytesLength + 1;
 
 FileInputStream::FileInputStream(const std::string& fileName, uint32_t fileSize, uint32_t byteOffset) 
 : mFile(NULL), mFileSize(fileSize), mByteOffset(byteOffset), mSeekAfterRead(TIMESTAMP_AND_SPACE_LEN){

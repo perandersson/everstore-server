@@ -3,7 +3,7 @@
 #include "../Shared/Database/Journal.h"
 #include "../Shared/Database/Transaction.h"
 
-Worker::Worker(ChildProcessId childProcessId, const Config& config)
+Worker::Worker(ChildProcessID childProcessId, const Config& config)
 		: mIpcChild(childProcessId), mJournals(childProcessId, config.maxJournalLifeTime),
 		  mNextTransactionTypeBit(1),
 		  mConfig(config) {
@@ -24,7 +24,7 @@ ESErrorCode Worker::start() {
 	mRunning.store(true, memory_order_relaxed);
 
 	// Memory for this worker
-	ByteBuffer memory(DEFAULT_MAX_DATA_SEND_SIZE);
+	ByteBuffer memory(mConfig.maxBufferSize);
 
 	//ByteBuffer buffer;
 	while (mRunning.load() && !isErrorCodeFatal(err)) {
@@ -356,10 +356,6 @@ Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* co
 	return sendBytesToClient(connection, memory);
 }
 
-// The amount of bytes left after the header and the response header is written to buffer
-const uint32_t BYTES_LEFT_AFTER_HEADERS =
-		DEFAULT_MAX_DATA_SEND_SIZE - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
-
 ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
@@ -391,6 +387,9 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 	uint32_t readBytes = (clampedJournalSize - offset);
 	if (readBytes > 0) readBytes--;
 
+	// The amount of bytes left after the header and the response header is written to buffer
+	const auto BYTES_LEFT_AFTER_HEADERS =
+			mConfig.maxBufferSize - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
 	if (readBytes <= BYTES_LEFT_AFTER_HEADERS) {
 		// Write and send header and the read-journal responses first
 		memory->reset();
@@ -405,10 +404,10 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 
 			// Write the journal body (with or without timestamp)
 			if (includeTimestamp) {
-				const ESErrorCode err = stream->readBytes(memory, readBytes);
+				err = stream->readBytes(memory, readBytes);
 				if (isError(err)) return err;
 			} else {
-				const ESErrorCode err = stream->readJournalBytes(memory, readBytes, &response->bytes);
+				err = stream->readJournalBytes(memory, readBytes, &response->bytes);
 				if (isError(err)) return err;
 			}
 		}
@@ -426,6 +425,10 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 	assert(connection != nullptr);
 	assert(memory != nullptr);
 
+	// The amount of bytes left after the header and the response header is written to buffer
+	const auto BYTES_LEFT_AFTER_HEADERS =
+			mConfig.maxBufferSize - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
+
 	// TODO: Put this as a threaded job (to ensure that smaller journals can be loaded)
 	while (stream->bytesLeft() > 0) {
 		const uint32_t bytesLeft = stream->bytesLeft();
@@ -434,7 +437,7 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 
 		// Write and send header and the read-journal responses first
 		memory->reset();
-		memory->ensureCapacity(DEFAULT_MAX_DATA_SEND_SIZE);
+		memory->ensureCapacity(mConfig.maxBufferSize);
 		const ReadJournal::Header responseHeader(requestUID, properties, id());
 		memory->put(&responseHeader);
 		memory->get<ReadJournal::Response>();
@@ -521,7 +524,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 		return &INVALID_HEADER;
 
 	// Validate request
-	if (header->size > DEFAULT_MAX_DATA_SEND_SIZE) return &INVALID_HEADER;
+	if (header->size > mConfig.maxBufferSize) return &INVALID_HEADER;
 
 	// Load the request body
 	if (header->size > 0) {

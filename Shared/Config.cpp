@@ -2,6 +2,7 @@
 #include "File/FileUtils.h"
 #include <fstream>
 #include <algorithm>
+
 using namespace std;
 
 string Config::getWorkingDirectory(char* command) {
@@ -18,6 +19,7 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 	uint32_t maxConnections = DEFAULT_MAX_CONNECTIONS;
 	uint16_t port = DEFAULT_PORT;
 	uint32_t maxJournalLifeTime = DEFAULT_JOURNAL_GC_SECONDS;
+	uint32_t maxBufferSize = DEFAULT_MAX_DATA_SEND_SIZE;
 
 	ifstream file;
 	file.open(configFileName.c_str());
@@ -35,23 +37,22 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 
 				if (key == string("journalDir")) {
 					journalDir = value;
-				}
-				else if (key == string("numWorkers")) {
+				} else if (key == string("numWorkers")) {
 					numWorkers = StringUtils::toUint32(value);
-				}
-				else if (key == string("maxConnections")) {
+				} else if (key == string("maxConnections")) {
 					maxConnections = StringUtils::toUint32(value);
-				}
-				else if (key == string("port")) {
+				} else if (key == string("port")) {
 					port = StringUtils::toUint16(value);
-				}
-				else if (key == string("maxJournalLifeTime")) {
+				} else if (key == string("maxJournalLifeTime")) {
 					maxJournalLifeTime = StringUtils::toUint32(value);
+				} else if (key == string("maxBufferSize")) {
+					maxBufferSize = StringUtils::toUint32(value);
 				}
 			}
 		}
 		file.close();
 	}
 
-	return Config(rootDir, configFileName, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime);
+	return Config(rootDir, configFileName, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime,
+	              maxBufferSize);
 }

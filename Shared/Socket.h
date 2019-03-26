@@ -1,6 +1,8 @@
 #ifndef _ES_SOCKET_H_
 #define _ES_SOCKET_H_
 
+#include <cinttypes>
+
 #ifdef WIN32
 #include "win32/Win32Socket.h"
 #else
@@ -26,10 +28,10 @@ ESErrorCode socket_nodelay(SOCKET socket);
 ESErrorCode socket_setbufsize(SOCKET socket, uint32_t sizeInBytes);
 
 // Create a new blocking socket
-SOCKET socket_create_blocking();
+SOCKET socket_create_blocking(uint32_t maxBufferSize);
 
 // Accept an incomming blocking socket
-SOCKET socket_accept_blocking(SOCKET serverSocket);
+SOCKET socket_accept_blocking(SOCKET serverSocket, uint32_t maxBufferSize);
 
 // Receive all bytes from the socket 
 uint32_t socket_recvall(SOCKET socket, char* bytes, uint32_t size);

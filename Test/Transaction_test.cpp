@@ -35,7 +35,7 @@ TEST_SUITE(Transaction) {
 		assertEquals((ESErrorCode)ESERR_NO_ERROR, err);
 		stream->close();
 
-		bytes.moveForward(Timestamp::BYTES_LENGTH + 1);
+		bytes.moveForward(Timestamp::BytesLength + 1);
 		const string endsWith = bytes.get(data.length());
 		assertEquals(data, endsWith);
 	}

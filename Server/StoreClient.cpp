@@ -1,7 +1,7 @@
 #include "StoreClient.h"
 
-StoreClient::StoreClient(SOCKET client, IpcHost* host)
-		: mClientSocket(client), mClientLock(INVALID_LOCK), mIpcHost(host) {
+StoreClient::StoreClient(SOCKET client, IpcHost* host, uint32_t maxBufferSize)
+		: mClientSocket(client), mIpcHost(host), mMaxBufferSize(maxBufferSize), mClientLock(INVALID_LOCK) {
 	mRunning.store(true, memory_order_relaxed);
 	const string mutexName = string("everstore_mutex_") + StringUtils::toString(client);
 	mClientLock = mutex_create(mutexName);
@@ -29,7 +29,7 @@ ESErrorCode StoreClient::start() {
 
 void StoreClient::run() {
 	// Memory for this client
-	ByteBuffer memory(DEFAULT_MAX_DATA_SEND_SIZE);
+	ByteBuffer memory(mMaxBufferSize);
 
 	//ByteBuffer byteBuffer;
 	ESErrorCode err = ESERR_NO_ERROR;
@@ -43,15 +43,14 @@ void StoreClient::run() {
 		}
 
 		// Prepare the request header and put it into the memory buffer
-		const uint32_t workerId = header->workerId;
-		const uint32_t requestUID = header->requestUID;
+		const auto workerId = ChildProcessID(header->workerId);
+		const auto requestUID = header->requestUID;
 		header->client = mClientSocket;
 
 		// If no worker is specified then let the host figure it out. Otherwise redirect directly to it
 		if (isRequestTypeInitiallyForHost(header->type)) {
 			err = handleRequest(header, &memory);
-		}
-		else {
+		} else {
 			err = mIpcHost->send(workerId, &memory);
 		}
 
@@ -98,8 +97,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 
 		// Send the request to the supplied worker
 		err = mIpcHost->send(workerId, bytes);
-	}
-	else if (header->type == REQ_JOURNAL_EXISTS) {
+	} else if (header->type == REQ_JOURNAL_EXISTS) {
 		// Memorize and reset the memory block
 		bytes->memorize();
 		bytes->reset();
@@ -132,11 +130,11 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 	ESHeader* header = memory->get<ESHeader>();
 
 	// Read the header from client socket stream
-	if (socket_recvall(mClientSocket, (char*)header, sizeof(ESHeader)) != sizeof(ESHeader))
+	if (socket_recvall(mClientSocket, (char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
 		return &INVALID_HEADER;
 
 	// Validate request
-	if (header->size > DEFAULT_MAX_DATA_SEND_SIZE) return &INVALID_HEADER;
+	if (header->size > mMaxBufferSize) return &INVALID_HEADER;
 
 	// Load the request body
 	if (header->size > 0) {

@@ -77,17 +77,16 @@ ESErrorCode Store::initialize() {
 	mAuthenticator = new FixedUserAuthenticator(string("admin"), string("passwd"));
 
 	// Create host
-	mHost = new IpcHost(mConfig.rootDir, mConfig.configFilename, mConfig.numWorkers);
+	mHost = new IpcHost(mConfig.rootDir, mConfig.configFilename, mConfig.maxBufferSize);
 
 	// Create worker processes
-	const uint32_t numWorkers = mConfig.numWorkers;
-	for (uint32_t i = 0; i < numWorkers; ++i) {
+	for (uint32_t i = 0; i < mConfig.numWorkers; ++i) {
 		err = mHost->addWorker();
 		if (isError(err)) return err;
 	}
 
 	// Listen for incomming database connections
-	mServer = new StoreServer(mConfig.port, mConfig.maxConnections, mHost, mAuthenticator);
+	mServer = new StoreServer(mConfig.port, mConfig.maxConnections, mConfig.maxBufferSize, mHost, mAuthenticator);
 	err = mServer->listen();
 	if (isError(err))
 		return err;

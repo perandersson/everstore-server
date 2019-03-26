@@ -4,11 +4,11 @@
 #include "../Message/ESHeader.h"
 #include "../Memory/ByteBuffer.h"
 #include "../Process.h"
-#include "ChildProcessId.h"
+#include "ChildProcessID.h"
 
 struct IpcChild {
 
-	IpcChild(const ChildProcessId id);
+	IpcChild(ChildProcessID id);
 
 	virtual ~IpcChild();
 
@@ -21,7 +21,7 @@ struct IpcChild {
 	ESErrorCode sendTo(const ByteBuffer* bytes);
 
 	// Retrieves this child's unique id
-	inline const ChildProcessId id() const { return mId; }
+	inline ChildProcessID id() const { return mId; }
 
 	inline process_t* process() { return &mProcess; }
 
@@ -38,7 +38,7 @@ struct IpcChild {
 	void close();
 	
 private:
-	const ChildProcessId mId;
+	const ChildProcessID mId;
 	process_t mProcess;
 	mutex mMutex;
 };

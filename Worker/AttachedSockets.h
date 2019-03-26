@@ -3,13 +3,15 @@
 
 #include "../Shared/everstore.h"
 
-struct AttachedConnection {
+struct AttachedConnection
+{
 	SOCKET socket;
 	mutex_t lock;
 };
 
-struct AttachedSockets : unordered_map<SOCKET, AttachedConnection*> {
-
+class AttachedSockets
+{
+public:
 	AttachedSockets();
 
 	~AttachedSockets();
@@ -19,6 +21,11 @@ struct AttachedSockets : unordered_map<SOCKET, AttachedConnection*> {
 	void add(SOCKET hostSocket, SOCKET clientSocket, mutex_t lock);
 
 	void remove(SOCKET hostSocket);
+
+	void clear();
+
+private:
+	unordered_map<SOCKET, AttachedConnection*> mSockets;
 };
 
 

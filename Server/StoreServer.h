@@ -18,7 +18,7 @@ struct ServerConfiguration {
 
 struct StoreServer {
 
-	StoreServer(uint16_t port, uint32_t maxConnections, IpcHost* host, Authenticator* authenticator);
+	StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host, Authenticator* authenticator);
 
 	~StoreServer();
 
@@ -33,8 +33,9 @@ struct StoreServer {
 	inline const ServerConfiguration& getConfiguration() const { return mConfiguration; }
 	
 private:
-	uint16_t mPort;
-	uint32_t mMaxConnections;
+	const uint16_t mPort;
+	const uint32_t mMaxConnections;
+	const uint32_t mMaxBufferSize;
 
 	ServerConfiguration mConfiguration;
 

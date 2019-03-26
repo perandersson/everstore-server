@@ -4,7 +4,7 @@
 #include "../es_config.h"
 #include "../Event.h"
 #include "../Memory/ByteBuffer.h"
-#include "TransactionId.h"
+#include "TransactionID.h"
 
 typedef bit_mask transaction_types;
 
@@ -18,7 +18,7 @@ const bit_mask NEW_JOURNAL_TRANSACTION_TYPE_BIT = BIT(0);
 
 struct Transaction {
 
-	Transaction(const TransactionId id, Journal* journal);
+	Transaction(TransactionID id, Journal* journal);
 
 	~Transaction();
 
@@ -26,7 +26,7 @@ struct Transaction {
 	void save(IntrusiveBytesString events);
 
 	// Retrieves the transaction id
-	inline const TransactionId id() const { return mId; }
+	inline const TransactionID id() const { return mId; }
 
 	// Check if this transaction conflicts with any of the supplied types
 	bool conflictsWith(transaction_types types) const;
@@ -41,7 +41,7 @@ struct Transaction {
 	inline bool createJournal() const { return mJournalSize == 0; }
 
 private:
-	const TransactionId mId;
+	const TransactionID mId;
 	Journal* mJournal;
 	uint32_t mJournalSize;
 	transaction_types mTransactionTypesBeforeCommit;

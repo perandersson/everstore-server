@@ -12,7 +12,7 @@ struct ActiveSocket {
 
 struct IpcHost {
 
-	IpcHost(const string& rootDir, const string& configFileName, uint32_t numWorkers);
+	IpcHost(const string& rootDir, const string& configFileName, uint32_t maxBufferSize);
 
 	~IpcHost();
 
@@ -23,7 +23,7 @@ struct IpcHost {
 	ESErrorCode send(const ESHeader* header);
 
 	// Send a message to a specific child process
-	ESErrorCode send(const ChildProcessId childProcessId, const ByteBuffer* bytes);
+	ESErrorCode send(const ChildProcessID childProcessId, const ByteBuffer* bytes);
 
 	// Add a new worker managed by this host
 	ESErrorCode addWorker();
@@ -44,18 +44,33 @@ struct IpcHost {
 	void error(ESErrorCode err);
 
 	// Retrieves a child-process id based on a string with a given length
-	const ChildProcessId workerId(const char* str, uint32_t length) const;
+	ChildProcessID workerId(const char* str, uint32_t length) const;
 
 private:
 	// Try to restart the IPC client
-	ESErrorCode tryRestartWorker(const ChildProcessId id);
+	ESErrorCode tryRestartWorker(ChildProcessID id);
+
+	// Create a new process instance
+	IpcChildProcess* createProcess();
+
+	// Check to see if the supplied worker exists
+	bool workerExists(ChildProcessID id);
+
+	// Wait and close all processes managed by this instance
+	void waitAndClose();
+
+	// Send a message over the IPC pipe
+	ESErrorCode sendToAll(const ESHeader* header);
+
+	// Send a message over the IPC pipe
+	ESErrorCode sendToAll(const ByteBuffer* bytes);
 
 private:
 	const string mRootDir;
 	const string mConfigFileName;
-	uint32_t mNumWorkers;
+	const uint32_t mMaxBufferSize;
 
-	IpcChildProcesses mProcesses;
+	vector<IpcChildProcess*> mProcesses;
 	vector<ActiveSocket> mActiveSockets;
 };
 

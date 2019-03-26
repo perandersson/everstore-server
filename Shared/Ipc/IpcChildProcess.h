@@ -4,9 +4,10 @@
 #include "../ESErrorCodes.h"
 #include "IpcChild.h"
 
-struct IpcChildProcess {
-
-	IpcChildProcess(const ChildProcessId id);
+class IpcChildProcess
+{
+public:
+	IpcChildProcess(ChildProcessID id, uint32_t maxBufferSize);
 
 	virtual ~IpcChildProcess();
 
@@ -24,32 +25,13 @@ struct IpcChildProcess {
 
 	inline IpcChild& child() { return mChild; }
 
-	inline const ChildProcessId id() { return mChild.id(); }
+	inline ChildProcessID id() const { return mChild.id(); }
 
 	inline process_t* handle() { return mChild.process(); }
 
 private:
-
-	// The client
 	IpcChild mChild;
-};
-
-struct IpcChildProcesses : vector<IpcChildProcess*> {
-	IpcChildProcesses();
-
-	~IpcChildProcesses();
-
-	// Create a new process instance
-	IpcChildProcess* createProcess();
-
-	// Check to see if the supplied worker exists
-	bool workerExists(const ChildProcessId id);
-
-	// Wait and close all processes managed by this instance
-	void waitAndClose();
-
-	// Retrieves child process based on the worker ID
-	IpcChildProcess* get(const ChildProcessId id);
+	const uint32_t mMaxBufferSize;
 };
 
 #endif

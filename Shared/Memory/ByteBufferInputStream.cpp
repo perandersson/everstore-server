@@ -11,10 +11,6 @@ ByteBufferInputStream::ByteBufferInputStream(ByteBuffer* buffer) {
 	assert(mEnd != nullptr);
 }
 
-ByteBufferInputStream::~ByteBufferInputStream() {
-
-}
-
 int32_t ByteBufferInputStream::lastIndexOf(char c) {
 	while (mEnd != mStart) {
 		if (*mEnd-- == c) {

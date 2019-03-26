@@ -1,8 +1,9 @@
 #include "StoreServer.h"
 
-
-StoreServer::StoreServer(uint16_t port, uint32_t maxConnections, IpcHost* host, Authenticator* authenticator)
-: mPort(port), mMaxConnections(maxConnections), mServerSocket(INVALID_SOCKET), mIpcHost(host), mAuthenticator(authenticator) {
+StoreServer::StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host, 
+	Authenticator* authenticator)
+: mPort(port), mMaxConnections(maxConnections), mMaxBufferSize(maxBufferSize), mServerSocket(INVALID_SOCKET), mIpcHost(host), 
+mAuthenticator(authenticator) {
 	// Prepare socket configuration
 	memset(&mAddr, 0, sizeof(sockaddr_in));
 	mAddr.sin_family = AF_INET;
@@ -23,7 +24,7 @@ StoreServer::~StoreServer() {
 }
 
 ESErrorCode StoreServer::listen() {
-	mServerSocket = socket_create_blocking();
+	mServerSocket = socket_create_blocking(mMaxBufferSize);
 	if (mServerSocket == INVALID_SOCKET)
 		return ESERR_SOCKET_CONFIGURE;
 
@@ -43,7 +44,7 @@ ESErrorCode StoreServer::listen() {
 }
 
 ESErrorCode StoreServer::acceptClient() {
-	SOCKET socket = socket_accept_blocking(mServerSocket);
+	SOCKET socket = socket_accept_blocking(mServerSocket, mMaxBufferSize);
 	if (socket == INVALID_SOCKET) {
 		return ESERR_SOCKET_CONFIGURE;
 	}
@@ -63,7 +64,7 @@ ESErrorCode StoreServer::acceptClient() {
 	// Garbage collect any running client processes
 	mClients.removeClosedClients();
 
-	StoreClient* client = new StoreClient(socket, mIpcHost);
+	StoreClient* client = new StoreClient(socket, mIpcHost, mMaxBufferSize);
 	err = mIpcHost->onClientConnected(socket, client->clientLock());
 	if (isError(err)) {
 		socket_close(socket);

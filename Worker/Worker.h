@@ -8,7 +8,7 @@
 class Worker
 {
 public:
-	Worker(ChildProcessId childProcessId, const Config& config);
+	Worker(ChildProcessID childProcessId, const Config& config);
 
 	~Worker();
 
@@ -68,7 +68,7 @@ private:
 	ESErrorCode readAndValidatePath(uint32_t length, ByteBuffer* memory, _OUT string* s);
 
 	// Retrieves this child's unique id
-	inline const ChildProcessId id() const { return mIpcChild.id(); }
+	inline const ChildProcessID id() const { return mIpcChild.id(); }
 
 	inline process_t* process() { return mIpcChild.process(); }
 

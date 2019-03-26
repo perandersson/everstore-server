@@ -17,11 +17,11 @@ FileOutputStream::~FileOutputStream() {
 }
 
 uint32_t FileOutputStream::writeEvents(const Timestamp* t, IntrusiveBytesString events) {
-	const uint32_t offset = Timestamp::BYTES_LENGTH + FileUtils::SPACE_SIZE;
+	const uint32_t offset = Timestamp::BytesLength + FileUtils::SPACE_SIZE;
 
 	char tmp[1024];
-	strncpy(tmp, t->value, Timestamp::BYTES_LENGTH);
-	tmp[Timestamp::BYTES_LENGTH] = FileUtils::SPACE;
+	strncpy(tmp, t->value, Timestamp::BytesLength);
+	tmp[Timestamp::BytesLength] = FileUtils::SPACE;
 
 	uint32_t newLines = 0;
 	uint32_t writeLen = offset;
