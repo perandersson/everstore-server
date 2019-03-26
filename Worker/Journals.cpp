@@ -1,9 +1,9 @@
 #include "Journals.h"
 
 
-Journals::Journals(ChildProcessId childProcessId, uint32_t maxJournalLifeTime) 
-: mChildProcessId(childProcessId), mMaxJournalLifeTime(maxJournalLifeTime),
-mJournalsToBeRemoved(offsetof(Journal, link)) {
+Journals::Journals(ChildProcessId childProcessId, uint32_t maxJournalLifeTime)
+		: mChildProcessId(childProcessId), mMaxJournalLifeTime(maxJournalLifeTime),
+		  mJournalsToBeRemoved(offsetof(Journal, link)) {
 	mTimeSinceLastGC = chrono::system_clock::now();
 }
 
@@ -12,15 +12,14 @@ Journals::~Journals() {
 }
 
 Journal* Journals::getOrCreate(const string& name) {
-	auto it = find(name);
+	auto it = mJournals.find(name);
 	Journal* journal = nullptr;
-	if (it == end()) {
+	if (it == mJournals.end()) {
 		journal = new Journal(name, mChildProcessId);
-		insert(make_pair(name, journal));
+		mJournals.insert(make_pair(name, journal));
 		mJournalsToBeRemoved.addLast(journal);
 		gc();
-	}
-	else {
+	} else {
 		journal = it->second;
 		mJournalsToBeRemoved.moveToLast(journal);
 	}
@@ -29,8 +28,8 @@ Journal* Journals::getOrCreate(const string& name) {
 }
 
 Journal* Journals::getOrNull(const string& name) {
-	auto it = find(name);
-	if (it == end()) return nullptr;
+	auto it = mJournals.find(name);
+	if (it == mJournals.end()) return nullptr;
 
 	auto journal = it->second;
 	journal->refresh();
@@ -55,8 +54,8 @@ void Journals::gc() {
 		if (duration < mMaxJournalLifeTime)
 			break;
 
-		auto it = find(journal->name());
-		erase(it);
+		auto it = mJournals.find(journal->name());
+		mJournals.erase(it);
 		delete journal;
 		journal = next;
 	}

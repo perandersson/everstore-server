@@ -5,9 +5,9 @@
 #include "Journals.h"
 #include "AttachedSockets.h"
 
-struct Worker
+class Worker
 {
-
+public:
 	Worker(ChildProcessId childProcessId, const Config& config);
 
 	~Worker();

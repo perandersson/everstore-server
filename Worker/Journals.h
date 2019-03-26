@@ -5,8 +5,9 @@
 
 //
 // Map managing any open journals
-struct Journals : unordered_map<string, Journal*> {
-
+class Journals
+{
+public:
 	Journals(ChildProcessId childProcessId, uint32_t maxJournalLifeTime);
 
 	~Journals();
@@ -23,12 +24,14 @@ struct Journals : unordered_map<string, Journal*> {
 	void gc();
 
 private:
-	ChildProcessId mChildProcessId;
-	uint32_t mMaxJournalLifeTime;
+	const ChildProcessId mChildProcessId;
+	const uint32_t mMaxJournalLifeTime;
+	unordered_map<string, Journal*> mJournals;
 
 	// GC
 	LinkedList<Journal> mJournalsToBeRemoved;
 	chrono::system_clock::time_point mTimeSinceLastGC;
+
 };
 
 #endif
