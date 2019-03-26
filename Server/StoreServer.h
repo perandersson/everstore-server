@@ -3,7 +3,7 @@
 
 #include "../Shared/everstore.h"
 #include "StoreClient.h"
-#include "Authenticator.h"
+#include "Auth/Authenticator.h"
 
 enum Endian : uint8_t {
 	ES_LITTLE_ENDIAN = 0,

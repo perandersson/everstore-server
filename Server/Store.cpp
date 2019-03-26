@@ -1,4 +1,5 @@
 #include "Store.h"
+#include "Auth/FixedUserAuthenticator.hpp"
 
 Store::Store(const Properties& props) : mProperties(props), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
 	mRunning.store(true, memory_order_relaxed);
@@ -73,7 +74,7 @@ ESErrorCode Store::initialize() {
 		return err;
 
 	// Create a new authenticator
-	mAuthenticator = new Authenticator();
+	mAuthenticator = new FixedUserAuthenticator(string("admin"), string("passwd"));
 
 	// Create host
 	mHost = new IpcHost(mProperties.rootDir, mProperties.configFilename, mProperties.numWorkers);
