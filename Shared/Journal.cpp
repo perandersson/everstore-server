@@ -89,7 +89,7 @@ bool Journal::performConsistencyCheck() {
 	if (exists() && mFileLock.exists()) {
 		
 		// Open and read the journal file into memory
-		Bytes buffer(mJournalSize);
+		ByteBuffer buffer(mJournalSize);
 		ESErrorCode err = AutoClosable<FileInputStream>(inputStream(0))->readBytes(&buffer);
 		if (err != ESERR_NO_ERROR) return false;
 

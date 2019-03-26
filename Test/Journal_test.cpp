@@ -53,7 +53,7 @@ TEST_SUITE(Journal) {
 		const string expectedJournal("test-resources/journals/persistenceCheckOkForValidJournal_expected.log");
 		manuallyReadJournal(unitTest, expectedJournal, temp, &tempSize);
 
-		Bytes bb(1024);
+		ByteBuffer bb(1024);
 		AutoClosable<FileInputStream>(j.inputStream(0))->readBytes(&bb);
 		const char* ptr = bb.ptr();
 		
@@ -83,7 +83,7 @@ TEST_SUITE(Journal) {
 		const string expectedJournal("test-resources/journals/persistenceCheckOkForJournal1_expected.log");
 		manuallyReadJournal(unitTest, expectedJournal, temp, &tempSize);
 
-		Bytes bb(1024);
+		ByteBuffer bb(1024);
 		AutoClosable<FileInputStream>(j.inputStream(0))->readBytes(&bb);
 		const char* ptr = bb.ptr();
 
@@ -113,7 +113,7 @@ TEST_SUITE(Journal) {
 		const string expectedJournal("test-resources/journals/persistenceCheckOkForJournal2_expected.log");
 		manuallyReadJournal(unitTest, expectedJournal, temp, &tempSize);
 
-		Bytes bb(1024);
+		ByteBuffer bb(1024);
 		AutoClosable<FileInputStream>(j.inputStream(0))->readBytes(&bb);
 		const char* ptr = bb.ptr();
 

@@ -5,11 +5,11 @@
 
 //
 // Structure representing raw memory
-struct Bytes {
+struct ByteBuffer {
 
-	Bytes(uint32_t initialSize);
+	ByteBuffer(uint32_t initialSize);
 
-	~Bytes();
+	~ByteBuffer();
 
 	void moveForward(uint32_t offset);
 
@@ -81,7 +81,7 @@ private:
 };
 
 //
-// Intrusive string directly connected to it's associated Bytes.
+// Intrusive string directly connected to it's associated ByteBuffer.
 //
 // \remark This might become invalidated when the associated ByteBuffer is resetted.
 //
@@ -89,7 +89,7 @@ struct IntrusiveBytesString {
 	uint32_t length; // The length of the string.
 	const char* str; // A pointer to the first character in the string. The string itself might not end with NULL.
 
-	IntrusiveBytesString(uint32_t length, Bytes* b) : length(length), str(b->get(length)) {}
+	IntrusiveBytesString(uint32_t length, ByteBuffer* b) : length(length), str(b->get(length)) {}
 	~IntrusiveBytesString() {}
 };
 

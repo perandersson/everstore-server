@@ -29,7 +29,7 @@ ESErrorCode StoreClient::start() {
 
 void StoreClient::run() {
 	// Memory for this client
-	Bytes memory(DEFAULT_MAX_DATA_SEND_SIZE);
+	ByteBuffer memory(DEFAULT_MAX_DATA_SEND_SIZE);
 
 	//ByteBuffer byteBuffer;
 	ESErrorCode err = ESERR_NO_ERROR;
@@ -79,7 +79,7 @@ void StoreClient::run() {
 	}
 }
 
-ESErrorCode StoreClient::handleRequest(const ESHeader* header, Bytes* bytes) {
+ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes) {
 	ESErrorCode err = ESERR_REQUEST_TYPE_UNKNOWN;
 	if (header->type == REQ_NEW_TRANSACTION) {
 		// Memorize and reset the memory block
@@ -121,7 +121,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, Bytes* bytes) {
 	return err;
 }
 
-ESHeader* StoreClient::loadHeaderFromClient(Bytes* memory) {
+ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 	assert(mClientSocket != INVALID_SOCKET);
 	assert(memory != nullptr);
 
@@ -150,7 +150,7 @@ ESHeader* StoreClient::loadHeaderFromClient(Bytes* memory) {
 	return header;
 }
 
-ESErrorCode StoreClient::sendBytesToClient(const Bytes* memory) {
+ESErrorCode StoreClient::sendBytesToClient(const ByteBuffer* memory) {
 	assert(mClientSocket != INVALID_SOCKET);
 	assert(memory != nullptr);
 

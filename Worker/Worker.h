@@ -35,37 +35,37 @@ private:
 
 	ESErrorCode handleHostMessage(const ESHeader* header);
 
-	ESErrorCode handleMessage(ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+	ESErrorCode handleMessage(ESHeader* header, const AttachedConnection* socket, ByteBuffer* memory);
 
 	ESErrorCode newConnection(const ESHeader* header);
 
 	ESErrorCode closeConnection(const ESHeader* header);
 
-	ESErrorCode newTransaction(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+	ESErrorCode newTransaction(const ESHeader* header, const AttachedConnection* socket, ByteBuffer* memory);
 
-	ESErrorCode commitTransaction(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+	ESErrorCode commitTransaction(const ESHeader* header, const AttachedConnection* socket, ByteBuffer* memory);
 
-	ESErrorCode rollbackTransaction(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+	ESErrorCode rollbackTransaction(const ESHeader* header, const AttachedConnection* socket, ByteBuffer* memory);
 
-	ESErrorCode readJournal(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+	ESErrorCode readJournal(const ESHeader* header, const AttachedConnection* socket, ByteBuffer* memory);
 
-	ESErrorCode checkIfJournalExists(const ESHeader* header, const AttachedConnection* socket, Bytes* memory);
+	ESErrorCode checkIfJournalExists(const ESHeader* header, const AttachedConnection* socket, ByteBuffer* memory);
 
 	// Read and send the journal as multiple responses
 	ESErrorCode readJournalParts(const AttachedConnection* socket, uint32_t requestUID,
-	                             bool includeTimestamp, FileInputStream* stream, Bytes* memory);
+	                             bool includeTimestamp, FileInputStream* stream, ByteBuffer* memory);
 
 	// Convert the types into transaction types
 	bit_mask transactionTypes(vector<string>& types);
 
 	// Load the next header form host application - with the associated request data
-	ESHeader* loadHeaderFromHost(Bytes* memory);
+	ESHeader* loadHeaderFromHost(ByteBuffer* memory);
 
 	// Send the supplied memory block to the client.
-	ESErrorCode sendBytesToClient(const AttachedConnection* connection, const Bytes* memory);
+	ESErrorCode sendBytesToClient(const AttachedConnection* connection, const ByteBuffer* memory);
 
 	// Load a path from the bytes block
-	ESErrorCode readAndValidatePath(const uint32_t length, Bytes* memory, _OUT string* s);
+	ESErrorCode readAndValidatePath(const uint32_t length, ByteBuffer* memory, _OUT string* s);
 
 	// Retrieves this child's unique id
 	inline const ChildProcessId id() const { return mIpcChild.id(); }

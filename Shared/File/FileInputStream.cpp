@@ -20,7 +20,7 @@ FileInputStream::~FileInputStream() {
 	}
 }
 
-ESErrorCode FileInputStream::readBytes(Bytes* memory, uint32_t size) {
+ESErrorCode FileInputStream::readBytes(ByteBuffer* memory, uint32_t size) {
 	assert(memory != nullptr);
 	assert(mFile != nullptr);
 	if (size == 0) return ESERR_NO_ERROR;
@@ -34,7 +34,7 @@ ESErrorCode FileInputStream::readBytes(Bytes* memory, uint32_t size) {
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode FileInputStream::readJournalBytes(Bytes* memory, uint32_t size, uint32_t* journalDataSize) {
+ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size, uint32_t* journalDataSize) {
 	assert(memory != nullptr);
 	assert(mFile != nullptr);
 	assert(journalDataSize != nullptr);

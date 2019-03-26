@@ -29,13 +29,13 @@ private:
 
 	//
 	// Handle a request that must be handled by this store client
-	ESErrorCode handleRequest(const ESHeader* header, Bytes* memory);
+	ESErrorCode handleRequest(const ESHeader* header, ByteBuffer* memory);
 
 	// Load the next header form the stream - with the associated request data
-	ESHeader* loadHeaderFromClient(Bytes* memory);
+	ESHeader* loadHeaderFromClient(ByteBuffer* memory);
 
 	// Send the supplied memory block to the client.
-	ESErrorCode sendBytesToClient(const Bytes* memory);
+	ESErrorCode sendBytesToClient(const ByteBuffer* memory);
 
 private:
 	SOCKET mClientSocket;

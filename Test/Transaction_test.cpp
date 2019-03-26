@@ -20,7 +20,7 @@ TEST_SUITE(Transaction) {
 		assertEquals(0U, transaction.value);
 
 		const string data("data123");
-		Bytes bytes(32);
+		ByteBuffer bytes(32);
 		memcpy(bytes.get(data.length()), data.c_str(), data.length());
 		bytes.reset();
 		IntrusiveBytesString events(data.length(), &bytes);

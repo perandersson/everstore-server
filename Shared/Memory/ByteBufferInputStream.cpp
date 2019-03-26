@@ -1,6 +1,6 @@
 #include "ByteBufferInputStream.h"
 
-ByteBufferInputStream::ByteBufferInputStream(Bytes* buffer) {
+ByteBufferInputStream::ByteBufferInputStream(ByteBuffer* buffer) {
 	mStart = buffer->ptr();
 	buffer->memorize();
 	buffer->moveFromEnd(0);

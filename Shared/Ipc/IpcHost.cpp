@@ -44,7 +44,7 @@ ESErrorCode IpcHost::send(const ESHeader* message) {
 	return err;
 }
 
-ESErrorCode IpcHost::send(const ChildProcessId childProcessId, const Bytes* bytes) {
+ESErrorCode IpcHost::send(const ChildProcessId childProcessId, const ByteBuffer* bytes) {
 	assert(bytes != nullptr);
 
 	if (!mProcesses.workerExists(childProcessId))

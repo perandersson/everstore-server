@@ -7,7 +7,7 @@
 
 #include "../es_config.h"
 #include "../Event.h"
-#include "../Memory/Bytes.h"
+#include "../Memory/ByteBuffer.h"
 
 
 struct FileOutputStream {

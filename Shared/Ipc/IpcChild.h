@@ -2,7 +2,7 @@
 #define _EVERSTORE_IPC_CHILD_H_
 
 #include "../ESHeader.h"
-#include "../Memory/Bytes.h"
+#include "../Memory/ByteBuffer.h"
 #include "../Process.h"
 #include "../ChildProcessId.h"
 
@@ -18,7 +18,7 @@ struct IpcChild {
 	ESErrorCode sendTo(const ESHeader* header);
 	
 	// Send a message over the IPC pipe
-	ESErrorCode sendTo(const Bytes* bytes);
+	ESErrorCode sendTo(const ByteBuffer* bytes);
 
 	// Retrieves this child's unique id
 	inline const ChildProcessId id() const { return mId; }

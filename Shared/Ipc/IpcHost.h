@@ -23,7 +23,7 @@ struct IpcHost {
 	ESErrorCode send(const ESHeader* header);
 
 	// Send a message to a specific child process
-	ESErrorCode send(const ChildProcessId childProcessId, const Bytes* bytes);
+	ESErrorCode send(const ChildProcessId childProcessId, const ByteBuffer* bytes);
 
 	// Add a new worker managed by this host
 	ESErrorCode addWorker();

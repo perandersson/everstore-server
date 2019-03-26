@@ -1,11 +1,12 @@
 #ifndef _EVERSTORE_BYTE_BUFFER_INPUT_STREAM_H_
 #define _EVERSTORE_BYTE_BUFFER_INPUT_STREAM_H_
 
-#include "Bytes.h"
+#include "ByteBuffer.h"
 
-struct ByteBufferInputStream {
-
-	ByteBufferInputStream(Bytes* buffer);
+class ByteBufferInputStream
+{
+public:
+	explicit ByteBufferInputStream(ByteBuffer* buffer);
 
 	~ByteBufferInputStream();
 

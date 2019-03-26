@@ -7,7 +7,7 @@
 #include "ESHeader.h"
 #include "Properties.h"
 #include "File/FileLock.h"
-#include "Memory/Bytes.h"
+#include "Memory/ByteBuffer.h"
 #include "Messages.h"
 #include "Journal.h"
 #include "AutoClosable.h"

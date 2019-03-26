@@ -3,7 +3,7 @@
 
 #include "es_config.h"
 #include "Event.h"
-#include "Memory/Bytes.h"
+#include "Memory/ByteBuffer.h"
 #include "TransactionId.h"
 
 typedef bit_mask transaction_types;

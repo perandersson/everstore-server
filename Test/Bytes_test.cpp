@@ -5,14 +5,14 @@ TEST_SUITE(Bytes) {
 
 	UNIT_TEST(bytesCapacity) {
 		const auto BYTES_INIT_SIZE = 1234U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		assertEquals(BYTES_INIT_SIZE, bytes.capacity());
 	}
 
 	UNIT_TEST(bytesEnsureCapacityNoResize) {
 		const auto BYTES_INIT_SIZE = 10U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		assertEquals(BYTES_INIT_SIZE, bytes.capacity());
 
@@ -23,7 +23,7 @@ TEST_SUITE(Bytes) {
 
 	UNIT_TEST(bytesEnsureCapacityResize) {
 		const auto BYTES_INIT_SIZE = 10U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		assertEquals(BYTES_INIT_SIZE, bytes.capacity());
 
@@ -34,7 +34,7 @@ TEST_SUITE(Bytes) {
 
 	UNIT_TEST(bytesMoveForwardNonClamped) {
 		const auto BYTES_INIT_SIZE = 10U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		bytes.moveForward(2U);
 
@@ -43,7 +43,7 @@ TEST_SUITE(Bytes) {
 
 	UNIT_TEST(bytesMoveForwardClamped) {
 		const auto BYTES_INIT_SIZE = 10U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		bytes.moveForward(12U);
 
@@ -52,7 +52,7 @@ TEST_SUITE(Bytes) {
 
 	UNIT_TEST(bytesMoveBackwardsNoClamped) {
 		const auto BYTES_INIT_SIZE = 10U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		bytes.moveForward(5U);
 		bytes.moveBackwards(2U);
@@ -62,7 +62,7 @@ TEST_SUITE(Bytes) {
 
 	UNIT_TEST(bytesMoveBackwardsClamped) {
 		const auto BYTES_INIT_SIZE = 10U;
-		Bytes bytes(BYTES_INIT_SIZE);
+		ByteBuffer bytes(BYTES_INIT_SIZE);
 
 		bytes.moveForward(5U);
 		bytes.moveBackwards(6U);

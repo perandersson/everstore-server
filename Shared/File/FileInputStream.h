@@ -7,7 +7,7 @@
 
 #include "../es_config.h"
 #include "../ESErrorCodes.h"
-#include "../Memory/Bytes.h"
+#include "../Memory/ByteBuffer.h"
 #include "../Properties.h"
 
 struct FileInputStream {
@@ -17,15 +17,15 @@ struct FileInputStream {
 	~FileInputStream();
 
 	// Read the entire bytes into the supplied memory
-	inline ESErrorCode readBytes(Bytes* memory) {
+	inline ESErrorCode readBytes(ByteBuffer* memory) {
 		return readBytes(memory, mFileSize);
 	}
 
 	// Read the amount of bytes from this file stream. The requested size will be clamped to the file size.
-	ESErrorCode readBytes(Bytes* memory, uint32_t size);
+	ESErrorCode readBytes(ByteBuffer* memory, uint32_t size);
 
 	// Read the journal-specific bytes from this file stream. The actual size will be clamped to the file size.
-	ESErrorCode readJournalBytes(Bytes* memory, uint32_t size, _OUT uint32_t* journalDataSize);
+	ESErrorCode readJournalBytes(ByteBuffer* memory, uint32_t size, _OUT uint32_t* journalDataSize);
 
 	// Close the input stream
 	void close();

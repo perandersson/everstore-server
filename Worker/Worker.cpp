@@ -24,7 +24,7 @@ ESErrorCode Worker::start() {
 	mRunning.store(true, memory_order_relaxed);
 
 	// Memory for this worker
-	Bytes memory(DEFAULT_MAX_DATA_SEND_SIZE);
+	ByteBuffer memory(DEFAULT_MAX_DATA_SEND_SIZE);
 
 	//ByteBuffer buffer;
 	while (mRunning.load() && !isErrorCodeFatal(err)) {
@@ -108,7 +108,7 @@ void Worker::error(ESErrorCode err) {
 	printf("%02d [ERROR]: %s\n", mIpcChild.id().value, parseErrorCode(err));
 }
 
-ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, const Bytes* memory) {
+ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, const ByteBuffer* memory) {
 	assert(connection != nullptr);
 	assert(memory != nullptr);
 
@@ -197,7 +197,7 @@ ESErrorCode Worker::handleHostMessage(const ESHeader* header) {
 	}
 }
 
-ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	ESErrorCode err = ESERR_NO_ERROR;
 	switch (header->type) {
 		case REQ_NEW_TRANSACTION:
@@ -240,7 +240,7 @@ ESErrorCode Worker::closeConnection(const ESHeader* header) {
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -267,7 +267,7 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	return sendBytesToClient(connection, memory);
 }
 
-ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -325,7 +325,7 @@ ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConn
 	return sendBytesToClient(connection, memory);
 }
 
-ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -358,7 +358,7 @@ ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedCo
 const uint32_t BYTES_LEFT_AFTER_HEADERS =
 		DEFAULT_MAX_DATA_SEND_SIZE - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
 
-ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -420,7 +420,7 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 }
 
 ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint32_t requestUID, bool includeTimestamp,
-                                     FileInputStream* stream, Bytes* memory) {
+                                     FileInputStream* stream, ByteBuffer* memory) {
 	assert(connection != nullptr);
 	assert(memory != nullptr);
 
@@ -459,7 +459,7 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection, Bytes* memory) {
+ESErrorCode Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -501,7 +501,7 @@ bit_mask Worker::transactionTypes(vector<string>& types) {
 	return transactionType;
 }
 
-ESHeader* Worker::loadHeaderFromHost(Bytes* memory) {
+ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 	assert(memory != nullptr);
 
 	// Reset the position of the memory
@@ -537,7 +537,7 @@ ESHeader* Worker::loadHeaderFromHost(Bytes* memory) {
 
 //
 // Read a path from the memory buffer. Dots are not allowed in a path name
-ESErrorCode Worker::readAndValidatePath(const uint32_t length, Bytes* memory, _OUT string* s) {
+ESErrorCode Worker::readAndValidatePath(const uint32_t length, ByteBuffer* memory, _OUT string* s) {
 	// Validate path length
 	if (length < 2 || length > 1024) {
 		*s = string();

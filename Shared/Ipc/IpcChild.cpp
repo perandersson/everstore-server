@@ -21,7 +21,7 @@ ESErrorCode IpcChild::sendTo(const ESHeader* header) {
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode IpcChild::sendTo(const Bytes* bytes) {
+ESErrorCode IpcChild::sendTo(const ByteBuffer* bytes) {
 	assert(bytes != nullptr);
 
 	// The offset of the memory represents the size of the memory
