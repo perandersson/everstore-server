@@ -2,7 +2,7 @@
 #define _EVERSTORE_EVENT_H_
 
 #include "es_config.h"
-#include "Timestamp.h"
+#include "Database/Timestamp.h"
 #include "File/FileUtils.h"
 
 struct Event {

@@ -1,8 +1,8 @@
 #ifndef _EVERSTORE_MESSAGES_H_
 #define _EVERSTORE_MESSAGES_H_
 
-#include "ESHeader.h"
-#include "TransactionId.h"
+#include "Message/ESHeader.h"
+#include "Database/TransactionId.h"
 
 struct Authentication {
 	static const ESRequestType TYPE = REQ_AUTHENTICATE;

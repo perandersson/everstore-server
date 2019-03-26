@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_TIMESTAMP_H_
 #define _EVERSTORE_TIMESTAMP_H_
 
-#include "es_config.h"
+#include "../es_config.h"
 
 //
 // Object representing a timestamp

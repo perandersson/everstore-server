@@ -2,7 +2,7 @@
 #include <sys/un.h>
 // This line is neccessary for GNUGCC to work
 #include "../Socket.h"
-#include "../ESHeader.h"
+#include "../Message/ESHeader.h"
 #include "GCCMutex.h"
 
 string PIPE_NAME_PREFIX = "everstore_pipe_child";

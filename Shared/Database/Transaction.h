@@ -1,9 +1,9 @@
 #ifndef _EVERSTORE_TRANSACTION_H_
 #define _EVERSTORE_TRANSACTION_H_
 
-#include "es_config.h"
-#include "Event.h"
-#include "Memory/ByteBuffer.h"
+#include "../es_config.h"
+#include "../Event.h"
+#include "../Memory/ByteBuffer.h"
 #include "TransactionId.h"
 
 typedef bit_mask transaction_types;

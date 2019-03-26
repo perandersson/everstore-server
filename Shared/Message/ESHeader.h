@@ -1,10 +1,10 @@
 #ifndef _EVERSTORE_HEADER_H_
 #define _EVERSTORE_HEADER_H_
 
-#include "es_config.h"
+#include "../es_config.h"
 #include "ESRequestType.h"
-#include "Socket.h"
-#include "ChildProcessId.h"
+#include "../Socket.h"
+#include "../Ipc/ChildProcessId.h"
 
 typedef uint32_t ESHeaderProperties;
 

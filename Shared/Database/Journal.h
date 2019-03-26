@@ -1,14 +1,14 @@
 #ifndef _EVERSTORE_JOURNAL_H_
 #define _EVERSTORE_JOURNAL_H_
 
-#include "es_config.h"
-#include "ESHeader.h"
-#include "File/FileLock.h"
+#include "../es_config.h"
+#include "../Message/ESHeader.h"
+#include "../File/FileLock.h"
 #include "Transaction.h"
-#include "LinkedList.h"
-#include "File/FileInputStream.h"
-#include "File/FileOutputStream.h"
-#include "ChildProcessId.h"
+#include "../LinkedList.h"
+#include "../File/FileInputStream.h"
+#include "../File/FileOutputStream.h"
+#include "../Ipc/ChildProcessId.h"
 
 static const char JOURNAL_EOF = 0; // Use NULL as EOF marker
 static const uint32_t JOURNAL_EOF_LEN = 1;

@@ -1,10 +1,10 @@
 #ifndef _EVERSTORE_IPC_CHILD_H_
 #define _EVERSTORE_IPC_CHILD_H_
 
-#include "../ESHeader.h"
+#include "../Message/ESHeader.h"
 #include "../Memory/ByteBuffer.h"
 #include "../Process.h"
-#include "../ChildProcessId.h"
+#include "ChildProcessId.h"
 
 struct IpcChild {
 

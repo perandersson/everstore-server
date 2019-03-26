@@ -1,7 +1,7 @@
 #ifndef _TRANSACTION_ID_H_
 #define _TRANSACTION_ID_H_
 
-#include "es_config.h"
+#include "../es_config.h"
 
 //
 struct TransactionId {

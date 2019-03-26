@@ -2,7 +2,7 @@
 #include "Win32Socket.h"
 #include "Win32Mutex.h"
 #include "../Socket.h"
-#include "../ESHeader.h"
+#include "../Message/ESHeader.h"
 
 string PIPE_NAME_PREFIX = "\\\\.\\pipe\\everstore";
 const uint32_t PIPE_BUFFER_SIZE_1MB = 1024 * 1024;

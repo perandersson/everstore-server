@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_PROTOCOL_H_
 #define _EVERSTORE_PROTOCOL_H_
 
-#include "es_config.h"
+#include "../es_config.h"
 
 enum ESRequestType : uint32_t  {
 	REQ_INVALID = 0,

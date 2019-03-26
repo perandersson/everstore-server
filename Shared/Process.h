@@ -6,7 +6,7 @@
 #else
 #include "gcc/GCCProcess.h"
 #endif
-#include "ESHeader.h"
+#include "Message/ESHeader.h"
 #include "Mutex.h"
 
 // Prefix for the named pipe

@@ -1,8 +1,8 @@
 #ifndef _CHILD_PROCESS_ID_H_
 #define _CHILD_PROCESS_ID_H_
 
-#include "es_config.h"
-#include "StringUtils.h"
+#include "../es_config.h"
+#include "../StringUtils.h"
 
 //
 struct ChildProcessId {
