@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, handleSingal);
 
 	if (argc != 3) {
-		printf("Expected: everstore-worker <idx> <configPath>\n");
+		printf("Expected: everstore_worker <idx> <configPath>\n");
 		return 1;
 	}
 

@@ -79,7 +79,7 @@ ESErrorCode IpcHost::addWorker() {
 			process->id().toString(),
 			string("\"") + mConfigFileName + string("\"")
 	};
-	return process->start(string("everstore-worker"), mRootDir, arguments);
+	return process->start(string("everstore_worker"), mRootDir, arguments);
 }
 
 ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
@@ -157,7 +157,7 @@ ESErrorCode IpcHost::tryRestartWorker(ChildProcessID id) {
 			process->id().toString(),
 			string("\"") + mConfigFileName + string("\"")
 	};
-	return process->start(string("everstore-worker"), mRootDir, arguments);
+	return process->start(string("everstore_worker"), mRootDir, arguments);
 }
 
 ESErrorCode IpcHost::sendToAll(const ESHeader* header) {
