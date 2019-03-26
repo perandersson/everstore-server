@@ -1,7 +1,7 @@
 #include "Worker.h"
-#include "StringUtils.h"
-#include "Journal.h"
-#include "Transaction.h"
+#include "../Shared/StringUtils.h"
+#include "../Shared/Journal.h"
+#include "../Shared/Transaction.h"
 
 Worker::Worker(ChildProcessId childProcessId, const Properties& properties)
 : IpcChild(childProcessId), mJournals(childProcessId, properties.maxJournalLifeTime), mNextTransactionTypeBit(1), mProperties(properties) {

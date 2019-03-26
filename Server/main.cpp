@@ -1,4 +1,3 @@
-#include <everstore.h>
 #include "Store.h"
 
 Store* gEventStore;
@@ -39,7 +38,7 @@ int main(int argc, char** argv) {
 	const Properties props = Properties::readFromConfigFile(rootPath, configFileName);
 
 	gEventStore = new Store(props);
-	printf("Starting up everstore-server\n");
+	printf("Starting up Server\n");
 
 	printServerProperties(props);
 

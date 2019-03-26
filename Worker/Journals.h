@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_JOURNALS_H_
 #define _EVERSTORE_JOURNALS_H_
 
-#include <everstore.h>
+#include "../Shared/everstore.h"
 
 //
 // Map managing any open journals

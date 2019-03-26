@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_WORKER_H_
 #define _EVERSTORE_WORKER_H_
 
-#include <everstore.h>
+#include "../Shared/everstore.h"
 #include "Journals.h"
 #include "AttachedSockets.h"
 

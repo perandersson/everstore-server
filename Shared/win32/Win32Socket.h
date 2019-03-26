@@ -7,8 +7,8 @@
 #include <sys/types.h>
 #include <ws2tcpip.h>
 
-typedef int socklen_t;
-typedef long ssize_t;
+//typedef int socklen_t;
+//typedef long ssize_t;
 
 // Macro for closing the socket
 #define socket_close closesocket

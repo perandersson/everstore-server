@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_STORE_SERVER_H_
 #define _EVERSTORE_STORE_SERVER_H_
 
-#include <everstore.h>
+#include "../Shared/everstore.h"
 #include "StoreClient.h"
 #include "Authenticator.h"
 

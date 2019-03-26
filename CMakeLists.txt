@@ -1,31 +1,61 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.6)
 project(everstore)
 
 # Default configuration types
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 
-# Add configuration for MSVC builds
-IF(MSVC)
-	ADD_DEFINITIONS(/fp:fast)
-	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS=1)
-	ADD_DEFINITIONS(-Deverstore_BUILD=1)
-ELSEIF(APPLE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++11 -Wno-invalid-offsetof")
-ELSE()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -std=c++11 -Wno-invalid-offsetof")
-ENDIF()
+# Collect all server files
+file(GLOB ALL_SERVER_FILES Server/*.cpp Server/*.h Server/Auth/*.* Server/Ipc/*.*)
 
-IF(everstore_BUILD_STATIC)
-	IF(MSVC)
-		ADD_DEFINITIONS(-Deverstore_STATIC=1)
-	ENDIF()
-ENDIF()
+# Collect all shared files
+file(GLOB ALL_SHARED_FILES Shared/*.cpp Shared/*.h
+        Shared/File/*.* Shared/Memory/*.* Shared/Database/*.*
+        Shared/Ipc/*.* Shared/Message/*.* Shared/Network/*.* Shared/Log/*.*)
+if (WIN32)
+    file(GLOB ALL_OS_SHARED_FILES Shared/Win32/*.* Shared/Network/Win32/*.*)
+elseif (APPLE)
+    file(GLOB ALL_OS_SHARED_FILES Shared/Unix/*.* Shared/Network/Unix/*.*)
+else ()
+    file(GLOB ALL_OS_SHARED_FILES Shared/Unix/*.* Shared/Network/Unix/*.*)
+endif ()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
-set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
-set(LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
+# Collect all worker files
+FILE(GLOB ALL_WORKER_FILES Worker/*.cpp Worker/*.h)
 
-add_subdirectory (everstore-shared)
-add_subdirectory (everstore-shared-test)
-add_subdirectory (everstore-worker)
-add_subdirectory (everstore-server)
+# Collect all test files
+FILE(GLOB ALL_TEST_FILES Test/*.cpp Test/*.h Test/test/*.*)
+
+# Default Microsoft Windows compiler properties
+set(MSVC_DEFINITIONS "/fp:fast /W4 /D_CRT_SECURE_NO_WARNINGS /wd4201 /wd4100 /D_WIN32_WINNT=0x0602")
+set(MSVC_SPECIFIL_LIBS "legacy_stdio_definitions.lib")
+
+# Default GCC for Linux and GCC for OSX compiler properties
+set(GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11")
+set(OSX_GCC_DEFINITIONS "${GCC_DEFINITIONS} -stdlib=libc++")
+
+# Configure libs
+if (WIN32)
+    set(OS_SPECIFIC_LIBS ${MSVC_SPECIFIL_LIBS} "ws2_32")
+elseif (APPLE)
+    set(OS_SPECIFIC_LIBS "pthread" "rt")
+else ()
+    set(OS_SPECIFIC_LIBS "pthread")
+endif ()
+
+# Server executable
+add_executable(everstore_server ${ALL_SERVER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
+target_link_libraries(everstore_server ${OS_SPECIFIC_LIBS})
+set_target_properties(everstore_server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+
+# Server executable
+add_executable(everstore_worker ${ALL_WORKER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
+target_link_libraries(everstore_worker ${OS_SPECIFIC_LIBS})
+set_target_properties(everstore_worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+
+# Server tests
+add_executable(everstore_tests ${ALL_TEST_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
+target_link_libraries(everstore_tests ${OS_SPECIFIC_LIBS})
+set_target_properties(everstore_tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+
+## Copy test-resources into bin test-directory
+file(COPY Test/test-resources DESTINATION "${EXECUTABLE_OUTPUT_PATH}/")

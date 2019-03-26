@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_STORE_CLIENT_H_
 #define _EVERSTORE_STORE_CLIENT_H_
 
-#include <everstore.h>
+#include "../Shared/everstore.h"
 
 struct StoreClient {
 

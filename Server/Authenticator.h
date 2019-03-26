@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_AUTHENTICATOR_H_
 #define _EVERSTORE_AUTHENTICATOR_H_
 
-#include <everstore.h>
+#include "../Shared/everstore.h"
 
 struct Authenticator {
 

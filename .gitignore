@@ -11,3 +11,8 @@ bin/*
 Debug/*
 */Release/*
 Release/*
+build
+bin
+.idea
+cmake-build-debug
+cmake-build-release

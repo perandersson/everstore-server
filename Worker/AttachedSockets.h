@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_ATTACHED_SOCKETS_H_
 #define _EVERSTORE_ATTACHED_SOCKETS_H_
 
-#include <everstore.h>
+#include "../Shared/everstore.h"
 
 struct AttachedConnection {
 	SOCKET socket;

@@ -1,4 +1,4 @@
-#include <everstore.h>
+#include "../Shared/everstore.h"
 #include "test/Test.h"
 
 #include <regex>
