@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_IPC_CHILD_PROCESS_H_
 #define _EVERSTORE_IPC_CHILD_PROCESS_H_
 
-#include "ESErrorCodes.h"
+#include "../ESErrorCodes.h"
 #include "IpcChild.h"
 
 struct IpcChildProcess {

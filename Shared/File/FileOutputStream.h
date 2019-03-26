@@ -5,9 +5,9 @@
 #ifndef _EVERSTORE_FILE_OUTPUT_STREAM_H_
 #define _EVERSTORE_FILE_OUTPUT_STREAM_H_
 
-#include "es_config.h"
-#include "Event.h"
-#include "Bytes.h"
+#include "../es_config.h"
+#include "../Event.h"
+#include "../Memory/Bytes.h"
 
 
 struct FileOutputStream {

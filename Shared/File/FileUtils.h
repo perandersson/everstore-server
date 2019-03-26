@@ -5,8 +5,8 @@
 #ifndef EVENTSTORE_FILEUTILS_H
 #define EVENTSTORE_FILEUTILS_H
 
-#include "es_config.h"
-#include "StringUtils.h"
+#include "../es_config.h"
+#include "../StringUtils.h"
 
 using namespace std;
 

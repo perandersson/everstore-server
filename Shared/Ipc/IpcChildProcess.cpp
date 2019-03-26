@@ -1,5 +1,5 @@
 #include "IpcChildProcess.h"
-#include "StringUtils.h"
+#include "../StringUtils.h"
 
 IpcChildProcess::IpcChildProcess(const ChildProcessId id) : mChild(id) {
 	process_init(handle());

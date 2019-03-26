@@ -1,8 +1,8 @@
 #include "Journal.h"
-#include "FileUtils.h"
+#include "File/FileUtils.h"
 #include "StringUtils.h"
 #include "Transaction.h"
-#include "ByteBufferInputStream.h"
+#include "Memory/ByteBufferInputStream.h"
 #include "AutoClosable.h"
 
 OpenTransactions::OpenTransactions() {

@@ -1,6 +1,6 @@
 #include "FileInputStream.h"
 #include "FileUtils.h"
-#include "Timestamp.h"
+#include "../Timestamp.h"
 
 static const uint32_t TEMP_READ_BLOCK_SIZE = 4096;
 static const uint32_t TIMESTAMP_AND_SPACE_LEN = Timestamp::BYTES_LENGTH + 1;

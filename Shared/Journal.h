@@ -3,11 +3,11 @@
 
 #include "es_config.h"
 #include "ESHeader.h"
-#include "FileLock.h"
+#include "File/FileLock.h"
 #include "Transaction.h"
 #include "LinkedList.h"
-#include "FileInputStream.h"
-#include "FileOutputStream.h"
+#include "File/FileInputStream.h"
+#include "File/FileOutputStream.h"
 #include "ChildProcessId.h"
 
 static const char JOURNAL_EOF = 0; // Use NULL as EOF marker

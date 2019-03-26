@@ -1,7 +1,7 @@
 #include "FileOutputStream.h"
 #include "FileUtils.h"
-#include "Timestamp.h"
-#include "Journal.h"
+#include "../Timestamp.h"
+#include "../Journal.h"
 
 FileOutputStream::FileOutputStream(const string& fileName, uint32_t byteOffset) : mByteOffset(byteOffset), mFileHandle(0) {
 	// Create file if it does not exists

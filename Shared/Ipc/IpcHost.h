@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_IPC_HOST_H_
 #define _EVERSTORE_IPC_HOST_H_
 
-#include "Properties.h"
+#include "../Properties.h"
 #include "IpcChildProcess.h"
 #include "IpcChild.h"
 

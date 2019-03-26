@@ -1,5 +1,5 @@
 #include "IpcHost.h"
-#include "StringUtils.h"
+#include "../StringUtils.h"
 #include <stdlib.h>
 #include <string.h>
 

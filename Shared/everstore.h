@@ -2,12 +2,12 @@
 #define _EVERSTORE_H_
 
 #include "es_config.h"
-#include "IpcHost.h"
+#include "Ipc/IpcHost.h"
 #include "Socket.h"
 #include "ESHeader.h"
 #include "Properties.h"
-#include "FileLock.h"
-#include "Bytes.h"
+#include "File/FileLock.h"
+#include "Memory/Bytes.h"
 #include "Messages.h"
 #include "Journal.h"
 #include "AutoClosable.h"

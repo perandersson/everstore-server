@@ -1,5 +1,5 @@
 #include "IpcChild.h"
-#include "StringUtils.h"
+#include "../StringUtils.h"
 
 IpcChild::IpcChild(ChildProcessId id) : mId(id) {
 }

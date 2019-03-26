@@ -5,10 +5,10 @@
 #ifndef _EVERSTORE_FILE_INPUT_STREAM_H_
 #define _EVERSTORE_FILE_INPUT_STREAM_H_
 
-#include "es_config.h"
-#include "ESErrorCodes.h"
-#include "Bytes.h"
-#include "Properties.h"
+#include "../es_config.h"
+#include "../ESErrorCodes.h"
+#include "../Memory/Bytes.h"
+#include "../Properties.h"
 
 struct FileInputStream {
 	friend struct Journal;

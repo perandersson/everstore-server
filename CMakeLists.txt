@@ -26,7 +26,7 @@ FILE(GLOB ALL_WORKER_FILES Worker/*.cpp Worker/*.h)
 FILE(GLOB ALL_TEST_FILES Test/*.cpp Test/*.h Test/test/*.*)
 
 # Default Microsoft Windows compiler properties
-set(MSVC_DEFINITIONS "/fp:fast /W4 /D_CRT_SECURE_NO_WARNINGS /wd4201 /wd4100 /D_WIN32_WINNT=0x0602")
+set(MSVC_DEFINITIONS "/fp:fast /W4 /D_CRT_SECURE_NO_WARNINGS=1 /wd4201 /wd4100 /D_WIN32_WINNT=0x0602")
 set(MSVC_SPECIFIL_LIBS "legacy_stdio_definitions.lib")
 
 # Default GCC for Linux and GCC for OSX compiler properties
@@ -42,20 +42,37 @@ else ()
     set(OS_SPECIFIC_LIBS "pthread")
 endif ()
 
+# Add configuration for the various compilers
+if (MSVC)
+    ADD_DEFINITIONS(${MSVC_DEFINITIONS})
+elseif (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OSX_GCC_DEFINITIONS}")
+else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_DEFINITIONS}")
+endif ()
+
 # Server executable
 add_executable(everstore_server ${ALL_SERVER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore_server ${OS_SPECIFIC_LIBS})
-set_target_properties(everstore_server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+if (NOT MSVC)
+    set_target_properties(everstore_server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+endif ()
 
 # Server executable
 add_executable(everstore_worker ${ALL_WORKER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore_worker ${OS_SPECIFIC_LIBS})
-set_target_properties(everstore_worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+if (NOT MSVC)
+    set_target_properties(everstore_worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+endif ()
 
 # Server tests
 add_executable(everstore_tests ${ALL_TEST_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore_tests ${OS_SPECIFIC_LIBS})
-set_target_properties(everstore_tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+if (NOT MSVC)
+    set_target_properties(everstore_tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+endif ()
 
 ## Copy test-resources into bin test-directory
 file(COPY Test/test-resources DESTINATION "${EXECUTABLE_OUTPUT_PATH}/")
+
+

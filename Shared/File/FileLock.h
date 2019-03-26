@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_FILE_LOCK_H_
 #define _EVERSTORE_FILE_LOCK_H_
 
-#include "es_config.h"
+#include "../es_config.h"
 
 //
 // Reference counted file lock. Useful for knowing when a journal is in use or not.

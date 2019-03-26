@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_BYTES_H_
 #define _EVERSTORE_BYTES_H_
 
-#include "es_config.h"
+#include "../es_config.h"
 
 //
 // Structure representing raw memory
