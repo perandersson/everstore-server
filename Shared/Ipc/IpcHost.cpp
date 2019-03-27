@@ -104,10 +104,10 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 				return err;
 			}
 
-			for (auto& activeSocket : mActiveSockets) {
-				err = process_share_socket(process->handle(), activeSocket.socket, activeSocket.m);
+			for (auto& active : mActiveSockets) {
+				err = process_share_socket(process->handle(), active.socket, active.m);
 				if (isError(err)) {
-					log("Could not share socket: %d with worker: %d", activeSocket, i);
+					log("Could not share socket: %d with worker: %d", active, i);
 					return err;
 				}
 			}

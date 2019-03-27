@@ -6,17 +6,18 @@
 #include "../Process.h"
 #include "ChildProcessID.h"
 
-struct IpcChild {
-
+class IpcChild
+{
+public:
 	IpcChild(ChildProcessID id);
 
-	virtual ~IpcChild();
+	~IpcChild();
 
 	ESErrorCode connectToHost();
 
 	// Send a message over the IPC pipe
 	ESErrorCode sendTo(const ESHeader* header);
-	
+
 	// Send a message over the IPC pipe
 	ESErrorCode sendTo(const ByteBuffer* bytes);
 
@@ -27,7 +28,7 @@ struct IpcChild {
 
 	// Close pipe
 	void close();
-	
+
 private:
 	const ChildProcessID mId;
 	process_t mProcess;

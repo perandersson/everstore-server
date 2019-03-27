@@ -9,9 +9,13 @@
 #include "../Event.h"
 #include "../Memory/ByteBuffer.h"
 
-
-struct FileOutputStream {
-	friend struct Journal;
+class FileOutputStream
+{
+public:
+	//
+	// \param fileName
+	// \param bytesOffset
+	FileOutputStream(const string& fileName, uint32_t byteOffset);
 
 	// Destructor
 	~FileOutputStream();
@@ -27,12 +31,6 @@ struct FileOutputStream {
 	void replaceWithNL(uint32_t pos);
 
 	void close();
-
-protected:
-	//
-	// \param fileName 
-	// \param bytesOffset
-	FileOutputStream(const string& fileName, uint32_t byteOffset);
 
 private:
 	uint32_t mByteOffset;

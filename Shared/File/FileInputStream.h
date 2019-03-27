@@ -10,8 +10,14 @@
 #include "../Memory/ByteBuffer.h"
 #include "../Config.h"
 
-struct FileInputStream {
-	friend struct Journal;
+class FileInputStream
+{
+public:
+	//
+	// \param fileName The path to where the file is located
+	// \param fileSize the size of the file
+	// \param bytesOffset Offset, in bytes, where the stream should start read data
+	FileInputStream(const string& fileName, uint32_t fileSize, uint32_t byteOffset);
 
 	// Destructor
 	~FileInputStream();
@@ -32,19 +38,11 @@ struct FileInputStream {
 
 	const inline uint32_t bytesLeft() const { return mFileSize - mByteOffset; }
 
-protected:
-
-	// 
-	// \param fileName The path to where the file is located
-	// \param fileSize the size of the file
-	// \param bytesOffset Offset, in bytes, where the stream should start read data
-	FileInputStream(const string& fileName, uint32_t fileSize, uint32_t byteOffset);
-
 private:
 	FILE* mFile;
 	uint32_t mFileSize;
 	uint32_t mByteOffset;
-	
+
 	uint32_t mSeekAfterRead;
 };
 

@@ -5,13 +5,15 @@
 #include "IpcChildProcess.h"
 #include "IpcChild.h"
 
-struct ActiveSocket {
+struct ActiveSocket
+{
 	SOCKET socket;
 	mutex_t m;
 };
 
-struct IpcHost {
-
+class IpcHost
+{
+public:
 	IpcHost(const string& rootDir, const string& configFileName, uint32_t maxBufferSize);
 
 	~IpcHost();
