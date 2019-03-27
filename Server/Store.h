@@ -31,6 +31,11 @@ private:
 	// Perform consistency check on the journals located on the HDD
 	bool performConsistencyCheck();
 
+	/**
+	 * Make sure that the directories used by the server exists
+	 */
+	void prepareDirectories();
+
 private:
 	const Config& mConfig;
 	atomic_bool mRunning;

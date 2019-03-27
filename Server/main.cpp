@@ -1,10 +1,12 @@
 #include "Store.h"
 
-Store* gEventStore;
+Store* gEventStore = nullptr;
 
 void handleSingal(int signal) {
 	printf("Stopping server\n");
-	gEventStore->stop();
+	if (gEventStore != nullptr) {
+		gEventStore->stop();
+	}
 	printf("Server stopped\n");
 }
 
@@ -42,13 +44,18 @@ int main(int argc, char** argv) {
 
 	printServerProperties(props);
 
+	// Register so that we get events when a signal is being sent to us. This makes it possible for us to
+	// gracefully shutdown the application.
 	signal(SIGINT, handleSingal);
 	signal(SIGTERM, handleSingal);
-	const ESErrorCode err = gEventStore->start();
-	if (isError(err)) {
-		printf("Could not start host: %s", parseErrorCode(err));
-	}
 
+	// Start the server
+	const auto err = gEventStore->start();
 	delete gEventStore;
+	gEventStore = nullptr;
+
+	if (isError(err)) {
+		printf("An unhandled error has occurred: %s (%d)", parseErrorCode(err), err);
+	}
 	return 0;
 }

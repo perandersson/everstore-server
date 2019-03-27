@@ -1,7 +1,8 @@
 #include "Store.h"
 #include "Auth/FixedUserAuthenticator.hpp"
 
-Store::Store(const Config& config) : mConfig(config), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
+Store::Store(const Config& config)
+		: mConfig(config), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
 	mRunning.store(true, memory_order_relaxed);
 }
 
@@ -23,8 +24,7 @@ Store::~Store() {
 }
 
 ESErrorCode Store::start() {
-	// Create the root directory if missing
-	FileUtils::createFolder(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir);
+	prepareDirectories();
 
 	// Make sure that we are not already running the everstore
 	const auto applicationLockPath = "everstore.lock";
@@ -63,13 +63,8 @@ ESErrorCode Store::start() {
 }
 
 ESErrorCode Store::initialize() {
-	ESErrorCode err;
-
-	// Create temp folder if it does not exists
-	FileUtils::createFolder(FileUtils::getTempDirectory());
-
 	// Initialize sockets
-	err = socket_init();
+	auto err = socket_init();
 	if (isError(err))
 		return err;
 
@@ -111,7 +106,8 @@ void Store::release() {
 
 bool Store::performConsistencyCheck() {
 	const string lockSufix(".lock");
-	auto files = FileUtils::findFilesEndingWith(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir, lockSufix);
+	auto files = FileUtils::findFilesEndingWith(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir,
+	                                            lockSufix);
 	for (auto& file : files) {
 		const uint32_t del = file.find_last_of('.');
 		const uint32_t del2 = file.find_last_of('.', del - 1);
@@ -125,4 +121,9 @@ bool Store::performConsistencyCheck() {
 		}
 	}
 	return true;
+}
+
+void Store::prepareDirectories() {
+	FileUtils::createFolder(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir);
+	FileUtils::createFolder(FileUtils::getTempDirectory());
 }

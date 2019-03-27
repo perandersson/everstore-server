@@ -1,10 +1,12 @@
 #include "../Shared/everstore.h"
 #include "Worker.h"
 
-Worker* gWorker;
+Worker* gWorker = nullptr;
 
 void handleSingal(int signal) {
-	gWorker->stop();
+	if (gWorker != nullptr) {
+		gWorker->stop();
+	}
 }
 
 int start(ChildProcessID idx, const Config& config) {
@@ -12,24 +14,26 @@ int start(ChildProcessID idx, const Config& config) {
 	ESErrorCode err = gWorker->start();
 	if (isError(err))
 		gWorker->error(err);
-	
+
 	delete gWorker;
 	return 0;
 }
 
 int main(int argc, char** argv) {
+	// Register so that we get events when a signal is being sent to us. This makes it possible for us to
+	// gracefully shutdown the application.
 	signal(SIGINT, handleSingal);
 	signal(SIGTERM, handleSingal);
 
 	if (argc != 3) {
-		printf("Expected: everstore_worker <idx> <configPath>\n");
+		printf("Expected: everstore-worker <idx> <configPath>\n");
 		return 1;
 	}
 
 	// Read the neccessary configuration for the worker
-	const string rootPath = Config::getWorkingDirectory(argv[0]);
+	const auto rootPath = Config::getWorkingDirectory(argv[0]);
 	const string configFileName(argv[2]);
-	const Config p = Config::readFromConfigFile(rootPath, configFileName);
+	const auto p = Config::readFromConfigFile(rootPath, configFileName);
 
 	// Start the worker
 	const ChildProcessID id(atoi(argv[1]));

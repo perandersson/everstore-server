@@ -52,24 +52,24 @@ else ()
 endif ()
 
 # Server executable
-add_executable(everstore_server ${ALL_SERVER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
-target_link_libraries(everstore_server ${OS_SPECIFIC_LIBS})
+add_executable(everstore-server ${ALL_SERVER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
+target_link_libraries(everstore-server ${OS_SPECIFIC_LIBS})
 if (NOT MSVC)
-    set_target_properties(everstore_server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+    set_target_properties(everstore-server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # Server executable
-add_executable(everstore_worker ${ALL_WORKER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
-target_link_libraries(everstore_worker ${OS_SPECIFIC_LIBS})
+add_executable(everstore-worker ${ALL_WORKER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
+target_link_libraries(everstore-worker ${OS_SPECIFIC_LIBS})
 if (NOT MSVC)
-    set_target_properties(everstore_worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+    set_target_properties(everstore-worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # Server tests
-add_executable(everstore_tests ${ALL_TEST_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
-target_link_libraries(everstore_tests ${OS_SPECIFIC_LIBS})
+add_executable(everstore-tests ${ALL_TEST_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
+target_link_libraries(everstore-tests ${OS_SPECIFIC_LIBS})
 if (NOT MSVC)
-    set_target_properties(everstore_tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+    set_target_properties(everstore-tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 ## Copy test-resources into bin test-directory
