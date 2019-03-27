@@ -11,11 +11,11 @@ typedef uint32_t ESHeaderProperties;
 enum ESHeaderProperty {
 	ESPROP_NONE = 0,
 
-	ESPROP_MULTIPART = BIT(0),
+	ESPROP_MULTIPART = 1u,
 	
-	ESPROP_COMPRESSED = BIT(1),
+	ESPROP_COMPRESSED = 2u,
 
-	ESPROP_INCLUDE_TIMESTAMP = BIT(2)
+	ESPROP_INCLUDE_TIMESTAMP = 4u
 };
 
 // Header for all messages sent to the server

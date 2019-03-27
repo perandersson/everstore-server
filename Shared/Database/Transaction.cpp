@@ -1,13 +1,9 @@
 #include "Transaction.h"
 #include "Journal.h"
 
-const string NEW_JOURNAL_TRANSACTION_TYPE("ES_NewJournal");
-
-Transaction::Transaction(const TransactionID id, Journal* journal) : mId(id), mJournal(journal), mTransactionTypesBeforeCommit(BIT_NONE) {
+Transaction::Transaction(const TransactionID id, Journal* journal) : mId(id), mJournal(journal),
+                                                                     mTransactionTypesBeforeCommit(Bits::None) {
 	mJournalSize = journal->journalSize();
-}
-
-Transaction::~Transaction() {
 }
 
 void Transaction::save(IntrusiveBytesString eventsString) {
@@ -29,12 +25,4 @@ void Transaction::save(IntrusiveBytesString eventsString) {
 
 	// We are now done with accessing the journal on disk
 	mJournal->release(bytesWritten);
-}
-
-bool Transaction::conflictsWith(transaction_types types) const {
-	return BIT_ISSET(mTransactionTypesBeforeCommit, types);
-}
-
-void Transaction::onTransactionCommitted(transaction_types types) {
-	BIT_SET(mTransactionTypesBeforeCommit, types);
 }

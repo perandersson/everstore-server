@@ -2,6 +2,7 @@
 #include "../Shared/StringUtils.h"
 #include "../Shared/Database/Journal.h"
 #include "../Shared/Database/Transaction.h"
+#include "../Shared/Bits.hpp"
 
 Worker::Worker(ChildProcessID childProcessId, const Config& config)
 		: mIpcChild(childProcessId), mJournals(childProcessId, config.maxJournalLifeTime),
@@ -120,9 +121,9 @@ ESErrorCode Worker::initialize() {
 
 	Log::Write(Log::Info, "Preparing built-in transaction types");
 	vector<string> types;
-	types.push_back(NEW_JOURNAL_TRANSACTION_TYPE);
+	types.push_back(Bits::BuiltIn::NewJournalKey);
 	auto mask = transactionTypes(types);
-	assert(mask == NEW_JOURNAL_TRANSACTION_TYPE_BIT);
+	assert(mask == Bits::BuiltIn::NewJournalBit);
 
 	Log::Write(Log::Info, "Initialization complete");
 	return err;
@@ -332,7 +333,7 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 
 	// Read the request from the socket
 	const auto request = memory->get<ReadJournal::Request>();
-	const auto includeTimestamp = BIT_ISSET(header->properties, ESPROP_INCLUDE_TIMESTAMP);
+	const auto includeTimestamp = Bits::IsSet(header->properties, ESPROP_INCLUDE_TIMESTAMP);
 
 	// Get journal name and make sure that it's valid
 	string journalName;
@@ -459,8 +460,8 @@ Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* c
 	return sendBytesToClient(connection, memory);
 }
 
-bit_mask Worker::transactionTypes(vector<string>& types) {
-	bit_mask transactionType = BIT_NONE;
+Bits::Type Worker::transactionTypes(vector<string>& types) {
+	Bits::Type transactionType = Bits::None;
 	for (auto type : types) {
 		auto mask = mTransactionTypes.find(type);
 		if (mask == mTransactionTypes.end()) {

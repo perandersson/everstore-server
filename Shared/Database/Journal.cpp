@@ -94,7 +94,7 @@ void Journal::rollback(const TransactionID id) {
 	mTransactions.close(id);
 }
 
-ESErrorCode Journal::tryCommit(const TransactionID id, transaction_types types, IntrusiveBytesString eventsString) {
+ESErrorCode Journal::tryCommit(const TransactionID id, Bits::Type types, IntrusiveBytesString eventsString) {
 	// Retrieve the active transaction
 	auto t = mTransactions.get(id);
 	if (t == nullptr) return ESERR_JOURNAL_TRANSACTION_DOES_NOT_EXIST;
@@ -102,7 +102,7 @@ ESErrorCode Journal::tryCommit(const TransactionID id, transaction_types types, 
 	// Set neccessary bit if the journal is to be created
 	if (t->createJournal()) {
 		FileUtils::createFullForPath(path());
-		BIT_SET(types, NEW_JOURNAL_TRANSACTION_TYPE_BIT);
+		types = Bits::Set(types, Bits::BuiltIn::NewJournalBit);
 	}
 
 	// Has a conflict occured?

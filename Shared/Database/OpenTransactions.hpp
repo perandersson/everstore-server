@@ -29,7 +29,7 @@ public:
 	/**
 	 * Method called whenever a new transaction is committed
 	 */
-	void onTransactionCommitted(transaction_types types);
+	void onTransactionCommitted(Bits::Type changes);
 
 
 private:

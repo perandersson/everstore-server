@@ -58,10 +58,10 @@ void OpenTransactions::close(TransactionID id) {
 	}
 }
 
-void OpenTransactions::onTransactionCommitted(transaction_types types) {
+void OpenTransactions::onTransactionCommitted(Bits::Type changes) {
 	for (auto trans : mTransactions) {
 		if (trans != nullptr) {
-			trans->onTransactionCommitted(types);
+			trans->onTransactionCommitted(changes);
 		}
 	}
 }

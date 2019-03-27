@@ -25,7 +25,7 @@ TEST_SUITE(Transaction) {
 		bytes.reset();
 		IntrusiveBytesString events(data.length(), &bytes);
 
-		auto err = j.tryCommit(transaction, BIT_ALL, events);
+		auto err = j.tryCommit(transaction, Bits::All, events);
 		assertEquals((ESErrorCode)ESERR_NO_ERROR, err);
 
 		bytes.reset();

@@ -36,7 +36,7 @@ struct Journal {
 	void rollback(const TransactionID id);
 
 	// Try to commit a transaction
-	ESErrorCode tryCommit(const TransactionID id, transaction_types types, IntrusiveBytesString eventsString);
+	ESErrorCode tryCommit(const TransactionID id, Bits::Type types, IntrusiveBytesString eventsString);
 
 	// Increase the reference count of this journal and returns the size of the journal
 	//

@@ -47,7 +47,7 @@ private:
 	                             bool includeTimestamp, FileInputStream* stream, ByteBuffer* memory);
 
 	// Convert the types into transaction types
-	bit_mask transactionTypes(vector<string>& types);
+	Bits::Type transactionTypes(vector<string>& types);
 
 	// Load the next header form host application - with the associated request data
 	ESHeader* loadHeaderFromHost(ByteBuffer* memory);
@@ -70,8 +70,8 @@ private:
 	AttachedSockets mAttachedSockets;
 
 	// Transaction types
-	bit_mask mNextTransactionTypeBit;
-	unordered_map<string, bit_mask> mTransactionTypes;
+	Bits::Type mNextTransactionTypeBit;
+	unordered_map<string, Bits::Type> mTransactionTypes;
 
 	const Config mConfig;
 };
