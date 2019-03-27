@@ -11,13 +11,18 @@
 #include "../Ipc/ChildProcessID.h"
 #include "OpenTransactions.hpp"
 
-static const char JOURNAL_EOF = 0; // Use NULL as EOF marker
-static const uint32_t JOURNAL_EOF_LEN = 1;
+class Journal
+{
+public:
+	// Use the nullptr character '\0' as an EOF marker
+	static constexpr char JournalEof = '\0';
 
-struct Journal {
+	// The length of the EOF character
+	static constexpr auto JournalEofLen = 1;
+
 	LinkedListLink<Journal> link;
 
-	Journal(const string& path); 
+	Journal(const string& path);
 
 	Journal(const string& path, const ChildProcessID childProcessId);
 
@@ -71,7 +76,7 @@ struct Journal {
 
 	// Retrieves the path to the journal (on the HDD)
 	inline const string& path() const { return mJournalFileName; }
-	
+
 	// When was the journal used last?
 	inline const chrono::system_clock::time_point& timeSinceLastUsed() const { return mTimeSinceLastUsed; }
 
@@ -79,11 +84,11 @@ private:
 	string mName;
 	string mJournalFileName;
 	FileLock mFileLock;
-	chrono::system_clock::time_point  mTimeSinceLastUsed;
+	chrono::system_clock::time_point mTimeSinceLastUsed;
 	uint32_t mJournalSize;
 	OpenTransactions mTransactions;
 
-	
+
 };
 
 

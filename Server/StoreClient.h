@@ -47,16 +47,4 @@ private:
 	thread mThread;
 };
 
-struct StoreClients : list<StoreClient*>
-{
-
-	StoreClients();
-
-	~StoreClients();
-
-	void disconnectAllClients();
-
-	void removeClosedClients();
-};
-
 #endif

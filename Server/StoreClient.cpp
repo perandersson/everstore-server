@@ -170,38 +170,3 @@ void StoreClient::stop() {
 	mClientSocket = INVALID_SOCKET;
 	mRunning.store(false, memory_order_relaxed);
 }
-
-StoreClients::StoreClients() {
-
-}
-
-StoreClients::~StoreClients() {
-
-}
-
-void StoreClients::disconnectAllClients() {
-	for (auto client : *this) {
-		client->stop();
-		delete client;
-	}
-	clear();
-}
-
-void StoreClients::removeClosedClients() {
-	// Find all clients that we can remove
-	list<list<StoreClient*>::iterator> removables;
-	auto it = begin();
-	const auto e = end();
-	for (; it != e; ++it) {
-		auto client = *it;
-		if (!client->running()) {
-			removables.push_back(it);
-		}
-	}
-
-	// Delete any removable clients
-	for (auto removable : removables) {
-		delete *removable;
-		erase(removable);
-	}
-}

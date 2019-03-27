@@ -8,7 +8,7 @@
 #include "../Bits.hpp"
 #include "../Memory/MutableString.hpp"
 
-struct Journal;
+class Journal;
 
 class Transaction
 {

@@ -1,9 +1,9 @@
 #include "StoreServer.h"
 
-StoreServer::StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host, 
-	Authenticator* authenticator)
-: mPort(port), mMaxConnections(maxConnections), mMaxBufferSize(maxBufferSize), mServerSocket(INVALID_SOCKET), mIpcHost(host), 
-mAuthenticator(authenticator) {
+StoreServer::StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host,
+                         Authenticator* authenticator)
+		: mPort(port), mMaxConnections(maxConnections), mMaxBufferSize(maxBufferSize), mServerSocket(INVALID_SOCKET),
+		  mIpcHost(host), mAuthenticator(authenticator) {
 	// Prepare socket configuration
 	memset(&mAddr, 0, sizeof(sockaddr_in));
 	mAddr.sin_family = AF_INET;
@@ -28,7 +28,7 @@ ESErrorCode StoreServer::listen() {
 	if (mServerSocket == INVALID_SOCKET)
 		return ESERR_SOCKET_CONFIGURE;
 
-	if (::bind(mServerSocket, (struct sockaddr *) &mAddr, sizeof (mAddr)) == -1) {
+	if (::bind(mServerSocket, (struct sockaddr*) &mAddr, sizeof(mAddr)) == -1) {
 		socket_close(mServerSocket);
 		mServerSocket = INVALID_SOCKET;
 		return ESERR_SOCKET_BIND;
@@ -62,7 +62,7 @@ ESErrorCode StoreServer::acceptClient() {
 	}
 
 	// Garbage collect any running client processes
-	mClients.removeClosedClients();
+	garbageCollect();
 
 	StoreClient* client = new StoreClient(socket, mIpcHost, mMaxBufferSize);
 	err = mIpcHost->onClientConnected(socket, client->clientLock());
@@ -111,9 +111,36 @@ ESErrorCode StoreServer::authenticate(SOCKET socket) {
 }
 
 void StoreServer::close() {
-	mClients.disconnectAllClients();
+	disconnectAllClients();
 	if (mServerSocket != INVALID_SOCKET) {
 		socket_close(mServerSocket);
 		mServerSocket = INVALID_SOCKET;
+	}
+}
+
+void StoreServer::disconnectAllClients() {
+	for (auto client : mClients) {
+		client->stop();
+		delete client;
+	}
+	mClients.clear();
+}
+
+void StoreServer::garbageCollect() {
+	// Find all clients that we can remove
+	list<list<StoreClient*>::iterator> removables;
+	auto it = mClients.begin();
+	const auto e = mClients.end();
+	for (; it != e; ++it) {
+		auto client = *it;
+		if (!client->running()) {
+			removables.push_back(it);
+		}
+	}
+
+	// Delete any removable clients
+	for (auto removable : removables) {
+		delete *removable;
+		mClients.erase(removable);
 	}
 }

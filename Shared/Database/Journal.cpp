@@ -42,7 +42,7 @@ bool Journal::performConsistencyCheck() {
 		ByteBufferInputStream stream(&buffer);
 
 		// Search for the eof marker
-		const int32_t eof = stream.lastIndexOf(JOURNAL_EOF);
+		const int32_t eof = stream.lastIndexOf(Journal::JournalEof);
 
 		// If the last character is not an EOF-marker then it indicates that we have an unfinished transaction
 		if (eof == -1) {
@@ -56,7 +56,7 @@ bool Journal::performConsistencyCheck() {
 			// I.e. we don't have to do anything, or we might have to search for the next marker
 
 			// Find where the EOF-marker might be
-			const auto potentialNextEof = stream.lastIndexOf(JOURNAL_EOF);
+			const auto potentialNextEof = stream.lastIndexOf(Journal::JournalEof);
 
 			// No EOF marker found then the journal is safe. The only thing that was missing was to remove the lock file
 			if (potentialNextEof == -1) {

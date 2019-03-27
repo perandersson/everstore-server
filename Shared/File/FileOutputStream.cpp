@@ -43,7 +43,7 @@ uint32_t FileOutputStream::writeEvents(const Timestamp* t, MutableString events)
 	}
 
 	// Add a EOF-marker
-	fwrite(&JOURNAL_EOF, 1, 1, mFileHandle);
+	fwrite(&Journal::JournalEof, 1, 1, mFileHandle);
 
 	// Flush the data before marking the commit as "comitted".
 	fflush(mFileHandle);
@@ -56,7 +56,7 @@ uint32_t FileOutputStream::writeEvents(const Timestamp* t, MutableString events)
 	// Flush the data so that the commit is solidified
 	fflush(mFileHandle);
 
-	return events.length + offset * newLines + JOURNAL_EOF_LEN;
+	return events.length + offset * newLines + Journal::JournalEofLen;
 }
 
 void FileOutputStream::replaceWithNL(uint32_t pos) {

@@ -5,20 +5,29 @@
 #include "StoreClient.h"
 #include "Auth/Authenticator.h"
 
-enum Endian : uint8_t {
+enum Endian : uint8_t
+{
 	ES_LITTLE_ENDIAN = 0,
 	ES_BIG_ENDIAN
 };
 
-struct ServerConfiguration {
-	Endian endian;			// Little or big endian
-	char version;			// Protocol version
-	char authenticate;		// Is the user required to authenticate (1 == true)
+struct ServerConfiguration
+{
+	// Little or big endian
+	Endian endian;
+
+	// Protocol version
+	char version;
+
+	// Is the user required to authenticate (1 == true)
+	char authenticate;
 };
 
-struct StoreServer {
-
-	StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host, Authenticator* authenticator);
+class StoreServer
+{
+public:
+	StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host,
+	            Authenticator* authenticator);
 
 	~StoreServer();
 
@@ -30,8 +39,17 @@ struct StoreServer {
 
 	ESErrorCode authenticate(SOCKET socket);
 
-	inline const ServerConfiguration& getConfiguration() const { return mConfiguration; }
-	
+private:
+	/**
+	 * Gracefully disconnect all clients
+	 */
+	void disconnectAllClients();
+
+	/**
+	 * Garbage collect any running client processes. This is a controlled way to remove already closed clients
+	 */
+	void garbageCollect();
+
 private:
 	const uint16_t mPort;
 	const uint32_t mMaxConnections;
@@ -43,7 +61,7 @@ private:
 	sockaddr_in mAddr;
 	IpcHost* mIpcHost;
 	Authenticator* mAuthenticator;
-	StoreClients mClients;
+	list<StoreClient*> mClients;
 };
 
 #endif

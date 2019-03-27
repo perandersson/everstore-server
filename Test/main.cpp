@@ -1,5 +1,4 @@
-#include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <ctime>
 #include "test/Test.h"
 #include "../Shared/everstore.h"
