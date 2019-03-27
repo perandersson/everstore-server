@@ -1,7 +1,7 @@
 #ifndef _EVERSTORE_ESCONFIG_H_
 #define _EVERSTORE_ESCONFIG_H_
 
-#ifdef WIN32
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <windows.h>
@@ -51,17 +51,5 @@
 #define _OUT
 
 using namespace std;
-
-#ifndef BOOL
-#define BOOL int
-#endif
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 #endif

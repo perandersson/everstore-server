@@ -87,7 +87,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 
 		// Load data about the new transaction
 		const auto request = bytes->get<NewTransaction::Request>();
-		const auto journalName = IntrusiveBytesString(request->journalStringLength, bytes);
+		const auto journalName = MutableString(request->journalStringLength, bytes);
 
 		// Figure out the worker for the requested journal
 		const auto workerId = mIpcHost->workerId(journalName.str, journalName.length);
@@ -104,7 +104,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 
 		// Load data about the new transaction
 		const auto request = bytes->get<JournalExists::Request>();
-		const auto journalName = IntrusiveBytesString(request->journalStringLength, bytes);
+		const auto journalName = MutableString(request->journalStringLength, bytes);
 
 		// Figure out the worker for the requested journal
 		const auto workerId = mIpcHost->workerId(journalName.str, journalName.length);

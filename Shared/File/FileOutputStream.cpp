@@ -16,7 +16,7 @@ FileOutputStream::FileOutputStream(const string& fileName, uint32_t byteOffset) 
 FileOutputStream::~FileOutputStream() {
 }
 
-uint32_t FileOutputStream::writeEvents(const Timestamp* t, IntrusiveBytesString events) {
+uint32_t FileOutputStream::writeEvents(const Timestamp* t, MutableString events) {
 	const uint32_t offset = Timestamp::BytesLength + FileUtils::SPACE_SIZE;
 
 	char tmp[1024];

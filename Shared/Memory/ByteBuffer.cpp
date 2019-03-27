@@ -1,8 +1,12 @@
 #include "ByteBuffer.h"
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
 
-ByteBuffer::ByteBuffer(uint32_t initialSize) : mMemory(nullptr), mCapacity(initialSize), mCurrentOffset(0), mSavedOffset(0) {
+ByteBuffer::ByteBuffer(uint32_t initialSize)
+		: mMemory(nullptr), mCapacity(initialSize), mCurrentOffset(0), mSavedOffset(0) {
 	assert(initialSize > 0);
-	mMemory = (char*)malloc(mCapacity);
+	mMemory = (char*) malloc(mCapacity);
 }
 
 ByteBuffer::~ByteBuffer() {
@@ -34,7 +38,7 @@ void ByteBuffer::ensureCapacity(uint32_t size) {
 	const uint32_t requiredSize = mCurrentOffset + size;
 	if (requiredSize > mCapacity) {
 		mCapacity = requiredSize;
-		mMemory = (char*)realloc(mMemory, mCapacity);
+		mMemory = (char*) realloc(mMemory, mCapacity);
 	}
 }
 

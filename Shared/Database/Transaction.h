@@ -6,6 +6,7 @@
 #include "../Memory/ByteBuffer.h"
 #include "TransactionID.h"
 #include "../Bits.hpp"
+#include "../Memory/MutableString.hpp"
 
 struct Journal;
 
@@ -15,7 +16,7 @@ public:
 	Transaction(TransactionID id, Journal* journal);
 
 	// Commit this transaction and save it to the HDD in a way that can be fixed if the worker closes ungracefully
-	void save(IntrusiveBytesString events);
+	void save(MutableString events);
 
 	// Retrieves the transaction id
 	inline const TransactionID id() const { return mId; }

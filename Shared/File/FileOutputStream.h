@@ -7,7 +7,7 @@
 
 #include "../es_config.h"
 #include "../Event.h"
-#include "../Memory/ByteBuffer.h"
+#include "../Memory/MutableString.hpp"
 
 class FileOutputStream
 {
@@ -25,7 +25,7 @@ public:
 	//
 	// \param t Timestamp for when the event is saved to the HDD
 	// \param events The events we want to save
-	uint32_t writeEvents(const Timestamp* t, IntrusiveBytesString events);
+	uint32_t writeEvents(const Timestamp* t, MutableString events);
 
 	// Replace the character at the given position with a newline
 	void replaceWithNL(uint32_t pos);

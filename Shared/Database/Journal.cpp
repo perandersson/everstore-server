@@ -94,7 +94,7 @@ void Journal::rollback(const TransactionID id) {
 	mTransactions.close(id);
 }
 
-ESErrorCode Journal::tryCommit(const TransactionID id, Bits::Type types, IntrusiveBytesString eventsString) {
+ESErrorCode Journal::tryCommit(const TransactionID id, Bits::Type types, MutableString eventsString) {
 	// Retrieve the active transaction
 	auto t = mTransactions.get(id);
 	if (t == nullptr) return ESERR_JOURNAL_TRANSACTION_DOES_NOT_EXIST;

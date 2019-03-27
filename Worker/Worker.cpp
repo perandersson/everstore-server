@@ -255,7 +255,7 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	}
 
 	// Load types that the client sent to us
-	const auto typeString = IntrusiveBytesString(request->typeSize, memory);
+	const auto typeString = MutableString(request->typeSize, memory);
 
 	// Convert the types into bit masks, used to identify different event types
 	vector<string> typeStrings;
@@ -275,7 +275,7 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	}
 
 	const auto types = transactionTypes(typeStrings);
-	auto events = IntrusiveBytesString(request->eventsSize, memory);
+	auto events = MutableString(request->eventsSize, memory);
 
 	// Commit the data into the journal. If the journal is null then it's been garbage collected (i.e. you are 
 	// not allowed to have a transaction open for over 1 minute)

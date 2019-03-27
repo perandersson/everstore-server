@@ -1,12 +1,13 @@
 #ifndef _EVERSTORE_BYTES_H_
 #define _EVERSTORE_BYTES_H_
 
-#include "../es_config.h"
+#include <cinttypes>
 
 //
 // Structure representing raw memory
-struct ByteBuffer {
-
+class ByteBuffer
+{
+public:
 	ByteBuffer(uint32_t initialSize);
 
 	~ByteBuffer();
@@ -31,7 +32,7 @@ struct ByteBuffer {
 	inline void restore() { mCurrentOffset = mSavedOffset; }
 
 	// Put the supplied memory into this bytes block
-	void put(const void* ptr, const uint32_t size);
+	void put(const void* ptr, uint32_t size);
 
 	// Put the supplied type into this bytes block
 	template<typename T>
@@ -50,7 +51,7 @@ struct ByteBuffer {
 	// Retrieves a memory block with large enough for the requested type
 	template<typename T>
 	T* get() {
-		return (T*)get(sizeof(T));
+		return (T*) get(sizeof(T));
 	}
 
 	inline uint32_t capacity() const { return mCapacity; }
@@ -78,19 +79,6 @@ private:
 	uint32_t mCapacity;
 	uint32_t mCurrentOffset;
 	uint32_t mSavedOffset;
-};
-
-//
-// Intrusive string directly connected to it's associated ByteBuffer.
-//
-// \remark This might become invalidated when the associated ByteBuffer is resetted.
-//
-struct IntrusiveBytesString {
-	uint32_t length; // The length of the string.
-	const char* str; // A pointer to the first character in the string. The string itself might not end with NULL.
-
-	IntrusiveBytesString(uint32_t length, ByteBuffer* b) : length(length), str(b->get(length)) {}
-	~IntrusiveBytesString() {}
 };
 
 #endif

@@ -6,7 +6,7 @@ Transaction::Transaction(const TransactionID id, Journal* journal) : mId(id), mJ
 	mJournalSize = journal->journalSize();
 }
 
-void Transaction::save(IntrusiveBytesString eventsString) {
+void Transaction::save(MutableString eventsString) {
 	// Ignore if no events are to be committed
 	if (eventsString.length == 0) return;
 

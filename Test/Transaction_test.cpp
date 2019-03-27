@@ -23,7 +23,7 @@ TEST_SUITE(Transaction) {
 		ByteBuffer bytes(32);
 		memcpy(bytes.get(data.length()), data.c_str(), data.length());
 		bytes.reset();
-		IntrusiveBytesString events(data.length(), &bytes);
+		MutableString events(data.length(), &bytes);
 
 		auto err = j.tryCommit(transaction, Bits::All, events);
 		assertEquals((ESErrorCode)ESERR_NO_ERROR, err);
