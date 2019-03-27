@@ -65,8 +65,8 @@ void StoreClient::run() {
 			// Put the response into the memory block
 			const RequestError::Header responseHeader(requestUID, workerId);
 			const RequestError::Response response(err);
-			memory.put(&responseHeader);
-			memory.put(&response);
+			memory.write(&responseHeader);
+			memory.write(&response);
 
 			// Send the data to the client
 			err = sendBytesToClient(&memory);
@@ -86,7 +86,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 		bytes->reset();
 
 		// Load data about the new transaction
-		const auto request = bytes->get<NewTransaction::Request>();
+		const auto request = bytes->allocate<NewTransaction::Request>();
 		const auto journalName = MutableString(request->journalStringLength, bytes);
 
 		// Figure out the worker for the requested journal
@@ -103,7 +103,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 		bytes->reset();
 
 		// Load data about the new transaction
-		const auto request = bytes->get<JournalExists::Request>();
+		const auto request = bytes->allocate<JournalExists::Request>();
 		const auto journalName = MutableString(request->journalStringLength, bytes);
 
 		// Figure out the worker for the requested journal
@@ -127,7 +127,7 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 	memory->reset();
 
 	// Get a memory block for the header
-	ESHeader* header = memory->get<ESHeader>();
+	ESHeader* header = memory->allocate<ESHeader>();
 
 	// Read the header from client socket stream
 	if (socket_recvall(mClientSocket, (char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
@@ -138,7 +138,7 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 
 	// Load the request body
 	if (header->size > 0) {
-		if (socket_recvall(mClientSocket, memory->get(header->size), header->size) != header->size) {
+		if (socket_recvall(mClientSocket, memory->allocate(header->size), header->size) != header->size) {
 			return &INVALID_HEADER;
 		}
 	}

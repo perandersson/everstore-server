@@ -7,7 +7,7 @@
 int main(int argc, char** argv) {
 	const string tempDir = FileUtils::getTempDirectory();
 	FileUtils::clearAndDeleteDirectory(tempDir);
-	srand(time(NULL));
+	srand(time(nullptr));
 
 	return TestRunner::run();
 }

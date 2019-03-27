@@ -32,26 +32,21 @@ public:
 	inline void restore() { mCurrentOffset = mSavedOffset; }
 
 	// Put the supplied memory into this bytes block
-	void put(const void* ptr, uint32_t size);
+	void write(const void* ptr, uint32_t size);
 
 	// Put the supplied type into this bytes block
 	template<typename T>
-	void put(T* ptr) {
-		put(ptr, sizeof(T));
+	void write(T* ptr) {
+		write(ptr, sizeof(T));
 	}
 
 	// Retrieves a memory block with large enough for the requested size
-	inline char* get(const uint32_t size) {
-		ensureCapacity(size);
-		char* ptr = &mMemory[mCurrentOffset];
-		moveForward(size);
-		return ptr;
-	}
+	char* allocate(uint32_t size);
 
 	// Retrieves a memory block with large enough for the requested type
 	template<typename T>
-	T* get() {
-		return (T*) get(sizeof(T));
+	T* allocate() {
+		return (T*) allocate(sizeof(T));
 	}
 
 	inline uint32_t capacity() const { return mCapacity; }

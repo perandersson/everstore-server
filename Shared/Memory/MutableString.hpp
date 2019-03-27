@@ -22,7 +22,7 @@ struct MutableString
 	const char* str;
 
 	MutableString(uint32_t length, ByteBuffer* b)
-			: length(length), str(b->get(length)) {
+			: length(length), str(b->allocate(length)) {
 	}
 
 	MutableString(const MutableString& rhs) = default;

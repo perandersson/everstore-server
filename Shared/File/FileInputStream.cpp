@@ -29,7 +29,7 @@ ESErrorCode FileInputStream::readBytes(ByteBuffer* memory, uint32_t size) {
 	const auto readBytes = size > mFileSize ? mFileSize : size;
 
 	// Read the file into the supplied memory block
-	const auto ret = fread(memory->get(readBytes), readBytes, 1, mFile);
+	const auto ret = fread(memory->allocate(readBytes), readBytes, 1, mFile);
 	if (ret != 1) return ESERR_JOURNAL_READ;
 	return ESERR_NO_ERROR;
 }
@@ -69,7 +69,7 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 		const auto clampedReadBytes = TEMP_READ_BLOCK_SIZE > readBytes ? readBytes : TEMP_READ_BLOCK_SIZE;
 
 		// Read the file into the supplied memory block
-		char* current = memory->get(clampedReadBytes);
+		char* current = memory->allocate(clampedReadBytes);
 		const auto end = memory->end();
 		const auto ret = fread(current, 1, clampedReadBytes, mFile);
 		if (ret != clampedReadBytes) {

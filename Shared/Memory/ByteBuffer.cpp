@@ -42,8 +42,15 @@ void ByteBuffer::ensureCapacity(uint32_t size) {
 	}
 }
 
-void ByteBuffer::put(const void* ptr, const uint32_t size) {
+void ByteBuffer::write(const void* ptr, uint32_t size) {
 	ensureCapacity(size);
 	memcpy(&mMemory[mCurrentOffset], ptr, size);
 	moveForward(size);
+}
+
+char* ByteBuffer::allocate(uint32_t size) {
+	ensureCapacity(size);
+	char* ptr = &mMemory[mCurrentOffset];
+	moveForward(size);
+	return ptr;
 }

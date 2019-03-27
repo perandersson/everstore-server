@@ -21,7 +21,7 @@ TEST_SUITE(Transaction) {
 
 		const string data("data123");
 		ByteBuffer bytes(32);
-		memcpy(bytes.get(data.length()), data.c_str(), data.length());
+		memcpy(bytes.allocate(data.length()), data.c_str(), data.length());
 		bytes.reset();
 		MutableString events(data.length(), &bytes);
 
@@ -36,7 +36,7 @@ TEST_SUITE(Transaction) {
 		stream->close();
 
 		bytes.moveForward(Timestamp::BytesLength + 1);
-		const string endsWith = bytes.get(data.length());
+		const string endsWith = bytes.allocate(data.length());
 		assertEquals(data, endsWith);
 	}
 

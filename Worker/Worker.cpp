@@ -66,8 +66,8 @@ ESErrorCode Worker::start() {
 						// Create response header
 						const RequestError::Header responseHeader(type, id());
 						const RequestError::Response response(err);
-						memory.put(&responseHeader);
-						memory.put(&response);
+						memory.write(&responseHeader);
+						memory.write(&response);
 
 						// Send the data to the client
 						err = sendBytesToClient(attachedSocket, &memory);
@@ -213,7 +213,7 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	assert(connection != nullptr);
 	assert(memory != nullptr);
 
-	auto request = memory->get<NewTransaction::Request>();
+	auto request = memory->allocate<NewTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
 	string journalName;
@@ -228,8 +228,8 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	const NewTransaction::Header responseHeader(header->requestUID, id());
 	const NewTransaction::Response response(journal->journalSize(), transaction);
 	memory->reset();
-	memory->put(&responseHeader);
-	memory->put(&response);
+	memory->write(&responseHeader);
+	memory->write(&response);
 
 	// Send the data to the client
 	return sendBytesToClient(connection, memory);
@@ -241,7 +241,7 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	assert(connection != nullptr);
 	assert(memory != nullptr);
 
-	const auto request = memory->get<CommitTransaction::Request>();
+	const auto request = memory->allocate<CommitTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
 	string journalName;
@@ -287,8 +287,8 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	const CommitTransaction::Header responseHeader(header->requestUID, id());
 	const CommitTransaction::Response response(commitSuccess, journal->journalSize());
 	memory->reset();
-	memory->put(&responseHeader);
-	memory->put(&response);
+	memory->write(&responseHeader);
+	memory->write(&response);
 
 	// Send the data to the client
 	return sendBytesToClient(connection, memory);
@@ -301,7 +301,7 @@ Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* co
 	assert(memory != nullptr);
 
 	// Read the request from the socket
-	const auto request = memory->get<RollbackTransaction::Request>();
+	const auto request = memory->allocate<RollbackTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
 	string journalName;
@@ -317,8 +317,8 @@ Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* co
 	const RollbackTransaction::Header responseHeader(header->requestUID, id());
 	const RollbackTransaction::Response response(TRUE);
 	memory->reset();
-	memory->put(&responseHeader);
-	memory->put(&response);
+	memory->write(&responseHeader);
+	memory->write(&response);
 
 	// Send the data to the client
 	return sendBytesToClient(connection, memory);
@@ -332,7 +332,7 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 	const auto requestUID = header->requestUID;
 
 	// Read the request from the socket
-	const auto request = memory->get<ReadJournal::Request>();
+	const auto request = memory->allocate<ReadJournal::Request>();
 	const auto includeTimestamp = Bits::IsSet(header->properties, ESPROP_INCLUDE_TIMESTAMP);
 
 	// Get journal name and make sure that it's valid
@@ -362,8 +362,8 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 		// Write and send header and the read-journal responses first
 		memory->reset();
 		const ReadJournal::Header responseHeader(requestUID, ESPROP_NONE, id());
-		memory->put(&responseHeader);
-		ReadJournal::Response* response = memory->get<ReadJournal::Response>();
+		memory->write(&responseHeader);
+		ReadJournal::Response* response = memory->allocate<ReadJournal::Response>();
 		response->bytes = 0;
 
 		// Write the journal body if one exists
@@ -407,8 +407,8 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 		memory->reset();
 		memory->ensureCapacity(mConfig.maxBufferSize);
 		const ReadJournal::Header responseHeader(requestUID, properties, id());
-		memory->put(&responseHeader);
-		memory->get<ReadJournal::Response>();
+		memory->write(&responseHeader);
+		memory->allocate<ReadJournal::Response>();
 		uint32_t bytesWritten = 0;
 
 		// Write the journal body (with or without timestamp)
@@ -439,7 +439,7 @@ Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* c
 	assert(memory != nullptr);
 
 	// Read the request from the socket
-	const auto request = memory->get<JournalExists::Request>();
+	const auto request = memory->allocate<JournalExists::Request>();
 
 	// Get journal name and make sure that it's valid
 	string journalName;
@@ -453,8 +453,8 @@ Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* c
 	const JournalExists::Header responseHeader(header->requestUID, id());
 	const JournalExists::Response response(journal->exists());
 	memory->reset();
-	memory->put(&responseHeader);
-	memory->put(&response);
+	memory->write(&responseHeader);
+	memory->write(&response);
 
 	// Okay!
 	return sendBytesToClient(connection, memory);
@@ -482,7 +482,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 	memory->reset();
 
 	// Get a memory block for the header
-	ESHeader* header = memory->get<ESHeader>();
+	ESHeader* header = memory->allocate<ESHeader>();
 
 	// Make sure to keep the position where the body starts
 	memory->memorize();
@@ -496,7 +496,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 
 	// Load the request body
 	if (header->size > 0) {
-		if (process_read(process(), memory->get(header->size), header->size) != header->size) {
+		if (process_read(process(), memory->allocate(header->size), header->size) != header->size) {
 			return &INVALID_HEADER;
 		}
 	}
@@ -519,7 +519,7 @@ ESErrorCode Worker::readAndValidatePath(const uint32_t length, ByteBuffer* memor
 	}
 
 	// Validate that the path is absolute
-	const char* ptr = memory->get(length);
+	const char* ptr = memory->allocate(length);
 	if (*ptr != '/') {
 		*s = string();
 		return ESERR_JOURNAL_PATH_INVALID;
