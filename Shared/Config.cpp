@@ -20,6 +20,7 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 	uint16_t port = DEFAULT_PORT;
 	uint32_t maxJournalLifeTime = DEFAULT_JOURNAL_GC_SECONDS;
 	uint32_t maxBufferSize = DEFAULT_MAX_DATA_SEND_SIZE;
+	uint32_t logLevel = DEFAULT_LOG_LEVEL;
 
 	ifstream file;
 	file.open(configFileName.c_str());
@@ -47,6 +48,8 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 					maxJournalLifeTime = StringUtils::toUint32(value);
 				} else if (key == string("maxBufferSize")) {
 					maxBufferSize = StringUtils::toUint32(value);
+				} else if (key == string("logLevel")) {
+					logLevel = StringUtils::toUint32(value);
 				}
 			}
 		}
@@ -54,5 +57,5 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 	}
 
 	return Config(rootDir, configFileName, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime,
-	              maxBufferSize);
+	              maxBufferSize, logLevel);
 }

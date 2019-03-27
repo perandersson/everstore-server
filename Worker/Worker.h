@@ -16,15 +16,6 @@ public:
 
 	void stop();
 
-	// Logging
-	void log(const char* str, ...);
-
-	// Logging
-	void error(const char* str, ...);
-
-	// Log an error message
-	void error(ESErrorCode err);
-
 private:
 
 	ESErrorCode initialize();

@@ -37,30 +37,6 @@ ESErrorCode IpcChild::sendTo(const ByteBuffer* bytes) {
 	return ESERR_NO_ERROR;
 }
 
-void IpcChild::log(const char* str, ...) {
-	va_list arglist;
-	va_start(arglist, str);
-	char tmp[5096];
-	vsprintf(tmp, str, arglist);
-	va_end(arglist);
-
-	printf("%02d [INFO]: %s\n", mId.value, tmp);
-}
-
-void IpcChild::error(const char* str, ...) {
-	va_list arglist;
-	va_start(arglist, str);
-	char tmp[5096];
-	vsprintf(tmp, str, arglist);
-	va_end(arglist);
-
-	printf("%02d [ERROR]: %s\n", mId.value, tmp);
-}
-
-void IpcChild::error(ESErrorCode err) {
-	printf("%02d [ERROR]: %s\n", mId.value, parseErrorCode(err));
-}
-
 void IpcChild::close() {
 	process_close(&mProcess);
 }

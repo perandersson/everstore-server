@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cinttypes>
+#include "Log/Log.hpp"
 
 using std::string;
 
@@ -30,6 +31,9 @@ using std::string;
 // How many seconds we wait until un-accessed journals are deleted
 #define DEFAULT_JOURNAL_GC_SECONDS 60
 
+// The default log level used by the server
+#define DEFAULT_LOG_LEVEL Log::Info
+
 struct Config
 {
 	const string rootDir;
@@ -40,13 +44,14 @@ struct Config
 	const uint16_t port;
 	const uint32_t maxJournalLifeTime;
 	const uint32_t maxBufferSize;
+	const uint32_t logLevel;
 
 	Config(const string& rootDir, const string& configFilename, const string& journalDir, const uint32_t numWorkers,
 	       const uint32_t maxConnections,
-	       const uint16_t port, const uint32_t maxJournalLifeTime, uint32_t maxBufferSize) :
+	       const uint16_t port, const uint32_t maxJournalLifeTime, uint32_t maxBufferSize, uint32_t logLevel) :
 			rootDir(rootDir), configFilename(configFilename), journalDir(journalDir), numWorkers(numWorkers),
 			maxConnections(maxConnections), port(port), maxJournalLifeTime(maxJournalLifeTime),
-			maxBufferSize(maxBufferSize) {}
+			maxBufferSize(maxBufferSize), logLevel(logLevel) {}
 
 	// Converts the supplied command string into a currently-working directory string
 	static string getWorkingDirectory(char* command);

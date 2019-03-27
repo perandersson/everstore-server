@@ -55,7 +55,7 @@ ESErrorCode Worker::start() {
 				// If the error is not fatal then log it, send it to the client and 
 				// continue working on the next message
 				if (IsErrorButNotFatal(err)) {
-					error(err);
+					Log::Write(Log::Error, "%s (%d)", parseErrorCode(err), err);
 
 					// Send the error to client
 					if (err != ESERR_SOCKET_NOT_ATTACHED) {
@@ -84,30 +84,6 @@ void Worker::stop() {
 	mRunning.store(false, memory_order_relaxed);
 }
 
-void Worker::log(const char* str, ...) {
-	va_list arglist;
-	va_start(arglist, str);
-	char tmp[5096];
-	vsprintf(tmp, str, arglist);
-	va_end(arglist);
-
-	printf("%02d [INFO]: %s\n", mIpcChild.id().value, tmp);
-}
-
-void Worker::error(const char* str, ...) {
-	va_list arglist;
-	va_start(arglist, str);
-	char tmp[5096];
-	vsprintf(tmp, str, arglist);
-	va_end(arglist);
-
-	printf("%02d [ERROR]: %s\n", mIpcChild.id().value, tmp);
-}
-
-void Worker::error(ESErrorCode err) {
-	printf("%02d [ERROR]: %s\n", mIpcChild.id().value, parseErrorCode(err));
-}
-
 ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, const ByteBuffer* memory) {
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -125,39 +101,30 @@ ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, cons
 }
 
 ESErrorCode Worker::initialize() {
-	log("Initializing worker");
-
-	log("Trying to load configuration from path: \"%s\"", mConfig.configFilename.c_str());
-	log("journalDir = \"%s\"", mConfig.journalDir.c_str());
-	log("numWorker = %d", mConfig.numWorkers);
-	log("maxConnections = %d", mConfig.maxConnections);
-	log("port = %d", mConfig.port);
-	log("maxJournalLifeTime = %d", mConfig.maxJournalLifeTime);
-
 	ESErrorCode err = socket_init();
 	if (isError(err)) {
 		return err;
 	}
 
-	log("Opening pipe to host");
+	Log::Write(Log::Info, "Opening pipe to host");
 	err = mIpcChild.connectToHost();
 	if (isError(err)) {
 		return err;
 	}
 
 	const auto path = mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir;
-	log("Changing working directory to: %s", path.c_str());
+	Log::Write(Log::Info, "Changing working directory to: %s", path.c_str());
 	if (!FileUtils::setCurrentDirectory(path)) {
 		return ESERR_FILESYSTEM_CHANGEPATH;
 	}
 
-	log("Preparing built-in transaction types");
+	Log::Write(Log::Info, "Preparing built-in transaction types");
 	vector<string> types;
 	types.push_back(NEW_JOURNAL_TRANSACTION_TYPE);
 	auto mask = transactionTypes(types);
 	assert(mask == NEW_JOURNAL_TRANSACTION_TYPE_BIT);
 
-	log("Initialization complete");
+	Log::Write(Log::Info, "Initialization complete");
 	return err;
 }
 
@@ -172,10 +139,10 @@ bool Worker::performConsistencyCheck() {
 	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir, lockSufix);
 	for (auto& file : files) {
 		const string journalFile = file.substr(0, file.length() - lockSufix.length());
-		log("Validating consistency for journal: %s", journalFile.c_str());
+		Log::Write(Log::Info, "Validating consistency for journal: %s", journalFile.c_str());
 		Journal j(journalFile, id());
 		if (!j.performConsistencyCheck()) {
-			error("Consistency check failed for file: %s", journalFile.c_str());
+			Log::Write(Log::Error, "Consistency check failed for file: %s", journalFile.c_str());
 			return false;
 		}
 	}
@@ -185,7 +152,7 @@ bool Worker::performConsistencyCheck() {
 ESErrorCode Worker::handleHostMessage(const ESHeader* header) {
 	switch (header->type) {
 		case REQ_SHUTDOWN:
-			log("Host is shutting down");
+			Log::Write(Log::Info, "Host is shutting down");
 			mRunning.store(false, memory_order_relaxed);
 			return ESERR_NO_ERROR;
 		case REQ_NEW_CONNECTION:
@@ -216,7 +183,7 @@ ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* co
 			err = checkIfJournalExists(header, connection, memory);
 			break;
 		default:
-			log("Unknown type: %d", header->type);
+			Log::Write(Log::Warn, "Unknown type: %d", header->type);
 			break;
 	}
 
@@ -230,13 +197,13 @@ ESErrorCode Worker::newConnection(const ESHeader* header) {
 		return ESERR_PROCESS_ATTACH_SHARED_SOCKET;
 
 	mAttachedSockets.add(header->client, newSocket, m);
-	log("New client %d mapped to %d on child process", header->client, newSocket);
+	Log::Write(Log::Info, "New client %d mapped to %d on child process", header->client, newSocket);
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode Worker::closeConnection(const ESHeader* header) {
 	mAttachedSockets.remove(header->client);
-	log("Client %d unmapped from child process", header->client);
+	Log::Write(Log::Info, "Client %d unmapped from child process", header->client);
 	return ESERR_NO_ERROR;
 }
 
