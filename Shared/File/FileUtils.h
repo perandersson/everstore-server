@@ -16,7 +16,7 @@ struct FileUtils {
 	static const int SPACE_SIZE;
 	static const char NL;
 	static const int NL_SIZE;
-	static const char* PATH_DELIM;
+	static const char PATH_DELIM;
 
 
 	/**
@@ -71,7 +71,7 @@ struct FileUtils {
 			string totalPath;
 			const uint32_t size = paths.size() - 1;
 			for (uint32_t i = 0; i < size; ++i) {
-				totalPath += paths[i] + string(FileUtils::PATH_DELIM);
+				totalPath += paths[i] + string(1, FileUtils::PATH_DELIM);
 				FileUtils::createFolder(totalPath);
 			}
 		}

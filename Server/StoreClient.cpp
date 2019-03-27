@@ -155,12 +155,16 @@ ESErrorCode StoreClient::sendBytesToClient(const ByteBuffer* memory) {
 	// The current offset indicates how much memory we've written to the memory
 	const uint32_t size = memory->offset();
 
+	// It's important to lock before doing this because any of the sub-processes might be using this socket.
+	// Note sub-processes is ever only sending data over the socket and is never reading data.
 	mutex_lock(mClientLock);
-	const uint32_t recv = socket_sendall(mClientSocket, memory->ptr(), size);
+	const uint32_t sentBytes = socket_sendall(mClientSocket, memory->ptr(), size);
 	mutex_unlock(mClientLock);
 
 	// Verify that we've sent all the data to the client
-	if (recv != size) return ESERR_SOCKET_SEND;
+	if (sentBytes != size) {
+		return ESERR_SOCKET_SEND;
+	}
 	return ESERR_NO_ERROR;
 }
 

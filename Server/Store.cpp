@@ -1,5 +1,6 @@
 #include "Store.h"
 #include "Auth/FixedUserAuthenticator.hpp"
+#include "../Shared/File/Path.hpp"
 
 Store::Store(const Config& config)
 		: mConfig(config), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
@@ -106,7 +107,7 @@ void Store::release() {
 
 bool Store::performConsistencyCheck() {
 	const string lockSufix(".lock");
-	auto files = FileUtils::findFilesEndingWith(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir,
+	auto files = FileUtils::findFilesEndingWith(mConfig.rootDir + Path::StrPathDelim + mConfig.journalDir,
 	                                            lockSufix);
 	for (auto& file : files) {
 		const uint32_t del = file.find_last_of('.');
@@ -124,6 +125,6 @@ bool Store::performConsistencyCheck() {
 }
 
 void Store::prepareDirectories() {
-	FileUtils::createFolder(mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir);
+	FileUtils::createFolder(mConfig.rootDir + string(1, FileUtils::PATH_DELIM) + mConfig.journalDir);
 	FileUtils::createFolder(FileUtils::getTempDirectory());
 }

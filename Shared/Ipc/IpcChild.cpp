@@ -9,7 +9,7 @@ IpcChild::~IpcChild() {
 }
 
 ESErrorCode IpcChild::connectToHost() {
-	const auto name = PIPE_NAME_PREFIX + mId.toString();
+	const auto name = mId.toString();
 	return process_connect_to_host(name, &mProcess);
 }
 

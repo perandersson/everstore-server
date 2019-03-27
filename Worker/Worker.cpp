@@ -3,6 +3,7 @@
 #include "../Shared/Database/Journal.h"
 #include "../Shared/Database/Transaction.h"
 #include "../Shared/Bits.hpp"
+#include "../Shared/File/Path.hpp"
 
 Worker::Worker(ChildProcessID childProcessId, const Config& config)
 		: mIpcChild(childProcessId), mJournals(childProcessId, config.maxJournalLifeTime),
@@ -113,7 +114,7 @@ ESErrorCode Worker::initialize() {
 		return err;
 	}
 
-	const auto path = mConfig.rootDir + string(FileUtils::PATH_DELIM) + mConfig.journalDir;
+	const auto path = mConfig.rootDir + Path::StrPathDelim + mConfig.journalDir;
 	Log::Write(Log::Info, "Changing working directory to: %s", path.c_str());
 	if (!FileUtils::setCurrentDirectory(path)) {
 		return ESERR_FILESYSTEM_CHANGEPATH;

@@ -3,8 +3,11 @@
 
 #include "es_config.h"
 
-template<class T> class LinkedListLink;
-template<class T> class LinkedList;
+template<class T>
+class LinkedListLink;
+
+template<class T>
+class LinkedList;
 
 template<class T>
 class LinkedListLink
@@ -85,7 +88,7 @@ public:
 	// 
 	// Delete all nodes inside this list
 	void deleteAll();
-	
+
 	//
 	// Unlinks all the nodes inside this list
 	void unlinkAll();
@@ -102,7 +105,7 @@ protected:
 	//
 	// Retrieves the link value from the supplied item.
 	Link* getLink(T* item);
-		
+
 private:
 	size_t mLinkOffset;
 	T* mHead;
@@ -113,37 +116,34 @@ private:
 /////////////////////////////////
 
 template<class T>
-LinkedListLink<T>::LinkedListLink() : mOffset(0), head(NULL), tail(NULL), list(NULL)
-{
+LinkedListLink<T>::LinkedListLink() : mOffset(0), head(NULL), tail(NULL), list(NULL) {
 }
 
 template<class T>
-LinkedListLink<T>::~LinkedListLink()
-{
+LinkedListLink<T>::~LinkedListLink() {
 	unlink();
 }
 
 template<class T>
-void LinkedListLink<T>::unlink()
-{
+void LinkedListLink<T>::unlink() {
 	if (list != NULL) {
 		// We are head if Head is NULL!
 		if (head == NULL) {
 			list->mHead = tail;
 		}
-		
+
 		// We are tail if Tail is NULL!
 		if (tail == NULL) {
 			list->mTail = head;
 		}
 
 		if (head != NULL) {
-			LinkedListLink<T>* link = (LinkedListLink<T>*)((char*)(head) + mOffset);
+			LinkedListLink<T>* link = (LinkedListLink<T>*) ((char*) (head) + mOffset);
 			link->tail = tail;
 		}
 
 		if (tail != NULL) {
-			LinkedListLink<T>* link = (LinkedListLink<T>*)((char*)(tail)+mOffset);
+			LinkedListLink<T>* link = (LinkedListLink<T>*) ((char*) (tail) + mOffset);
 			link->head = head;
 		}
 
@@ -156,35 +156,30 @@ void LinkedListLink<T>::unlink()
 }
 
 template<class T>
-void LinkedListLink<T>::link(T* item, LinkedList<T>* _list)
-{
+void LinkedListLink<T>::link(T* item, LinkedList<T>* _list) {
 	// Offset is needed so that we can find where the link is located inside the item
-	mOffset = (char*)(this) - (char*)(item);
+	mOffset = (char*) (this) - (char*) (item);
 	list = _list;
 }
 
 template<class T>
-bool LinkedListLink<T>::isLinked() const
-{
+bool LinkedListLink<T>::isLinked() const {
 	return list != NULL;
 }
 
 ///////////////////////////////////
 
 template<class T>
-LinkedList<T>::LinkedList(size_t offset) : mLinkOffset(offset), mHead(NULL), mTail(NULL), mSize(0)
-{
+LinkedList<T>::LinkedList(size_t offset) : mLinkOffset(offset), mHead(NULL), mTail(NULL), mSize(0) {
 }
 
 template<class T>
-LinkedList<T>::~LinkedList()
-{
+LinkedList<T>::~LinkedList() {
 	unlinkAll();
 }
 
 template<class T>
-void LinkedList<T>::addFirst(T* item)
-{
+void LinkedList<T>::addFirst(T* item) {
 	// Find the link for the supplied item
 	Link* link = getLink(item);
 
@@ -194,8 +189,7 @@ void LinkedList<T>::addFirst(T* item)
 	// Assign the item into the linked list
 	if (mHead == NULL) {
 		mHead = mTail = item;
-	}
-	else {
+	} else {
 		// Put the item to the end of the list
 		getLink(mHead)->head = item;
 		link->tail = mHead;
@@ -208,18 +202,17 @@ void LinkedList<T>::addFirst(T* item)
 }
 
 template<class T>
-void LinkedList<T>::addLast(T* item)
-{
+void LinkedList<T>::addLast(T* item) {
 	// Find the link for the supplied item
 	Link* link = getLink(item);
-		
+
 	// Make sure that the items link isn't attached to the list
 	link->unlink();
 
 	// Assign the item into the linked list
-	if(mHead == NULL) {
+	if (mHead == NULL) {
 		mHead = mTail = item;
- 	} else {
+	} else {
 		// Put the item to the end of the list
 		getLink(mTail)->tail = item;
 		link->head = mTail;
@@ -232,12 +225,11 @@ void LinkedList<T>::addLast(T* item)
 }
 
 template<class T>
-void LinkedList<T>::remove(T* item) 
-{
+void LinkedList<T>::remove(T* item) {
 	assert(item != NULL && "You cannot remove a non-existing item");
 
 	Link* link = getLink(item);
-	if(link->list == NULL)
+	if (link->list == NULL)
 		return;
 
 	assert(link->list == this && "You cannot remove another lists nodes");
@@ -246,27 +238,23 @@ void LinkedList<T>::remove(T* item)
 }
 
 template<class T>
-typename LinkedList<T>::Link* LinkedList<T>::getLink(T* item)
-{
+typename LinkedList<T>::Link* LinkedList<T>::getLink(T* item) {
 	char* mem = reinterpret_cast<char*>(item) + mLinkOffset;
 	return reinterpret_cast<Link*>(mem);
 }
 
 template<class T>
-T* LinkedList<T>::first() const
-{
+T* LinkedList<T>::first() const {
 	return mHead;
 }
 
 template<class T>
-T* LinkedList<T>::last() const
-{
+T* LinkedList<T>::last() const {
 	return mTail;
 }
 
 template<class T>
-void LinkedList<T>::moveToLast(T* item)
-{
+void LinkedList<T>::moveToLast(T* item) {
 	remove(item);
 	addLast(item);
 }
@@ -274,7 +262,7 @@ void LinkedList<T>::moveToLast(T* item)
 template<class T>
 void LinkedList<T>::unlinkAll() {
 	T* ptr = mHead;
-	while(ptr != NULL) {
+	while (ptr != NULL) {
 		Link* link = getLink(ptr);
 		T* next = link->tail;
 		link->head = link->tail = NULL;
@@ -285,10 +273,9 @@ void LinkedList<T>::unlinkAll() {
 }
 
 template<class T>
-void LinkedList<T>::deleteAll()
-{
+void LinkedList<T>::deleteAll() {
 	T* ptr = mHead;
-	while(ptr != NULL) {
+	while (ptr != NULL) {
 		Link* link = getLink(ptr);
 		T* next = link->tail;
 		delete ptr;
@@ -298,8 +285,7 @@ void LinkedList<T>::deleteAll()
 }
 
 template<class T>
-uint32_t LinkedList<T>::getSize() const
-{
+uint32_t LinkedList<T>::getSize() const {
 	return mSize;
 }
 

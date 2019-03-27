@@ -21,7 +21,7 @@ void IpcChildProcess::kill() {
 
 ESErrorCode IpcChildProcess::start(const string& command, const string& currentDirectory,
                                    const vector<string>& arguments) {
-	const string name = PIPE_NAME_PREFIX + mChild.id().toString();
+	const string name = mChild.id().toString();
 	return process_start(name, command, currentDirectory, arguments, mMaxBufferSize, handle());
 }
 

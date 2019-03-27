@@ -9,9 +9,6 @@
 #include "Message/ESHeader.h"
 #include "Mutex.h"
 
-// Prefix for the named pipe
-extern string PIPE_NAME_PREFIX;
-
 // Initialize the process
 void process_init(process_t* p);
 

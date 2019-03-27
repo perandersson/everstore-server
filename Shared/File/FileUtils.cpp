@@ -8,9 +8,9 @@ const int FileUtils::SPACE_SIZE = 1;
 const char FileUtils::NL = '\n';
 const int FileUtils::NL_SIZE = 1;
 #ifdef WIN32
-const char* FileUtils::PATH_DELIM = "\\";
+const char FileUtils::PATH_DELIM = '\\';
 #else
-const char* FileUtils::PATH_DELIM = "/";
+const char FileUtils::PATH_DELIM = '/';
 #endif
 
 #ifdef WIN32
@@ -130,7 +130,7 @@ string FileUtils::getTempDirectory() {
 
 string FileUtils::getTempFile() {
 	const int firstChar = (int)'a';
-	string path = getTempDirectory() + string(FileUtils::PATH_DELIM);
+	string path = getTempDirectory() + string(1, FileUtils::PATH_DELIM);
 	for (auto i = 0U; i < 20U; ++i) {
 		path += (char)(firstChar + (rand() % 22));
 	}

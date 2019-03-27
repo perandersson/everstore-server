@@ -36,7 +36,7 @@ ESErrorCode _win32_pipe_open(const string& name, PIPE* p) {
 
 	SECURITY_ATTRIBUTES sec;
 	sec.bInheritHandle = TRUE;
-	sec.lpSecurityDescriptor = NULL;
+	sec.lpSecurityDescriptor = nullptr;
 	sec.nLength = sizeof(SECURITY_ATTRIBUTES);
 
 	*p = CreateNamedPipe(name.c_str(), PIPE_ACCESS_DUPLEX | PIPE_TYPE_BYTE | PIPE_READMODE_BYTE, PIPE_WAIT, 1,
@@ -51,20 +51,21 @@ ESErrorCode _win32_pipe_open(const string& name, PIPE* p) {
 
 ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory,
                           const vector<string>& arguments, uint32_t, process_t* p) {
-	const ESErrorCode err = _win32_pipe_open(name, &p->pipe);
+	const auto pipeName = PIPE_NAME_PREFIX + name;
+	const ESErrorCode err = _win32_pipe_open(pipeName, &p->pipe);
 	if (isError(err)) return err;
 
 	const string c = currentDirectory + string("\\") + command + ".exe " + vector_to_string(arguments);
 	SECURITY_ATTRIBUTES sec;
 	sec.bInheritHandle = TRUE;
-	sec.lpSecurityDescriptor = NULL;
+	sec.lpSecurityDescriptor = nullptr;
 	sec.nLength = sizeof(SECURITY_ATTRIBUTES);
-	if (!CreateProcess(NULL, (char*) c.c_str(), &sec, &sec, TRUE, 0, NULL, currentDirectory.c_str(), &p->startupInfo,
+	if (!CreateProcess(nullptr, (char*) c.c_str(), &sec, &sec, TRUE, 0, nullptr, currentDirectory.c_str(), &p->startupInfo,
 	                   &p->processInfo))
 		return ESERR_PROCESS_CREATE_CHILD;
 
 	p->running = true;
-	return ConnectNamedPipe(p->pipe, NULL) == TRUE ? ESERR_NO_ERROR : ESERR_PIPE_LISTEN;
+	return ConnectNamedPipe(p->pipe, nullptr) == TRUE ? ESERR_NO_ERROR : ESERR_PIPE_LISTEN;
 }
 
 ESErrorCode process_close(process_t* p) {
@@ -100,10 +101,11 @@ ESErrorCode process_connect_to_host(const string& name, process_t* p) {
 
 	SECURITY_ATTRIBUTES sec;
 	sec.bInheritHandle = TRUE;
-	sec.lpSecurityDescriptor = NULL;
+	sec.lpSecurityDescriptor = nullptr;
 	sec.nLength = sizeof(SECURITY_ATTRIBUTES);
 
-	p->pipe = CreateFile(name.c_str(), GENERIC_READ | GENERIC_WRITE, TRUE, &sec, OPEN_EXISTING, 0, NULL);
+	const auto pipeName = PIPE_NAME_PREFIX + name;
+	p->pipe = CreateFile(pipeName.c_str(), GENERIC_READ | GENERIC_WRITE, TRUE, &sec, OPEN_EXISTING, 0, nullptr);
 	if (p->pipe == INVALID_PIPE) {
 		return ESERR_PIPE_CONNECT;
 	}
@@ -113,10 +115,10 @@ ESErrorCode process_connect_to_host(const string& name, process_t* p) {
 
 uint32_t process_read(process_t* p, _OUT char* bytes, uint32_t size) {
 	DWORD totalBytes = 0;
-	BOOL result = TRUE;
+	BOOL result;
 	do {
 		DWORD readBytes = 0;
-		result = ReadFile(p->pipe, &bytes[totalBytes], size - totalBytes, &readBytes, NULL);
+		result = ReadFile(p->pipe, &bytes[totalBytes], size - totalBytes, &readBytes, nullptr);
 		totalBytes += readBytes;
 	} while (result && totalBytes < size);
 	return (uint32_t) totalBytes;
@@ -124,10 +126,10 @@ uint32_t process_read(process_t* p, _OUT char* bytes, uint32_t size) {
 
 uint32_t process_write(process_t* p, const char* bytes, uint32_t size) {
 	DWORD totalBytes = 0;
-	BOOL result = TRUE;
+	BOOL result;
 	do {
 		DWORD writeBytes = 0;
-		result = WriteFile(p->pipe, &bytes[totalBytes], size - totalBytes, &writeBytes, NULL);
+		result = WriteFile(p->pipe, &bytes[totalBytes], size - totalBytes, &writeBytes, nullptr);
 		totalBytes += writeBytes;
 	} while (result && totalBytes < size);
 	if (totalBytes > 0)

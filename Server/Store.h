@@ -4,9 +4,10 @@
 #include "../Shared/everstore.h"
 #include "StoreServer.h"
 
-struct Store {
-
-	Store(const Config& config);
+class Store
+{
+public:
+	explicit Store(const Config& config);
 
 	~Store();
 

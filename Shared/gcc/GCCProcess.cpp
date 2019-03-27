@@ -5,7 +5,7 @@
 #include "../Message/ESHeader.h"
 #include "GCCMutex.h"
 
-string PIPE_NAME_PREFIX = "everstore_pipe_child";
+string PIPE_NAME_PREFIX("everstore_pipe_child");
 
 ESErrorCode _gcc_pipe_open(const string& name, int* pipe) {
 	unlink(name.c_str());
@@ -51,10 +51,11 @@ void process_init(process_t* p) {
 	p->pipe = INVALID_PIPE;
 }
 
-ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory,
+ESErrorCode process_start(const string& asd, const string& command, const string& currentDirectory,
 		const vector<string>& arguments, uint32_t pipeMaxBufferSize, process_t* p) {
+	const auto pipeName = PIPE_NAME_PREFIX + name;
 	// Open the pipe first
-	ESErrorCode err = _gcc_pipe_open(name, &p->pipe);
+	ESErrorCode err = _gcc_pipe_open(pipeName, &p->pipe);
 	if (isError(err)) {
 		return err;
 	}
@@ -107,7 +108,7 @@ ESErrorCode process_wait(process_t* p) {
 }
 
 ESErrorCode process_connect_to_host(const string& name, process_t* p) {
-	const string pipeName = name;
+	const auto pipeName = PIPE_NAME_PREFIX + name;
 	struct sockaddr_un addr;
 	SOCKET fd;
 	p->handle = INVALID_PROCESS;

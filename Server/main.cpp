@@ -1,4 +1,5 @@
 #include "Store.h"
+#include "../Shared/File/Path.hpp"
 
 Store* gEventStore = nullptr;
 
@@ -11,7 +12,7 @@ void handleSingal(int signal) {
 }
 
 string getConfigPath(const string& rootPath, int argc, char** argv) {
-	string configFileName = string(rootPath + string(FileUtils::PATH_DELIM) + DEFAULT_CONFIG_FILENAME);
+	string configFileName = string(rootPath + Path::StrPathDelim + DEFAULT_CONFIG_FILENAME);
 	for (int i = 0; i < argc; ++i) {
 		const auto configKey = argv[i];
 		if (strcmp("--config", configKey) == 0) {
