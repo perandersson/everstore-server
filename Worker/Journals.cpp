@@ -8,15 +8,18 @@ Journals::Journals(ChildProcessID childProcessId, uint32_t maxJournalLifeTime)
 }
 
 Journals::~Journals() {
-
+	for (auto& pair : mJournals) {
+		delete pair.second;
+	}
+	mJournals.clear();
 }
 
-Journal* Journals::getOrCreate(const string& name) {
-	auto it = mJournals.find(name);
+Journal* Journals::getOrCreate(const Path& path) {
+	auto it = mJournals.find(path);
 	Journal* journal = nullptr;
 	if (it == mJournals.end()) {
-		journal = new Journal(name, mChildProcessId);
-		mJournals.insert(make_pair(name, journal));
+		journal = new Journal(path, mChildProcessId);
+		mJournals[path] = journal;
 		mJournalsToBeRemoved.addLast(journal);
 		gc();
 	} else {
@@ -27,9 +30,11 @@ Journal* Journals::getOrCreate(const string& name) {
 	return journal;
 }
 
-Journal* Journals::getOrNull(const string& name) {
-	auto it = mJournals.find(name);
-	if (it == mJournals.end()) return nullptr;
+Journal* Journals::getOrNull(const Path& path) {
+	auto it = mJournals.find(path);
+	if (it == mJournals.end()) {
+		return nullptr;
+	}
 
 	auto journal = it->second;
 	journal->refresh();
@@ -54,7 +59,7 @@ void Journals::gc() {
 		if (duration < mMaxJournalLifeTime)
 			break;
 
-		auto it = mJournals.find(journal->name());
+		auto it = mJournals.find(journal->path());
 		mJournals.erase(it);
 		delete journal;
 		journal = next;

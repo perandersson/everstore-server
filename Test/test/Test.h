@@ -5,6 +5,7 @@
 #include "UnitTest.h"
 #include "TestException.h"
 #include <cstdint>
+#include "../../Shared/File/Path.hpp"
 
 #define TEST_SUITE(Name) \
 	namespace Name##_suite { static const char SuiteName[] = {#Name}; } \
@@ -26,6 +27,7 @@ std::string toString(uint16_t value);
 std::string toString(uint32_t value);
 std::string toString(unsigned char value);
 std::string toString(std::string value);
+std::string toString(const Path& value);
 
 void innerAssertNull(void* ptr, UnitTest* test, const char* file, long line);
 void innerAssertNotNull(void* ptr, UnitTest* test, const char* file, long line);

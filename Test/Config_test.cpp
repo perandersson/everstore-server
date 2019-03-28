@@ -5,12 +5,12 @@ TEST_SUITE(Properties)
 {
 	UNIT_TEST(defaultValuesForNonExistentPropertiesFile) {
 		const string rootDir(".");
-		const string configFilename("test-resources/filenotfound.properties");
+		const Path configFilename("test-resources/filenotfound.properties");
 
 		const Config p = Config::readFromConfigFile(rootDir, configFilename);
 
 		assertEquals(rootDir, p.rootDir);
-		assertEquals(configFilename, p.configFilename);
+		assertEquals(configFilename, p.configPath);
 		assertEquals(string(DEFAULT_JOURNAL_DIR), p.journalDir);
 		assertEquals((uint32_t) DEFAULT_NUM_WORKERS, p.numWorkers);
 		assertEquals((uint32_t) DEFAULT_MAX_CONNECTIONS, p.maxConnections);
@@ -22,7 +22,7 @@ TEST_SUITE(Properties)
 
 	UNIT_TEST(overrideAllPropertiesFromFile) {
 		const Config p = Config::readFromConfigFile(string("."),
-		                                            string("test-resources/override_all.properties"));
+		                                            Path("test-resources/override_all.properties"));
 
 		assertEquals(string("path/to/journal"), p.journalDir);
 		assertEquals(1U, p.numWorkers);
@@ -33,7 +33,7 @@ TEST_SUITE(Properties)
 
 	UNIT_TEST(overrideOnePropertyFromFile) {
 		const Config p = Config::readFromConfigFile(string("."),
-		                                            string("test-resources/override_one.properties"));
+			Path("test-resources/override_one.properties"));
 
 		assertEquals(string(DEFAULT_JOURNAL_DIR), p.journalDir);
 		assertEquals((uint32_t) DEFAULT_NUM_WORKERS, p.numWorkers);

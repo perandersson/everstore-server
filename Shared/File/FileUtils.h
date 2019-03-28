@@ -7,10 +7,12 @@
 
 #include "../es_config.h"
 #include "../StringUtils.h"
+#include "Path.hpp"
 
 using namespace std;
 
-struct FileUtils {
+struct FileUtils
+{
 	static const char EMPTY;
 	static const char SPACE;
 	static const int SPACE_SIZE;
@@ -25,15 +27,14 @@ struct FileUtils {
 	* \return The file size; 0 if file does not exists
 	*/
 	static uint32_t getFileSize(FILE* file) {
+		if (!file) {
+			return 0u;
+		}
 		const auto begin = ftell(file);
 		fseek(file, 0, SEEK_END);
 		const auto end = ftell(file);
 		fseek(file, 0, SEEK_SET);
-		return (uint32_t)(end - begin);
-	}
-
-	static char* empty() {
-		return (char*)&EMPTY;
+		return (uint32_t) (end - begin);
 	}
 
 	static bool fileExists(const string& fileName) {
@@ -42,9 +43,9 @@ struct FileUtils {
 		return f != 0;
 	}
 
-	static void truncate(const string& fileName, long newLength);
+	static bool truncate(const string& fileName, long newLength);
 
-	static void truncate(FILE* f, long newLength);
+	static bool truncate(FILE* f, long newLength);
 
 	// 
 	// Returns the file size for file with the supplied filename
@@ -54,8 +55,7 @@ struct FileUtils {
 			auto size = getFileSize(file);
 			fclose(file);
 			return size;
-		}
-		else return 0;
+		} else return 0;
 	}
 
 	static int remove(const string& fileName) {
@@ -90,14 +90,10 @@ struct FileUtils {
 	static void clearAndDeleteDirectory(const string& path);
 
 	// 
-	static bool copyFile(const string& srcFile, const string& destFile);
-
-	// 
-	static string getTempFileWithoutPath();
+	static bool copyFile(const Path& srcFile, const Path& destFile);
 
 	static vector<string> findFilesEndingWith(const string& path, const string& sufix);
 };
-
 
 
 #endif //EVENTSTORE_FILEUTILS_H

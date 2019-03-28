@@ -10,6 +10,7 @@
 #include "../File/FileOutputStream.h"
 #include "../Ipc/ChildProcessID.h"
 #include "OpenTransactions.hpp"
+#include "../File/Path.hpp"
 
 class Journal
 {
@@ -22,9 +23,9 @@ public:
 
 	LinkedListLink<Journal> link;
 
-	Journal(const string& path);
+	Journal(const Path& path);
 
-	Journal(const string& path, const ChildProcessID childProcessId);
+	Journal(const Path& path, ChildProcessID childProcessId);
 
 	~Journal();
 
@@ -38,10 +39,10 @@ public:
 	const TransactionID openTransaction();
 
 	// Rollback the supplied transaction
-	void rollback(const TransactionID id);
+	void rollback(TransactionID id);
 
 	// Try to commit a transaction
-	ESErrorCode tryCommit(const TransactionID id, Bits::Type types, MutableString eventsString);
+	ESErrorCode tryCommit(TransactionID id, Bits::Type types, MutableString eventsString);
 
 	// Increase the reference count of this journal and returns the size of the journal
 	//
@@ -53,15 +54,6 @@ public:
 	// \param bytesWritten The amount of bytes written to the journal
 	void release(uint32_t bytesWritten);
 
-	// Open a file input stream to the journal
-	FileInputStream* inputStream(uint32_t bytesOffset);
-
-	// Open a file output stream
-	FileOutputStream* outputStream();
-
-	// Open a file output stream
-	FileOutputStream* outputStream(uint32_t bytesOffset);
-
 	// Retrieves the size of this journal in bytes. The size of the journal might or might not be the same size as the journal file's size
 	inline uint32_t journalSize() const { return mJournalSize; }
 
@@ -72,17 +64,29 @@ public:
 	inline bool exists() const { return !empty(); }
 
 	// Retrieves the path to the journal (on the HDD)
-	inline const string& name() const { return mName; }
+	inline const Path& path() const { return mPath; }
 
-	// Retrieves the path to the journal (on the HDD)
-	inline const string& path() const { return mJournalFileName; }
+	inline FILE* file() const { return mFile; }
 
 	// When was the journal used last?
 	inline const chrono::system_clock::time_point& timeSinceLastUsed() const { return mTimeSinceLastUsed; }
 
+	// Open a file input stream to the journal
+	FileInputStream* inputStream(uint32_t bytesOffset);
+
+	// Open a file output stream
+	FileOutputStream* outputStream();
+
+	// Open a file output stream
+	FileOutputStream* outputStream(uint32_t bytesOffset);
+
 private:
-	string mName;
-	string mJournalFileName;
+	// The path to this journal
+	const Path mPath;
+
+	// Points to the actual file on the hdd
+	FILE* const mFile;
+
 	FileLock mFileLock;
 	chrono::system_clock::time_point mTimeSinceLastUsed;
 	uint32_t mJournalSize;

@@ -4,6 +4,7 @@
 #include "../Config.h"
 #include "IpcChildProcess.h"
 #include "IpcChild.h"
+#include "../File/Path.hpp"
 
 struct ActiveSocket
 {
@@ -14,7 +15,7 @@ struct ActiveSocket
 class IpcHost
 {
 public:
-	IpcHost(const string& rootDir, const string& configFileName, uint32_t maxBufferSize);
+	IpcHost(const string& rootDir, const Path& configPath, uint32_t maxBufferSize);
 
 	~IpcHost();
 
@@ -69,7 +70,7 @@ private:
 
 private:
 	const string mRootDir;
-	const string mConfigFileName;
+	const Path mConfigPath;
 	const uint32_t mMaxBufferSize;
 
 	vector<IpcChildProcess*> mProcesses;

@@ -2,6 +2,7 @@
 #define _EVERSTORE_JOURNALS_H_
 
 #include "../Shared/everstore.h"
+#include "../Shared/File/Path.hpp"
 
 //
 // Map managing any open journals
@@ -14,10 +15,10 @@ public:
 
 	//
 	// Retrieves a journal with the supplied name
-	Journal* getOrCreate(const string& name);
+	Journal* getOrCreate(const Path& path);
 
 	// Retrieves the journal if found; NULL otherwise.
-	Journal* getOrNull(const string& name);
+	Journal* getOrNull(const Path& path);
 
 	//
 	// Look for journals that's reacently been closed and remove them if they are old enough
@@ -26,7 +27,7 @@ public:
 private:
 	const ChildProcessID mChildProcessId;
 	const uint32_t mMaxJournalLifeTime;
-	unordered_map<string, Journal*> mJournals;
+	unordered_map<Path, Journal*> mJournals;
 
 	// GC
 	LinkedList<Journal> mJournalsToBeRemoved;

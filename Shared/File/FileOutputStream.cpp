@@ -3,21 +3,15 @@
 #include "../Database/Timestamp.h"
 #include "../Database/Journal.h"
 
-FileOutputStream::FileOutputStream(const string& fileName, uint32_t byteOffset) : mByteOffset(byteOffset), mFileHandle(0) {
-	// Create file if it does not exists
-	auto tmpFile = fopen(fileName.c_str(), "a");
-	fclose(tmpFile);
-
-	mFileHandle = fopen(fileName.c_str(), "r+b");
-	if (mByteOffset > 0)
+FileOutputStream::FileOutputStream(FILE* file, uint32_t byteOffset)
+	: mFileHandle(file), mByteOffset(byteOffset) {
+	if (mByteOffset > 0) {
 		fseek(mFileHandle, mByteOffset, SEEK_SET);
-}
-
-FileOutputStream::~FileOutputStream() {
+	}
 }
 
 uint32_t FileOutputStream::writeEvents(const Timestamp* t, MutableString events) {
-	const uint32_t offset = Timestamp::BytesLength + FileUtils::SPACE_SIZE;
+	const auto offset = Timestamp::BytesLength + FileUtils::SPACE_SIZE;
 
 	char tmp[1024];
 	strncpy(tmp, t->value, Timestamp::BytesLength);
@@ -65,12 +59,4 @@ void FileOutputStream::replaceWithNL(uint32_t pos) {
 	fseek(mFileHandle, pos, SEEK_SET);
 	fwrite(&FileUtils::NL, FileUtils::NL_SIZE, 1, mFileHandle);
 	fseek(mFileHandle, currentPos, SEEK_SET);
-}
-
-void FileOutputStream::close() {
-	if (mFileHandle != 0) {
-		fclose(mFileHandle);
-		mFileHandle = 0;
-	}
-	delete this;
 }

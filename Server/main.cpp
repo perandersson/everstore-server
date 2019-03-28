@@ -11,7 +11,7 @@ void handleSingal(int signal) {
 	printf("Server stopped\n");
 }
 
-string getConfigPath(const string& rootPath, int argc, char** argv) {
+Path getConfigPath(const string& rootPath, int argc, char** argv) {
 	string configFileName = string(rootPath + Path::StrPathDelim + DEFAULT_CONFIG_FILENAME);
 	for (int i = 0; i < argc; ++i) {
 		const auto configKey = argv[i];
@@ -23,11 +23,11 @@ string getConfigPath(const string& rootPath, int argc, char** argv) {
 			}
 		}
 	}
-	return configFileName;
+	return Path(configFileName);
 }
 
 void printServerProperties(const Config& config) {
-	Log::Write(Log::Info, "Trying to load configuration from path: \"%s\"", config.configFilename.c_str());
+	Log::Write(Log::Info, "Trying to load configuration from path: \"%s\"", config.configPath.value.c_str());
 	Log::Write(Log::Info, "journalDir = \"%s\"", config.journalDir.c_str());
 	Log::Write(Log::Info, "numWorker = %d", config.numWorkers);
 	Log::Write(Log::Info, "maxConnections = %d", config.maxConnections);
@@ -38,8 +38,8 @@ void printServerProperties(const Config& config) {
 
 int main(int argc, char** argv) {
 	const string rootPath = Config::getWorkingDirectory(argv[0]);
-	const string configFileName = getConfigPath(rootPath, argc, argv);
-	const Config props = Config::readFromConfigFile(rootPath, configFileName);
+	const Path configPath = getConfigPath(rootPath, argc, argv);
+	const Config props = Config::readFromConfigFile(rootPath, configPath);
 	Log::SetLogLevel(props.logLevel);
 
 	gEventStore = new Store(props);

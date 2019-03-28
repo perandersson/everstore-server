@@ -50,7 +50,7 @@ struct CommitTransaction {
 		uint32_t journalStringLength;	// Length of the journal name
 		uint32_t typeSize;				// The byte size for the event types
 		uint32_t eventsSize;			// The byte size for the actual events
-		uint32_t transactionUID;		// A unique identifier for the current transaction
+		TransactionID transactionUID;		// A unique identifier for the current transaction
 	};
 	struct Response {
 		uint32_t success;				// If a conflict occured (TRUE or FALSE)
@@ -73,7 +73,7 @@ struct RollbackTransaction {
 	static const ESRequestType TYPE = REQ_ROLLBACK_TRANSACTION;
 	struct Request {
 		uint32_t journalStringLength;	// Length of the journal name
-		uint32_t transactionUID;		// Transaction we want to delete
+		TransactionID transactionUID;		// Transaction we want to delete
 	};
 	struct Response {
 		char success;

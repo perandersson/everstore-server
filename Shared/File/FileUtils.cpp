@@ -22,19 +22,21 @@ const char FileUtils::PATH_DELIM = '/';
 
 #endif
 
-void FileUtils::truncate(const string& fileName, long newLength) {
+bool FileUtils::truncate(const string& fileName, long newLength) {
 	FILE* f = fopen(fileName.c_str(), "r+b");
-	if (f != 0) {
-		truncate(f, newLength);
+	if (f) {
+		const auto result = truncate(f, newLength);
 		fclose(f);
+		return result;
 	}
+	return false;
 }
 
-void FileUtils::truncate(FILE* f, long newLength) {
+bool FileUtils::truncate(FILE* f, long newLength) {
 #ifdef WIN32
-	_chsize(_fileno(f), newLength);
+	return _chsize(_fileno(f), newLength) == 0;
 #else
-	ftruncate(fileno(f), newLength);
+	return ftruncate(fileno(f), newLength) == 0;
 #endif
 }
 
@@ -129,22 +131,11 @@ string FileUtils::getTempDirectory() {
 }
 
 string FileUtils::getTempFile() {
-	const int firstChar = (int)'a';
+	static constexpr int firstChar = (int)'a';
 	string path = getTempDirectory() + string(1, FileUtils::PATH_DELIM);
 	for (auto i = 0U; i < 20U; ++i) {
 		path += (char)(firstChar + (rand() % 22));
 	}
-	return path;
-}
-
-string FileUtils::getTempFileWithoutPath() {
-	const int firstChar = (int)'a';
-	string path;
-	
-	for (auto i = 0U; i < 20U; ++i) {
-		path += (char)(firstChar + (rand() % 22));
-	}
-
 	return path;
 }
 
@@ -156,9 +147,9 @@ void FileUtils::clearAndDeleteDirectory(const string& path) {
 	::remove(path.c_str());
 }
 
-bool FileUtils::copyFile(const string& srcFile, const string& destFile) {
-	FILE* file = fopen(srcFile.c_str(), "r+b");
-	if (file == NULL) return false;
+bool FileUtils::copyFile(const Path& srcFile, const Path& destFile) {
+	auto file = srcFile.Open();
+	if (file == nullptr) return false;
 
 	const uint32_t fileSize = FileUtils::getFileSize(file);
 
@@ -167,10 +158,7 @@ bool FileUtils::copyFile(const string& srcFile, const string& destFile) {
 	fread(t, fileSize, 1, file);
 	fclose(file);
 
-	file = fopen(destFile.c_str(), "a");
-	fclose(file);
-	
-	file = fopen(destFile.c_str(), "r+b");
+	file = destFile.OpenOrCreate("r+b");
 	if (file == NULL) {
 		free(t);
 		return false;

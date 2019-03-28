@@ -15,10 +15,7 @@ public:
 	//
 	// \param fileName
 	// \param bytesOffset
-	FileOutputStream(const string& fileName, uint32_t byteOffset);
-
-	// Destructor
-	~FileOutputStream();
+	FileOutputStream(FILE* file, uint32_t byteOffset);
 
 	//
 	// Write the supplied event to the supplied associated file
@@ -30,11 +27,9 @@ public:
 	// Replace the character at the given position with a newline
 	void replaceWithNL(uint32_t pos);
 
-	void close();
-
 private:
+	FILE* const mFileHandle;
 	uint32_t mByteOffset;
-	FILE* mFileHandle;
 };
 
 #endif

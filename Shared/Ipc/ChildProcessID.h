@@ -14,6 +14,8 @@ struct ChildProcessID
 		assert(value != 0);
 	}
 
+	ChildProcessID(const ChildProcessID& rhs) = default;
+
 	const bool operator!=(const ChildProcessID& rhs) const { return value != rhs.value; }
 
 	const bool operator==(const ChildProcessID& rhs) const { return value == rhs.value; }

@@ -137,14 +137,14 @@ void Worker::release() {
 }
 
 bool Worker::performConsistencyCheck() {
-	const string lockSufix(string(".") + id().toString() + string(".lock"));
+	const string lockSufix(string(".log.") + id().toString() + string(".lock"));
 	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir, lockSufix);
 	for (auto& file : files) {
-		const string journalFile = file.substr(0, file.length() - lockSufix.length());
-		Log::Write(Log::Info, "Validating consistency for journal: %s", journalFile.c_str());
+		const Path journalFile = Path(file.substr(0, file.length() - lockSufix.length()));
+		Log::Write(Log::Info, "Validating consistency for journal: %s", journalFile.value.c_str());
 		Journal j(journalFile, id());
 		if (!j.performConsistencyCheck()) {
-			Log::Write(Log::Error, "Consistency check failed for file: %s", journalFile.c_str());
+			Log::Write(Log::Error, "Consistency check failed for file: %s", journalFile.value.c_str());
 			return false;
 		}
 	}
@@ -217,13 +217,18 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	auto request = memory->allocate<NewTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
-	string journalName;
+	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
-	if (err != ESERR_NO_ERROR) return err;
+	if (err != ESERR_NO_ERROR) {
+		return err;
+	}
 
 	// Retrieve the journal and then create a transaction for it
 	auto journal = mJournals.getOrCreate(journalName);
 	auto transaction = journal->openTransaction();
+	if (transaction.IsInvalid()) {
+		return ESERR_JOURNAL_PATH_INVALID;
+	}
 
 	// Write the response
 	const NewTransaction::Header responseHeader(header->requestUID, id());
@@ -236,8 +241,8 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	return sendBytesToClient(connection, memory);
 }
 
-ESErrorCode
-Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
+ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection,
+                                      ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -245,9 +250,11 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	const auto request = memory->allocate<CommitTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
-	string journalName;
+	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
-	if (err != ESERR_NO_ERROR) return err;
+	if (err != ESERR_NO_ERROR) {
+		return err;
+	}
 
 	// Retrieve the journal and then create a transaction for it
 	auto journal = mJournals.getOrNull(journalName);
@@ -281,7 +288,9 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	// Commit the data into the journal. If the journal is null then it's been garbage collected (i.e. you are 
 	// not allowed to have a transaction open for over 1 minute)
 	err = journal->tryCommit(request->transactionUID, types, events);
-	if (err == ESERR_JOURNAL_TRANSACTION_DOES_NOT_EXIST) return err;
+	if (err == ESERR_JOURNAL_TRANSACTION_DOES_NOT_EXIST) {
+		return err;
+	}
 
 	// Send response
 	const auto commitSuccess = err != ESERR_JOURNAL_TRANSACTION_CONFLICT ? TRUE : FALSE;
@@ -295,8 +304,8 @@ Worker::commitTransaction(const ESHeader* header, const AttachedConnection* conn
 	return sendBytesToClient(connection, memory);
 }
 
-ESErrorCode
-Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
+ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection,
+                                        ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -305,9 +314,11 @@ Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* co
 	const auto request = memory->allocate<RollbackTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
-	string journalName;
+	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
-	if (err != ESERR_NO_ERROR) return err;
+	if (err != ESERR_NO_ERROR) {
+		return err;
+	}
 
 	// Rollback the transaction
 	auto journal = mJournals.getOrNull(journalName);
@@ -337,7 +348,7 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 	const auto includeTimestamp = Bits::IsSet(header->properties, ESPROP_INCLUDE_TIMESTAMP);
 
 	// Get journal name and make sure that it's valid
-	string journalName;
+	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
 	if (err != ESERR_NO_ERROR) return err;
 
@@ -364,7 +375,7 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 		memory->reset();
 		const ReadJournal::Header responseHeader(requestUID, ESPROP_NONE, id());
 		memory->write(&responseHeader);
-		ReadJournal::Response* response = memory->allocate<ReadJournal::Response>();
+		auto const response = memory->allocate<ReadJournal::Response>();
 		response->bytes = 0;
 
 		// Write the journal body if one exists
@@ -415,10 +426,14 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 		// Write the journal body (with or without timestamp)
 		if (includeTimestamp) {
 			const ESErrorCode err = stream->readBytes(memory, sendSize);
-			if (isError(err)) return err;
+			if (isError(err)) {
+				return err;
+			}
 		} else {
 			const ESErrorCode err = stream->readJournalBytes(memory, sendSize, &bytesWritten);
-			if (isError(err)) return err;
+			if (isError(err)) {
+				return err;
+			}
 		}
 
 		// TODO: Make this better!!! Update response header
@@ -427,14 +442,16 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 
 		// Send to client
 		const ESErrorCode err = sendBytesToClient(connection, memory);
-		if (isError(err)) return err;
+		if (isError(err)) {
+			return err;
+		}
 	}
 
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode
-Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
+ESErrorCode Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection,
+                                         ByteBuffer* memory) {
 	assert(header != nullptr);
 	assert(connection != nullptr);
 	assert(memory != nullptr);
@@ -443,9 +460,11 @@ Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* c
 	const auto request = memory->allocate<JournalExists::Request>();
 
 	// Get journal name and make sure that it's valid
-	string journalName;
+	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
-	if (err != ESERR_NO_ERROR) return err;
+	if (err != ESERR_NO_ERROR) {
+		return err;
+	}
 
 	// Retrieve the journal and then create a transaction for it
 	auto journal = mJournals.getOrCreate(journalName);
@@ -463,12 +482,12 @@ Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* c
 
 Bits::Type Worker::transactionTypes(vector<string>& types) {
 	Bits::Type transactionType = Bits::None;
-	for (auto type : types) {
+	for (auto& type : types) {
 		auto mask = mTransactionTypes.find(type);
 		if (mask == mTransactionTypes.end()) {
 			transactionType |= mNextTransactionTypeBit;
 			mTransactionTypes.insert(make_pair(type, mNextTransactionTypeBit));
-			mNextTransactionTypeBit = mNextTransactionTypeBit << 1;
+			mNextTransactionTypeBit = mNextTransactionTypeBit << 1u;
 		} else {
 			transactionType |= mask->second;
 		}
@@ -510,30 +529,27 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 	return header;
 }
 
-//
-// Read a path from the memory buffer. Dots are not allowed in a path name
-ESErrorCode Worker::readAndValidatePath(const uint32_t length, ByteBuffer* memory, _OUT string* s) {
+ESErrorCode Worker::readAndValidatePath(const uint32_t length, ByteBuffer* memory, Path* path) {
 	// Validate path length
 	if (length < 2 || length > 1024) {
-		*s = string();
 		return ESERR_JOURNAL_PATH_INVALID;
 	}
 
 	// Validate that the path is absolute
 	const char* ptr = memory->allocate(length);
 	if (*ptr != '/') {
-		*s = string();
 		return ESERR_JOURNAL_PATH_INVALID;
 	}
 
 	// Make the memory block into a std string that does not contain the '/' character.
-	*s = string(ptr + 1, length - 1);
+	static const string logSuffix(".log");
+	string logFilename = string(ptr + 1, length - 1) + logSuffix;
 
 	// Ensure that no illegal characters is part of the journal path
-	if (s->find("..") != -1 || s->find("//") != -1) {
-		*s = string();
+	if (logFilename.find("..") != -1 || logFilename.find("//") != -1) {
 		return ESERR_JOURNAL_PATH_INVALID;
 	}
 
+	*path = Path(logFilename);
 	return ESERR_NO_ERROR;
 }

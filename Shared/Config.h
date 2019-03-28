@@ -4,6 +4,7 @@
 #include <string>
 #include <cinttypes>
 #include "Log/Log.hpp"
+#include "File/Path.hpp"
 
 using std::string;
 
@@ -37,7 +38,7 @@ using std::string;
 struct Config
 {
 	const string rootDir;
-	const string configFilename;
+	const Path configPath;
 	const string journalDir;
 	const uint32_t numWorkers;
 	const uint32_t maxConnections;
@@ -46,10 +47,10 @@ struct Config
 	const uint32_t maxBufferSize;
 	const uint32_t logLevel;
 
-	Config(const string& rootDir, const string& configFilename, const string& journalDir, const uint32_t numWorkers,
+	Config(const string& rootDir, const Path& configPath, const string& journalDir, const uint32_t numWorkers,
 	       const uint32_t maxConnections,
 	       const uint16_t port, const uint32_t maxJournalLifeTime, uint32_t maxBufferSize, uint32_t logLevel) :
-			rootDir(rootDir), configFilename(configFilename), journalDir(journalDir), numWorkers(numWorkers),
+			rootDir(rootDir), configPath(configPath), journalDir(journalDir), numWorkers(numWorkers),
 			maxConnections(maxConnections), port(port), maxJournalLifeTime(maxJournalLifeTime),
 			maxBufferSize(maxBufferSize), logLevel(logLevel) {}
 
@@ -57,7 +58,7 @@ struct Config
 	static string getWorkingDirectory(char* command);
 
 	// Read the application properties from the supplied config filename
-	static Config readFromConfigFile(const string& rootDir, const string& configFileName);
+	static Config readFromConfigFile(const string& rootDir, const Path& configPath);
 };
 
 #endif

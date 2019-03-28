@@ -17,10 +17,7 @@ public:
 	// \param fileName The path to where the file is located
 	// \param fileSize the size of the file
 	// \param bytesOffset Offset, in bytes, where the stream should start read data
-	FileInputStream(const string& fileName, uint32_t fileSize, uint32_t byteOffset);
-
-	// Destructor
-	~FileInputStream();
+	FileInputStream(FILE* file, uint32_t fileSize, uint32_t byteOffset);
 
 	// Read the entire bytes into the supplied memory
 	inline ESErrorCode readBytes(ByteBuffer* memory) {
@@ -39,7 +36,7 @@ public:
 	const inline uint32_t bytesLeft() const { return mFileSize - mByteOffset; }
 
 private:
-	FILE* mFile;
+	FILE* const mFile;
 	uint32_t mFileSize;
 	uint32_t mByteOffset;
 

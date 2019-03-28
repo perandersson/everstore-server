@@ -22,6 +22,10 @@ std::string toString(std::string value) {
 	return value;
 }
 
+std::string toString(const Path& value) {
+	return value.value;
+}
+
 std::string toString(unsigned char value) {
 	char tmp[1024];
 	sprintf(tmp, "%c", value);

@@ -10,10 +10,14 @@
 
 class Journal;
 
+class FileInputStream;
+
+class FileOutputStream;
+
 class Transaction
 {
 public:
-	Transaction(TransactionID id, Journal* journal);
+	Transaction(TransactionID id, FILE* file, Journal* journal);
 
 	// Commit this transaction and save it to the HDD in a way that can be fixed if the worker closes ungracefully
 	void save(MutableString events);
@@ -32,6 +36,10 @@ public:
 	}
 
 	// Retrieves the journal size from this transactions view-point
+	/**
+	 *
+	 * @return
+	 */
 	inline uint32_t journalSize() const { return mJournalSize; }
 
 	// Does this transaction indicate that the journal will be created on commit
@@ -39,6 +47,7 @@ public:
 
 private:
 	const TransactionID mId;
+	FILE* const mFile;
 	Journal* mJournal;
 	uint32_t mJournalSize;
 	Bits::Type mTransactionTypesBeforeCommit;

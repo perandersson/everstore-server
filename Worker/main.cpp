@@ -27,7 +27,7 @@ int start(ChildProcessID idx, const Config& config) {
 }
 
 void printWorkerProperties(const Config& config) {
-	Log::Write(Log::Info, "Trying to load configuration from path: \"%s\"", config.configFilename.c_str());
+	Log::Write(Log::Info, "Trying to load configuration from path: \"%s\"", config.configPath.value.c_str());
 	Log::Write(Log::Info, "journalDir = \"%s\"", config.journalDir.c_str());
 	Log::Write(Log::Info, "numWorker = %d", config.numWorkers);
 	Log::Write(Log::Info, "maxConnections = %d", config.maxConnections);
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 	// Read the necessary configuration for the worker
 	const auto rootPath = Config::getWorkingDirectory(argv[0]);
 	const string configFileName(argv[2]);
-	const auto p = Config::readFromConfigFile(rootPath, configFileName);
+	const auto p = Config::readFromConfigFile(rootPath, Path(configFileName));
 	printWorkerProperties(p);
 
 	// Start the worker

@@ -73,7 +73,7 @@ ESErrorCode Store::initialize() {
 	mAuthenticator = new FixedUserAuthenticator(string("admin"), string("passwd"));
 
 	// Create host
-	mHost = new IpcHost(mConfig.rootDir, mConfig.configFilename, mConfig.maxBufferSize);
+	mHost = new IpcHost(mConfig.rootDir, mConfig.configPath, mConfig.maxBufferSize);
 
 	// Create worker processes
 	for (uint32_t i = 0; i < mConfig.numWorkers; ++i) {
@@ -112,12 +112,12 @@ bool Store::performConsistencyCheck() {
 	for (auto& file : files) {
 		const uint32_t del = file.find_last_of('.');
 		const uint32_t del2 = file.find_last_of('.', del - 1);
-		const string journalFile = file.substr(0, del2);
+		const Path journalFile(file.substr(0, del2));
 
-		mHost->log("Validating consistency for journal: %s", journalFile.c_str());
+		mHost->log("Validating consistency for journal: %s", journalFile.value.c_str());
 		Journal j(journalFile);
 		if (!j.performConsistencyCheck()) {
-			mHost->error("Consistency check failed for file: %s", journalFile.c_str());
+			mHost->error("Consistency check failed for file: %s", journalFile.value.c_str());
 			return false;
 		}
 	}

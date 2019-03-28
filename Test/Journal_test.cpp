@@ -1,20 +1,21 @@
 #include "../Shared/everstore.h"
 #include "test/Test.h"
+#include <experimental/filesystem>
 
-TEST_SUITE(Journal) {
+TEST_SUITE(Journal)
+{
+	static const string logSuffix(".log");
 
 	UNIT_TEST(emptyJournalForNonExistingFile) {
-
-		const string tempPath = FileUtils::getTempFile();
+		const Path tempPath(FileUtils::getTempFile() + logSuffix);
 		Journal j(tempPath, ChildProcessID(1));
 
-		assertEquals(0U, j.journalSize());
-		assertEquals((tempPath + string(".log")), j.path());
+		assertEquals(0u, j.journalSize());
+		assertEquals(tempPath, j.path());
 	}
 
 	UNIT_TEST(persistenceCheckOkEmptyJournal) {
-
-		const string tempPath = FileUtils::getTempFile();
+		const Path tempPath(FileUtils::getTempFile() + logSuffix);
 		Journal j(tempPath, ChildProcessID(1));
 
 		assertTrue(j.performConsistencyCheck());
@@ -37,18 +38,16 @@ TEST_SUITE(Journal) {
 	}
 
 	UNIT_TEST(persistenceCheckOkForValidJournal) {
-		const string fileName = FileUtils::getTempFile();
-
-		const string originalJournal("test-resources/journals/persistenceCheckOkForValidJournal.log");
-		const string targetJournal(fileName + string(".log"));
+		const Path targetJournal(FileUtils::getTempFile() + logSuffix);
+		const Path originalJournal("test-resources/journals/persistenceCheckOkForValidJournal.log");
 		assertTrue(FileUtils::copyFile(originalJournal, targetJournal));
 
-		manuallyCreateLockFile(fileName);
+		manuallyCreateLockFile(targetJournal.value);
 
-		Journal j(fileName);
+		Journal j(targetJournal);
 		assertTrue(j.performConsistencyCheck());
 
-		char temp[1024] = { 0 };
+		char temp[1024] = {0};
 		uint32_t tempSize = 0;
 		const string expectedJournal("test-resources/journals/persistenceCheckOkForValidJournal_expected.log");
 		manuallyReadJournal(unitTest, expectedJournal, temp, &tempSize);
@@ -56,7 +55,7 @@ TEST_SUITE(Journal) {
 		ByteBuffer bb(1024);
 		AutoClosable<FileInputStream>(j.inputStream(0))->readBytes(&bb);
 		const char* ptr = bb.ptr();
-		
+
 		assertEquals(tempSize, bb.offset());
 		for (uint32_t i = 0; i < tempSize; ++i) {
 			char c1 = ptr[i];
@@ -67,18 +66,16 @@ TEST_SUITE(Journal) {
 	}
 
 	UNIT_TEST(persistenceCheckOkForJournal1) {
-		const string fileName = FileUtils::getTempFile();
-
-		const string originalJournal("test-resources/journals/persistenceCheckOkForJournal1.log");
-		const string targetJournal(fileName + string(".log"));
+		const Path targetJournal(FileUtils::getTempFile() + logSuffix);
+		const Path originalJournal("test-resources/journals/persistenceCheckOkForJournal1.log");
 		assertTrue(FileUtils::copyFile(originalJournal, targetJournal));
 
-		manuallyCreateLockFile(fileName);
+		manuallyCreateLockFile(targetJournal.value);
 
-		Journal j(fileName);
+		Journal j(targetJournal);
 		assertTrue(j.performConsistencyCheck());
 
-		char temp[1024] = { 0 };
+		char temp[1024] = {0};
 		uint32_t tempSize = 0;
 		const string expectedJournal("test-resources/journals/persistenceCheckOkForJournal1_expected.log");
 		manuallyReadJournal(unitTest, expectedJournal, temp, &tempSize);
@@ -97,18 +94,16 @@ TEST_SUITE(Journal) {
 	}
 
 	UNIT_TEST(persistenceCheckOkForJournal2) {
-		const string fileName = FileUtils::getTempFile();
-
-		const string originalJournal("test-resources/journals/persistenceCheckOkForJournal2.log");
-		const string targetJournal(fileName + string(".log"));
+		const Path targetJournal(FileUtils::getTempFile() + logSuffix);
+		const Path originalJournal("test-resources/journals/persistenceCheckOkForJournal2.log");
 		assertTrue(FileUtils::copyFile(originalJournal, targetJournal));
 
-		manuallyCreateLockFile(fileName);
+		manuallyCreateLockFile(targetJournal.value);
 
-		Journal j(fileName);
+		Journal j(targetJournal);
 		assertTrue(j.performConsistencyCheck());
 
-		char temp[1024] = { 0 };
+		char temp[1024] = {0};
 		uint32_t tempSize = 0;
 		const string expectedJournal("test-resources/journals/persistenceCheckOkForJournal2_expected.log");
 		manuallyReadJournal(unitTest, expectedJournal, temp, &tempSize);
@@ -127,19 +122,17 @@ TEST_SUITE(Journal) {
 	}
 
 	UNIT_TEST(persistenceCheckOkForJournal3) {
-		const string fileName = FileUtils::getTempFile();
-
-		const string originalJournal("test-resources/journals/persistenceCheckOkForJournal3.log");
-		const string targetJournal(fileName + string(".log"));
+		const Path targetJournal(FileUtils::getTempFile() + logSuffix);
+		const Path originalJournal("test-resources/journals/persistenceCheckOkForJournal3.log");
 		assertTrue(FileUtils::copyFile(originalJournal, targetJournal));
 
-		manuallyCreateLockFile(fileName);
+		manuallyCreateLockFile(targetJournal.value);
 
-		Journal j(fileName);
+		Journal j(targetJournal);
 		assertTrue(j.performConsistencyCheck());
 		assertEquals(0U, j.journalSize());
 
-		const bool exists = FileUtils::fileExists(targetJournal);
-		assertFalse(exists);
+		auto const size = FileUtils::getFileSize(targetJournal.value);
+		assertEquals(0u, size);
 	}
 }

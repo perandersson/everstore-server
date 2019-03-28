@@ -13,7 +13,7 @@ string Config::getWorkingDirectory(char* command) {
 	return result.substr(0, idx);
 }
 
-Config Config::readFromConfigFile(const string& rootDir, const string& configFileName) {
+Config Config::readFromConfigFile(const string& rootDir, const Path& configPath) {
 	string journalDir = DEFAULT_JOURNAL_DIR;
 	uint32_t numWorkers = DEFAULT_NUM_WORKERS;
 	uint32_t maxConnections = DEFAULT_MAX_CONNECTIONS;
@@ -22,8 +22,7 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 	uint32_t maxBufferSize = DEFAULT_MAX_DATA_SEND_SIZE;
 	uint32_t logLevel = DEFAULT_LOG_LEVEL;
 
-	ifstream file;
-	file.open(configFileName.c_str());
+	ifstream file = configPath.OpenStream();
 	if (file.is_open()) {
 
 		while (!file.eof()) {
@@ -56,6 +55,6 @@ Config Config::readFromConfigFile(const string& rootDir, const string& configFil
 		file.close();
 	}
 
-	return Config(rootDir, configFileName, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime,
+	return Config(rootDir, configPath, journalDir, numWorkers, maxConnections, port, maxJournalLifeTime,
 	              maxBufferSize, logLevel);
 }

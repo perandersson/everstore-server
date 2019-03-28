@@ -56,7 +56,7 @@ private:
 	ESErrorCode sendBytesToClient(const AttachedConnection* connection, const ByteBuffer* memory);
 
 	// Load a path from the bytes block
-	ESErrorCode readAndValidatePath(uint32_t length, ByteBuffer* memory, _OUT string* s);
+	ESErrorCode readAndValidatePath(uint32_t length, ByteBuffer* memory, Path* path);
 
 	// Retrieves this child's unique id
 	inline const ChildProcessID id() const { return mIpcChild.id(); }

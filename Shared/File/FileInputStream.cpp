@@ -5,19 +5,12 @@
 static const uint32_t TEMP_READ_BLOCK_SIZE = 4096;
 static const uint32_t TIMESTAMP_AND_SPACE_LEN = Timestamp::BytesLength + 1;
 
-FileInputStream::FileInputStream(const std::string& fileName, uint32_t fileSize, uint32_t byteOffset) 
-: mFile(NULL), mFileSize(fileSize), mByteOffset(byteOffset), mSeekAfterRead(TIMESTAMP_AND_SPACE_LEN){
-	if (mByteOffset > mFileSize) mByteOffset = mFileSize;
-
-	mFile = fopen(fileName.c_str(), "r+b");
-	fseek(mFile, mByteOffset, SEEK_SET);
-}
-
-FileInputStream::~FileInputStream() {
-	if (mFile != NULL) {
-		fclose(mFile);
-		mFile = NULL;
+FileInputStream::FileInputStream(FILE* file, uint32_t fileSize, uint32_t byteOffset)
+		: mFile(file), mFileSize(fileSize), mByteOffset(byteOffset), mSeekAfterRead(TIMESTAMP_AND_SPACE_LEN) {
+	if (mByteOffset > mFileSize) {
+		mByteOffset = mFileSize;
 	}
+	fseek(mFile, mByteOffset, SEEK_SET);
 }
 
 ESErrorCode FileInputStream::readBytes(ByteBuffer* memory, uint32_t size) {
@@ -38,7 +31,7 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 	assert(memory != nullptr);
 	assert(mFile != nullptr);
 	assert(journalDataSize != nullptr);
-	
+
 	// Initialize the size to 0
 	*journalDataSize = 0;
 
@@ -92,8 +85,8 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 
 				// If we've read to much data, then stop parsing and make sure to move the file handle to the correct position
 				if ((bytesWritten + totalBytes) == size) {
-					const uint32_t bytesLeftInBuffer = (size_t)(end)-(size_t)(current);
-					const int offset = -(int)bytesLeftInBuffer;
+					const uint32_t bytesLeftInBuffer = (size_t) (end) - (size_t) (current);
+					const int offset = -(int) bytesLeftInBuffer;
 					if (fseek(mFile, offset, SEEK_CUR) != 0) {
 						return ESERR_JOURNAL_READ;
 					}
@@ -101,16 +94,15 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 					mByteOffset -= bytesLeftInBuffer;
 					break;
 				}
-			}
-			else {
+			} else {
 				// Copy NL
 				*moveDataTo++ = *current++;
 				totalBytes++;
 
 				// If we've read to much data, then stop parsing and make sure to move the file handle to the correct position
 				if ((bytesWritten + totalBytes) == size) {
-					const uint32_t bytesLeftInBuffer = (size_t)(end)-(size_t)(current);
-					const int offset = -(int)bytesLeftInBuffer;
+					const uint32_t bytesLeftInBuffer = (size_t) (end) - (size_t) (current);
+					const int offset = -(int) bytesLeftInBuffer;
 					if (fseek(mFile, offset, SEEK_CUR) != 0) {
 						return ESERR_JOURNAL_READ;
 					}
@@ -123,9 +115,9 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 				}
 
 				// Ignore timestamp and space
-				const uint32_t bytesLeftInBuffer = (size_t)(end)-(size_t)(current);
+				const uint32_t bytesLeftInBuffer = (size_t) (end) - (size_t) (current);
 				const uint32_t seek = TIMESTAMP_AND_SPACE_LEN > bytesLeftInBuffer
-					? bytesLeftInBuffer : TIMESTAMP_AND_SPACE_LEN;
+				                      ? bytesLeftInBuffer : TIMESTAMP_AND_SPACE_LEN;
 
 				mSeekAfterRead = TIMESTAMP_AND_SPACE_LEN - seek;
 				current += seek;
@@ -144,9 +136,5 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 }
 
 void FileInputStream::close() {
-	if (mFile != NULL) {
-		fclose(mFile);
-		mFile = NULL;
-	}
 	delete this;
 }

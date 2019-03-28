@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-IpcHost::IpcHost(const string& rootDir, const string& configFileName, uint32_t maxBufferSize)
-		: mRootDir(rootDir), mConfigFileName(configFileName), mMaxBufferSize() {
+IpcHost::IpcHost(const string& rootDir, const Path& configPath, uint32_t maxBufferSize)
+		: mRootDir(rootDir), mConfigPath(configPath), mMaxBufferSize() {
 }
 
 IpcHost::~IpcHost() {
@@ -77,7 +77,7 @@ ESErrorCode IpcHost::addWorker() {
 	// Start the worker process
 	const vector<string> arguments = {
 			process->id().toString(),
-			string("\"") + mConfigFileName + string("\"")
+			string("\"") + mConfigPath.value + string("\"")
 	};
 	return process->start(string("everstore-worker"), mRootDir, arguments);
 }
@@ -155,7 +155,7 @@ ESErrorCode IpcHost::tryRestartWorker(ChildProcessID id) {
 	// Start the worker process
 	const vector<string> arguments = {
 			process->id().toString(),
-			string("\"") + mConfigFileName + string("\"")
+			string("\"") + mConfigPath.value + string("\"")
 	};
 	return process->start(string("everstore-worker"), mRootDir, arguments);
 }
