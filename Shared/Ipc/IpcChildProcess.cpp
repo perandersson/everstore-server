@@ -26,7 +26,6 @@ ESErrorCode IpcChildProcess::start(const string& command, const string& currentD
 }
 
 ESErrorCode IpcChildProcess::stop() {
-	process_close(handle());
 	mChild.close();
 	return ESERR_NO_ERROR;
 }

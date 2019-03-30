@@ -35,11 +35,9 @@ ESErrorCode IpcHost::send(const ESHeader* message) {
 		auto process = mProcesses[id.asIndex()];
 		err = process->child().sendTo(message);
 		if (isError(err)) {
-			// Log the problem
-			error(err);
-			log("Trying to restart process: %d", id);
-
-			// Try to restart the worker
+			Log::Write(Log::Error,
+			           "An error occurred while sending data to client %d. Trying to restart the process. Reason: %s (%d)",
+			           id, parseErrorCode(err), err);
 			err = tryRestartWorker(id);
 			if (!isError(err)) {
 				err = process->child().sendTo(message);
@@ -58,11 +56,9 @@ ESErrorCode IpcHost::send(const ChildProcessID childProcessId, const ByteBuffer*
 	auto process = mProcesses[childProcessId.asIndex()];
 	ESErrorCode err = process->child().sendTo(bytes);
 	if (isError(err)) {
-		// Log the problem
-		error(err);
-		log("Trying to restart process: %d", childProcessId.value);
-
-		// Try to restart the worker
+		Log::Write(Log::Error,
+		           "An error occurred while sending data to client %d. Trying to restart the process. Reason: %s (%d)",
+		           childProcessId, parseErrorCode(err), err);
 		err = tryRestartWorker(childProcessId);
 		if (!isError(err)) {
 			err = process->child().sendTo(bytes);
@@ -88,17 +84,15 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 	activeSocket.m = lock;
 	mActiveSockets.push_back(activeSocket);
 
-	log("Client %d is now fully connected", socket);
+	Log::Write(Log::Info, "Client %d is now fully connected", socket);
 	const uint32_t numProcesses = mProcesses.size() + 1;
 	for (uint32_t i = 1u; i < numProcesses; ++i) {
 		auto process = mProcesses[i - 1u];
 		ESErrorCode err = process_share_socket(process->handle(), socket, lock);
 		if (isError(err)) {
-			// Log the problem
-			error(err);
-			log("Trying to restart process: %d", i);
-
-			// Try to restart the worker
+			Log::Write(Log::Error,
+			           "An error occurred while sending data to client %d. Trying to restart the process. Reason: %s (%d)",
+			           i, parseErrorCode(err), err);
 			err = tryRestartWorker(ChildProcessID(i));
 			if (isError(err)) {
 				return err;
@@ -107,7 +101,9 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 			for (auto& active : mActiveSockets) {
 				err = process_share_socket(process->handle(), active.socket, active.m);
 				if (isError(err)) {
-					log("Could not share socket: %d with worker: %d", active, i);
+					Log::Write(Log::Error,
+					           "Could not share socket: %d with worker: %d: %s (%d)",
+					           active, i, parseErrorCode(err), err);
 					return err;
 				}
 			}
@@ -118,7 +114,7 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 }
 
 ESErrorCode IpcHost::onClientDisconnected(SOCKET socket) {
-	log("Client %d disconnected", socket);
+	Log::Write(Log::Info, "Client %d has disconnected", socket);
 	auto it = mActiveSockets.begin();
 	const auto end = mActiveSockets.end();
 	for (; it != end; ++it) {
@@ -200,29 +196,4 @@ void IpcHost::waitAndClose() {
 	for (auto client : mProcesses) {
 		client->waitAndClose();
 	}
-}
-
-void IpcHost::log(const char* str, ...) {
-	va_list arglist;
-	va_start(arglist, str);
-	char tmp[5096];
-	vsprintf(tmp, str, arglist);
-	va_end(arglist);
-
-	printf("[INFO]: %s\n", tmp);
-}
-
-void IpcHost::error(const char* str, ...) {
-	va_list arglist;
-	va_start(arglist, str);
-	char tmp[5096];
-	vsprintf(tmp, str, arglist);
-	va_end(arglist);
-
-	printf("[ERROR]: %s\n", tmp);
-}
-
-void IpcHost::error(ESErrorCode err) {
-	const auto errorStr = parseErrorCode(err);
-	printf("[ERROR]: %s\n", errorStr);
 }

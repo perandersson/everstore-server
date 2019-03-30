@@ -11,16 +11,19 @@ struct ChildProcessID
 
 	explicit ChildProcessID(const uint32_t value)
 			: value(value) {
-		assert(value != 0);
 	}
 
 	ChildProcessID(const ChildProcessID& rhs) = default;
 
-	const bool operator!=(const ChildProcessID& rhs) const { return value != rhs.value; }
+	inline bool operator!=(const ChildProcessID& rhs) const { return value != rhs.value; }
 
-	const bool operator==(const ChildProcessID& rhs) const { return value == rhs.value; }
+	inline bool operator==(const ChildProcessID& rhs) const { return value == rhs.value; }
 
 	inline uint32_t asIndex() const { return value - 1u; }
+
+	inline bool isValid() const { return value > 0u; }
+
+	inline bool isInvalid() const { return value == 0u; }
 
 	// Converts this id value to a string
 	inline const string toString() const { return StringUtils::toString(value); }

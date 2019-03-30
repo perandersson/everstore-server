@@ -3,12 +3,12 @@
 
 Store* gEventStore = nullptr;
 
-void handleSingal(int signal) {
-	printf("Stopping server\n");
+void handleSingal(int) {
+	Log::Write(Log::Info, "Stopping server");
 	if (gEventStore != nullptr) {
 		gEventStore->stop();
 	}
-	printf("Server stopped\n");
+	Log::Write(Log::Info, "Server stopped");
 }
 
 Path getConfigPath(const string& rootPath, int argc, char** argv) {
@@ -40,12 +40,12 @@ int main(int argc, char** argv) {
 	const string rootPath = Config::getWorkingDirectory(argv[0]);
 	const Path configPath = getConfigPath(rootPath, argc, argv);
 	const Config props = Config::readFromConfigFile(rootPath, configPath);
+
 	Log::SetLogLevel(props.logLevel);
+	Log::Write(Log::Info, "Starting server");
+	printServerProperties(props);
 
 	gEventStore = new Store(props);
-	printf("Starting up Server\n");
-
-	printServerProperties(props);
 
 	// Register so that we get events when a signal is being sent to us. This makes it possible for us to
 	// gracefully shutdown the application.

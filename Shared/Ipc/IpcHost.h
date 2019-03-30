@@ -26,7 +26,7 @@ public:
 	ESErrorCode send(const ESHeader* header);
 
 	// Send a message to a specific child process
-	ESErrorCode send(const ChildProcessID childProcessId, const ByteBuffer* bytes);
+	ESErrorCode send(ChildProcessID childProcessId, const ByteBuffer* bytes);
 
 	// Add a new worker managed by this host
 	ESErrorCode addWorker();
@@ -36,15 +36,6 @@ public:
 
 	// Method called when a client is disconnected 
 	ESErrorCode onClientDisconnected(SOCKET socket);
-
-	// Logging
-	void log(const char* str, ...);
-
-	// Logging
-	void error(const char* str, ...);
-
-	// Log an error message
-	void error(ESErrorCode err);
 
 	// Retrieves a child-process id based on a string with a given length
 	ChildProcessID workerId(const char* str, uint32_t length) const;

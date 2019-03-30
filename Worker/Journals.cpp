@@ -43,6 +43,7 @@ Journal* Journals::getOrNull(const Path& path) {
 }
 
 void Journals::gc() {
+	Log::Write(Log::Debug, "Garbage collecting journals");
 	// Ignore if nothing is removable
 	if (mJournalsToBeRemoved.empty()) return;
 
@@ -59,6 +60,7 @@ void Journals::gc() {
 		if (duration < mMaxJournalLifeTime)
 			break;
 
+		Log::Write(Log::Debug, "Destroing journal");
 		auto it = mJournals.find(journal->path());
 		mJournals.erase(it);
 		delete journal;

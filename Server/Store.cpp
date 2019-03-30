@@ -3,8 +3,7 @@
 #include "../Shared/File/Path.hpp"
 
 Store::Store(const Config& config)
-		: mConfig(config), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
-	mRunning.store(true, memory_order_relaxed);
+		: mConfig(config), mRunning(false), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
 }
 
 Store::~Store() {
@@ -49,7 +48,7 @@ ESErrorCode Store::start() {
 		err = mServer->acceptClient();
 
 		if (IsErrorButNotFatal(err)) {
-			mHost->error(err);
+			Log::Write(Log::Error, "Failed to accept a new client: %s (%d)", parseErrorCode(err), err);
 			err = ESERR_NO_ERROR;
 		}
 	}
@@ -81,13 +80,14 @@ ESErrorCode Store::initialize() {
 		if (isError(err)) return err;
 	}
 
-	// Listen for incomming database connections
+	// Listen for incoming database connections
 	mServer = new StoreServer(mConfig.port, mConfig.maxConnections, mConfig.maxBufferSize, mHost, mAuthenticator);
 	err = mServer->listen();
 	if (isError(err))
 		return err;
 
-	return err;
+	mRunning = true;
+	return ESERR_NO_ERROR;
 }
 
 void Store::stop() {
@@ -95,7 +95,7 @@ void Store::stop() {
 		mServer->close();
 	}
 
-	mRunning.store(false, memory_order_relaxed);
+	mRunning = false;
 }
 
 void Store::release() {
@@ -114,10 +114,10 @@ bool Store::performConsistencyCheck() {
 		const uint32_t del2 = file.find_last_of('.', del - 1);
 		const Path journalFile(file.substr(0, del2));
 
-		mHost->log("Validating consistency for journal: %s", journalFile.value.c_str());
+		Log::Write(Log::Error, "Validating consistency for journal: %s", journalFile.value.c_str());
 		Journal j(journalFile);
 		if (!j.performConsistencyCheck()) {
-			mHost->error("Consistency check failed for file: %s", journalFile.value.c_str());
+			Log::Write(Log::Error, "Consistency check failed for journal: %s", journalFile.value.c_str());
 			return false;
 		}
 	}

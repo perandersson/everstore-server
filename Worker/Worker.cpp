@@ -17,18 +17,18 @@ Worker::~Worker() {
 
 ESErrorCode Worker::start() {
 	// Make sure that the journals are consistent
-	if (!performConsistencyCheck()) return ESERR_STORE_CONSISTENCY_CHECK_FAILED;
+	if (!performConsistencyCheck()) {
+		return ESERR_STORE_CONSISTENCY_CHECK_FAILED;
+	}
 
 	// Initialize worker
 	ESErrorCode err = initialize();
-	if (isError(err)) return err;
-
-	mRunning.store(true, memory_order_relaxed);
+	if (isError(err)) {
+		return err;
+	}
 
 	// Memory for this worker
 	ByteBuffer memory(mConfig.maxBufferSize);
-
-	//ByteBuffer buffer;
 	while (mRunning.load() && !isErrorCodeFatal(err)) {
 		err = ESERR_NO_ERROR;
 
@@ -83,7 +83,7 @@ ESErrorCode Worker::start() {
 }
 
 void Worker::stop() {
-	mRunning.store(false, memory_order_relaxed);
+	mRunning = false;
 }
 
 ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, const ByteBuffer* memory) {
@@ -127,7 +127,8 @@ ESErrorCode Worker::initialize() {
 	assert(mask == Bits::BuiltIn::NewJournalBit);
 
 	Log::Write(Log::Info, "Initialization complete");
-	return err;
+	mRunning = true;
+	return ESERR_NO_ERROR;
 }
 
 void Worker::release() {
@@ -155,7 +156,7 @@ ESErrorCode Worker::handleHostMessage(const ESHeader* header) {
 	switch (header->type) {
 		case REQ_SHUTDOWN:
 			Log::Write(Log::Info, "Host is shutting down");
-			mRunning.store(false, memory_order_relaxed);
+			stop();
 			return ESERR_NO_ERROR;
 		case REQ_NEW_CONNECTION:
 			return newConnection(header);
@@ -219,6 +220,7 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 	// Get journal name and make sure that it's valid
 	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
+	Log::Write(Log::Debug, "Creating new transaction for journal: %s", journalName.value.c_str());
 	if (err != ESERR_NO_ERROR) {
 		return err;
 	}

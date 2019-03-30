@@ -50,7 +50,7 @@ ESErrorCode StoreServer::acceptClient() {
 	}
 
 	if (!socket_sendall(socket, &mConfiguration)) {
-		mIpcHost->log("Could not send the server properties to client: %d", socket);
+		Log::Write(Log::Error, "Could not send server properties to client: %d", socket);
 		socket_close(socket);
 		return ESERR_SOCKET_DISCONNECTED;
 	}
@@ -84,7 +84,7 @@ ESErrorCode StoreServer::acceptClient() {
 ESErrorCode StoreServer::authenticate(SOCKET socket) {
 	if (!mAuthenticator->required()) return ESERR_NO_ERROR;
 
-	mIpcHost->log("Client is authenticating");
+	Log::Write(Log::Error, "Client: %d is authenticating", socket);
 	ESHeader header;
 	if (socket_recvall(socket, &header) == 0 || header.type != REQ_AUTHENTICATE)
 		return ESERR_AUTHENTICATION_FAILED;
@@ -106,7 +106,7 @@ ESErrorCode StoreServer::authenticate(SOCKET socket) {
 	if (!mAuthenticator->login(username, password))
 		return ESERR_AUTHENTICATION_FAILED;
 
-	mIpcHost->log("Client %d is authenticated as: '%s'", socket, username.c_str());
+	Log::Write(Log::Error, "Client: %d has authenticated as %s", socket, username.c_str());
 	return ESERR_NO_ERROR;
 }
 

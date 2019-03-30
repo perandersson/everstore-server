@@ -56,7 +56,8 @@ void StoreClient::run() {
 
 		// Notify the client if the supplied request failed
 		if (IsErrorButNotFatal(err)) {
-			mIpcHost->error(err);
+			Log::Write(Log::Error, "An error occurred while sending data to process %d: %s (%d)", workerId,
+			           parseErrorCode(err), err);
 			err = ESERR_NO_ERROR;
 
 			// Reset memory
@@ -74,7 +75,7 @@ void StoreClient::run() {
 	}
 
 	if (isError(err)) {
-		mIpcHost->error(err);
+		Log::Write(Log::Error, "Unhandled error occurred for StoreClient(%d): %s (%d)", this, parseErrorCode(err), err);
 	}
 }
 

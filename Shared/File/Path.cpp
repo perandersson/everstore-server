@@ -1,4 +1,5 @@
 #include "Path.hpp"
+#include "FileUtils.h"
 #include <cstdio>
 
 const string Path::StrPathDelim("/");
@@ -31,6 +32,14 @@ FILE* Path::OpenOrCreate(const char* mode) const {
 #ifdef _WIN32
 	StringUtils::replaceAll(fileName, '/', '\\');
 #endif
+	auto fp = fopen(fileName.c_str(), mode);
+	if (fp) {
+		return fp;
+	}
+
+	// Create the path to the file
+	FileUtils::createFullForPath(value);
+
 	// Create file if it does not exists
 	auto tmpFile = fopen(fileName.c_str(), "a");
 	fclose(tmpFile);
