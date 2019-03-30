@@ -40,3 +40,11 @@ ESErrorCode IpcChild::sendTo(const ByteBuffer* bytes) {
 void IpcChild::close() {
 	process_close(&mProcess);
 }
+
+int32_t IpcChild::read(char* bytes, uint32_t size) {
+	return process_read(&mProcess, bytes, size);
+}
+
+SOCKET IpcChild::acceptSharedSocket(mutex_t* m) {
+	return process_accept_shared_socket(process(), m);
+}

@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
 	// gracefully shutdown the application.
 	signal(SIGINT, handleSingal);
 	signal(SIGTERM, handleSingal);
+	signal(SIGBREAK, handleSingal);
 
 	// Start the server
 	const auto err = gEventStore->start();

@@ -195,7 +195,7 @@ ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* co
 
 ESErrorCode Worker::newConnection(const ESHeader* header) {
 	mutex_t m;
-	SOCKET newSocket = process_accept_shared_socket(process(), header, &m);
+	SOCKET newSocket = mIpcChild.acceptSharedSocket(&m);
 	if (newSocket == INVALID_SOCKET)
 		return ESERR_PROCESS_ATTACH_SHARED_SOCKET;
 
@@ -510,7 +510,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 	memory->memorize();
 
 	// Read the header from host process
-	if (process_read(process(), (char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
+	if (mIpcChild.read((char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
 		return &INVALID_HEADER;
 
 	// Validate request
@@ -518,7 +518,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 
 	// Load the request body
 	if (header->size > 0) {
-		if (process_read(process(), memory->allocate(header->size), header->size) != header->size) {
+		if (mIpcChild.read(memory->allocate(header->size), header->size) != header->size) {
 			return &INVALID_HEADER;
 		}
 	}

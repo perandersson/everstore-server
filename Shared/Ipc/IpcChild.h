@@ -21,6 +21,10 @@ public:
 	// Send a message over the IPC pipe
 	ESErrorCode sendTo(const ByteBuffer* bytes);
 
+	int32_t read(char* bytes, uint32_t size);
+
+	SOCKET acceptSharedSocket(mutex_t* m);
+
 	// Retrieves this child's unique id
 	inline ChildProcessID id() const { return mId; }
 

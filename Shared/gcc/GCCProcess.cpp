@@ -265,12 +265,8 @@ SOCKET _gcc_socket_attach(process_t* p, mutex_t* lock) {
 	return INVALID_SOCKET;
 }
 
-SOCKET process_accept_shared_socket(process_t* p, const ESHeader* header, mutex_t* lock) {
+SOCKET process_accept_shared_socket(process_t* p, mutex_t* lock) {
 	*lock = INVALID_LOCK;
-	if (header->type != REQ_NEW_CONNECTION) {
-		return INVALID_SOCKET;
-	}
-
 	return _gcc_socket_attach(p, lock);
 }
 

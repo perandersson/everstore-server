@@ -171,11 +171,8 @@ ESErrorCode process_share_socket(process_t* p, SOCKET hostSocket, mutex_t lock) 
 	return ESERR_NO_ERROR;
 }
 
-SOCKET process_accept_shared_socket(process_t* p, const ESHeader* header, mutex_t* lock) {
+SOCKET process_accept_shared_socket(process_t* p, mutex_t* lock) {
 	*lock = INVALID_LOCK;
-	if (header->type != REQ_NEW_CONNECTION) {
-		return INVALID_SOCKET;
-	}
 
 	// Read the spared socket protocol information
 	WSAPROTOCOL_INFO info;
