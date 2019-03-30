@@ -1,13 +1,13 @@
 #include "Win32Mutex.h"
 #include "../ESErrorCodes.h"
 
-mutex_t mutex_create(const string& name) {
+mutex_t mutex_create(const string&) {
 	SECURITY_ATTRIBUTES sec;
 	sec.bInheritHandle = TRUE;
-	sec.lpSecurityDescriptor = NULL;
+	sec.lpSecurityDescriptor = nullptr;
 	sec.nLength = sizeof(SECURITY_ATTRIBUTES);
 
-	return CreateMutexEx(&sec, NULL, 0, MUTEX_ALL_ACCESS);
+	return CreateMutexEx(&sec, nullptr, 0, MUTEX_ALL_ACCESS);
 }
 
 void mutex_destroy(mutex_t lock) {

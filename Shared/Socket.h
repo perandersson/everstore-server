@@ -4,7 +4,9 @@
 #include <cinttypes>
 
 #ifdef WIN32
+
 #include "win32/Win32Socket.h"
+
 #else
 
 #include "gcc/GCCSocket.h"

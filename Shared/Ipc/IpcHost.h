@@ -17,7 +17,7 @@ class IpcHost
 public:
 	IpcHost(const string& rootDir, const Path& configPath, uint32_t maxBufferSize);
 
-	~IpcHost();
+	~IpcHost() = default;
 
 	// Close the host and and all it's clients
 	void close();
@@ -49,9 +49,6 @@ private:
 
 	// Check to see if the supplied worker exists
 	bool workerExists(ChildProcessID id);
-
-	// Wait and close all processes managed by this instance
-	void waitAndClose();
 
 	// Send a message over the IPC pipe
 	ESErrorCode sendToAll(const ESHeader* header);

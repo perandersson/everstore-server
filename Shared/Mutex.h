@@ -2,9 +2,13 @@
 #define EVERSTORE_MUTEX_H
 
 #ifdef WIN32
+
 #include "win32/Win32Mutex.h"
+
 #else
+
 #include "gcc/GCCMutex.h"
+
 #endif
 
 #include "ESErrorCodes.h"

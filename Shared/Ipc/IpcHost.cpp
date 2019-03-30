@@ -4,14 +4,7 @@
 #include <string.h>
 
 IpcHost::IpcHost(const string& rootDir, const Path& configPath, uint32_t maxBufferSize)
-		: mRootDir(rootDir), mConfigPath(configPath), mMaxBufferSize() {
-}
-
-IpcHost::~IpcHost() {
-	for (auto client : mProcesses) {
-		client->stop();
-		delete client;
-	}
+		: mRootDir(rootDir), mConfigPath(configPath), mMaxBufferSize(maxBufferSize) {
 }
 
 void IpcHost::close() {
@@ -24,7 +17,10 @@ void IpcHost::close() {
 	}
 
 	// Wait for the process to shutdown and then close all host handles
-	waitAndClose();
+	for (auto client : mProcesses) {
+		client->waitAndClose();
+		delete client;
+	}
 }
 
 ESErrorCode IpcHost::send(const ESHeader* message) {
@@ -190,10 +186,4 @@ bool IpcHost::workerExists(ChildProcessID id) {
 	const auto worker = id.value - 1;
 	auto processes = mProcesses.size();
 	return processes > worker;
-}
-
-void IpcHost::waitAndClose() {
-	for (auto client : mProcesses) {
-		client->waitAndClose();
-	}
 }
