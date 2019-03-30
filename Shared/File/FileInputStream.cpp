@@ -7,6 +7,7 @@ static const uint32_t TIMESTAMP_AND_SPACE_LEN = Timestamp::BytesLength + 1;
 
 FileInputStream::FileInputStream(FILE* file, uint32_t fileSize, uint32_t byteOffset)
 		: mFile(file), mFileSize(fileSize), mByteOffset(byteOffset), mSeekAfterRead(TIMESTAMP_AND_SPACE_LEN) {
+	assert(file != nullptr);
 	if (mByteOffset > mFileSize) {
 		mByteOffset = mFileSize;
 	}
@@ -15,8 +16,9 @@ FileInputStream::FileInputStream(FILE* file, uint32_t fileSize, uint32_t byteOff
 
 ESErrorCode FileInputStream::readBytes(ByteBuffer* memory, uint32_t size) {
 	assert(memory != nullptr);
-	assert(mFile != nullptr);
-	if (size == 0) return ESERR_NO_ERROR;
+	if (size == 0) {
+		return ESERR_NO_ERROR;
+	}
 
 	// Clamp to file size
 	const auto readBytes = size > mFileSize ? mFileSize : size;
@@ -29,21 +31,24 @@ ESErrorCode FileInputStream::readBytes(ByteBuffer* memory, uint32_t size) {
 
 ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size, uint32_t* journalDataSize) {
 	assert(memory != nullptr);
-	assert(mFile != nullptr);
 	assert(journalDataSize != nullptr);
 
 	// Initialize the size to 0
 	*journalDataSize = 0;
 
 	// Do nothing if we don't want to read anything
-	if (size == 0) return ESERR_NO_ERROR;
+	if (size == 0) {
+		return ESERR_NO_ERROR;
+	}
 
 	// Do nothing if no bytes are to be read
-	uint32_t bytesLeft = mFileSize - mByteOffset;
-	if (bytesLeft == 0) return ESERR_NO_ERROR;
+	auto bytesLeft = mFileSize - mByteOffset;
+	if (bytesLeft == 0) {
+		return ESERR_NO_ERROR;
+	}
 
 	// How many bytes are written to the memory block
-	uint32_t bytesWritten = 0;
+	auto bytesWritten = 0u;
 
 	// Read journal data and put it into the memory bytes block as long as there are bytes left to be read
 	while (bytesLeft > 0 && bytesWritten < size) {
@@ -131,7 +136,6 @@ ESErrorCode FileInputStream::readJournalBytes(ByteBuffer* memory, uint32_t size,
 	}
 
 	*journalDataSize = bytesWritten;
-
 	return ESERR_NO_ERROR;
 }
 

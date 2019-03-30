@@ -4,12 +4,14 @@
 Transaction::Transaction(TransactionID id, FILE* file, Journal* journal)
 		: mId(id), mFile(file), mJournal(journal),
 		  mTransactionTypesBeforeCommit(Bits::None) {
-	mJournalSize = FileUtils::getFileSize(file);
+	mJournalSize = journal->journalSize();
 }
 
 void Transaction::save(MutableString eventsString) {
 	// Ignore if no events are to be committed
-	if (eventsString.length == 0) return;
+	if (eventsString.length == 0) {
+		return;
+	}
 
 	// Increase reference counter to the journal
 	auto fileSize = mJournal->addRef();
@@ -18,8 +20,7 @@ void Transaction::save(MutableString eventsString) {
 	auto writer = mJournal->outputStream(fileSize);
 
 	// Write the data onto the journal
-	Timestamp now;
-	uint32_t bytesWritten = writer->writeEvents(&now, eventsString);
+	const auto bytesWritten = writer->writeTimedEvents(eventsString);
 
 	// Close the stream and flush the content to the disk
 	delete writer;

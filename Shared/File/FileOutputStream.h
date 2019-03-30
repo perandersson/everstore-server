@@ -24,6 +24,14 @@ public:
 	// \param events The events we want to save
 	uint32_t writeEvents(const Timestamp* t, MutableString events);
 
+	/**
+	 * Write events prefixed with a timestamp
+	 *
+	 * @param events
+	 * @return How many bytes that are written to the journal file
+	 */
+	uint32_t writeTimedEvents(MutableString events);
+
 	// Replace the character at the given position with a newline
 	void replaceWithNL(uint32_t pos);
 

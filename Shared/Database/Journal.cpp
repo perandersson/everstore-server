@@ -105,13 +105,13 @@ ESErrorCode Journal::tryCommit(TransactionID id, Bits::Type types, MutableString
 	auto t = mTransactions.get(id);
 	if (t == nullptr) return ESERR_JOURNAL_TRANSACTION_DOES_NOT_EXIST;
 
-	// Set neccessary bit if the journal is to be created
+	// Set necessary bit if the journal is to be created
 	if (t->createJournal()) {
 		FileUtils::createFullForPath(mPath.value);
 		types = Bits::Set(types, Bits::BuiltIn::NewJournalBit);
 	}
 
-	// Has a conflict occured?
+	// Has a conflict occurred?
 	if (t->conflictsWith(types)) {
 		return ESERR_JOURNAL_TRANSACTION_CONFLICT;
 	}

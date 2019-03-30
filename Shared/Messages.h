@@ -4,13 +4,16 @@
 #include "Message/ESHeader.h"
 #include "Database/TransactionID.h"
 
-struct Authentication {
+struct Authentication
+{
 	static const ESRequestType TYPE = REQ_AUTHENTICATE;
-	struct Request {
+	struct Request
+	{
 		uint32_t usernameLength;
 		uint32_t passwordLength;
 	};
-	struct Response {
+	struct Response
+	{
 		char success;
 	};
 };
@@ -18,22 +21,30 @@ struct Authentication {
 static_assert(sizeof(Authentication::Request) == 8, "Expected CommitTransaction::Request to be 8 byte(s)");
 static_assert(sizeof(Authentication::Response) == 1, "Expected CommitTransaction::Response to be 1 byte(s)");
 
-struct NewTransaction {
+struct NewTransaction
+{
 	static const ESRequestType TYPE = REQ_NEW_TRANSACTION;
-	struct Request {
-		uint32_t journalStringLength;	// Length of the journal name
+	struct Request
+	{
+		uint32_t journalStringLength;    // Length of the journal name
 	};
-	struct Response {
-		uint32_t journalSize;			// The size of the journal when this transaction was created
-		uint32_t transactionUID;		// A unique identifier for the current transaction
+
+	struct Response
+	{
+		uint32_t journalSize;            // The size of the journal when this transaction was created
+		uint32_t transactionUID;        // A unique identifier for the current transaction
 
 		Response(uint32_t journalSize, const TransactionID id)
-			: journalSize(journalSize), transactionUID(id.value) {}
+				: journalSize(journalSize), transactionUID(id.value) {}
+
 		~Response() {}
 	};
-	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessID workerId) 
-		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
+	struct Header : ESHeader
+	{
+		Header(uint32_t requestId, ChildProcessID workerId)
+				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
 		~Header() {}
 	};
 };
@@ -44,24 +55,33 @@ static_assert(sizeof(NewTransaction::Response) == 8, "Expected CommitTransaction
 // Delimiter for the event types
 static const char EVENT_TYPE_DELIMITER = ',';
 
-struct CommitTransaction {
+struct CommitTransaction
+{
 	static const ESRequestType TYPE = REQ_COMMIT_TRANSACTION;
-	struct Request {
-		uint32_t journalStringLength;	// Length of the journal name
-		uint32_t typeSize;				// The byte size for the event types
-		uint32_t eventsSize;			// The byte size for the actual events
-		TransactionID transactionUID;		// A unique identifier for the current transaction
+	struct Request
+	{
+		uint32_t journalStringLength;    // Length of the journal name
+		uint32_t typeSize;                // The byte size for the event types
+		uint32_t eventsSize;            // The byte size for the actual events
+		TransactionID transactionUID;        // A unique identifier for the current transaction
+		// TODO: Add a hash that ensures that we can use to ensure the data to be consistent
 	};
-	struct Response {
-		uint32_t success;				// If a conflict occured (TRUE or FALSE)
-		uint32_t journalSize;			// The size of the journal when this transaction was created
+
+	struct Response
+	{
+		uint32_t success;                // If a conflict occured (TRUE or FALSE)
+		uint32_t journalSize;            // The size of the journal when this transaction was created
 
 		Response(uint32_t success, uint32_t journalSize) : success(success), journalSize(journalSize) {}
+
 		~Response() {}
 	};
-	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessID workerId) 
-		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
+	struct Header : ESHeader
+	{
+		Header(uint32_t requestId, ChildProcessID workerId)
+				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
 		~Header() {}
 	};
 };
@@ -69,21 +89,29 @@ struct CommitTransaction {
 static_assert(sizeof(CommitTransaction::Request) == 16, "Expected CommitTransaction::Request to be 16 byte(s)");
 static_assert(sizeof(CommitTransaction::Response) == 8, "Expected CommitTransaction::Response to be 8 byte(s)");
 
-struct RollbackTransaction {
+struct RollbackTransaction
+{
 	static const ESRequestType TYPE = REQ_ROLLBACK_TRANSACTION;
-	struct Request {
-		uint32_t journalStringLength;	// Length of the journal name
-		TransactionID transactionUID;		// Transaction we want to delete
+	struct Request
+	{
+		uint32_t journalStringLength;    // Length of the journal name
+		TransactionID transactionUID;        // Transaction we want to delete
 	};
-	struct Response {
+
+	struct Response
+	{
 		char success;
 
 		Response(char success) : success(success) {}
+
 		~Response() {}
 	};
-	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessID workerId) 
-		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
+	struct Header : ESHeader
+	{
+		Header(uint32_t requestId, ChildProcessID workerId)
+				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
 		~Header() {}
 	};
 };
@@ -91,39 +119,56 @@ struct RollbackTransaction {
 static_assert(sizeof(RollbackTransaction::Request) == 8, "Expected RollbackTransaction::Request to be 8 byte(s)");
 static_assert(sizeof(RollbackTransaction::Response) == 1, "Expected RollbackTransaction::Response to be 1 byte(s)");
 
-struct RequestError {
+struct RequestError
+{
 	static const ESRequestType TYPE = REQ_ERROR;
-	struct Response {
+
+	struct Response
+	{
 		ESErrorCode errorCode;
 
 		Response(ESErrorCode errorCode) : errorCode(errorCode) {}
+
 		~Response() {}
 	};
-	struct Header : ESHeader {
-		Header(uint32_t requestId, ChildProcessID workerId) 
-		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
+	struct Header : ESHeader
+	{
+		Header(uint32_t requestId, ChildProcessID workerId)
+				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
 		~Header() {}
 	};
 };
 
 static_assert(sizeof(RequestError::Response) == 4, "Expected RequestError::Request to be 4 byte(s)");
 
-struct ReadJournal {
+struct ReadJournal
+{
 	static const ESRequestType TYPE = REQ_READ_JOURNAL;
-	struct Header : ESHeader {
-		Header(uint32_t requestId, ESHeaderProperties properties, ChildProcessID workerId) 
-		: ESHeader(TYPE, sizeof(Response), requestId, properties, workerId) {}
+
+	struct Header : ESHeader
+	{
+		Header(uint32_t requestId, ESHeaderProperties properties, ChildProcessID workerId)
+				: ESHeader(TYPE, sizeof(Response), requestId, properties, workerId) {}
+
 		~Header() {}
 	};
-	struct Request {
-		uint32_t journalStringLength;	// Length of the journal name
-		uint32_t offset;				// Offset where we want to start read the data from
-		uint32_t journalSize;			// The amount of bytes we want to read
+
+	struct Request
+	{
+		uint32_t journalStringLength;    // Length of the journal name
+		uint32_t offset;                // Offset where we want to start read the data from
+		uint32_t journalSize;            // The amount of bytes we want to read
 	};
-	struct Response {
-		uint32_t bytes;				// The total amount of bytes sent back the the client
+
+	struct Response
+	{
+		uint32_t bytes;                // The total amount of bytes sent back the the client
+		// TODO: Add a hash that ensures that we can use to ensure the data to be consistent
 
 		Response(uint32_t bytes) : bytes(bytes) {}
+
 		~Response() {}
 	};
 };
@@ -131,20 +176,29 @@ struct ReadJournal {
 static_assert(sizeof(ReadJournal::Request) == 12, "Expected ReadJournal::Request to be 12 byte(s)");
 static_assert(sizeof(ReadJournal::Response) == 4, "Expected ReadJournal::Response to be 4 byte(s)");
 
-struct JournalExists {
+struct JournalExists
+{
 	static const ESRequestType TYPE = REQ_JOURNAL_EXISTS;
-	struct Header : ESHeader {
+
+	struct Header : ESHeader
+	{
 		Header(uint32_t requestId, ChildProcessID workerId)
-		: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
+
 		~Header() {}
 	};
-	struct Request {
+
+	struct Request
+	{
 		uint32_t journalStringLength; // Length of the journal name
 	};
-	struct Response {
+
+	struct Response
+	{
 		char exists;
 
 		Response(bool exists) : exists(exists ? 1 : 0) {}
+
 		~Response() {}
 	};
 };

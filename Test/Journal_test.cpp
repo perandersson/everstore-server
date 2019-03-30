@@ -1,6 +1,5 @@
 #include "../Shared/everstore.h"
 #include "test/Test.h"
-#include <experimental/filesystem>
 
 TEST_SUITE(Journal)
 {

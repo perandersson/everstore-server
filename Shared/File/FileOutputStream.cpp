@@ -4,7 +4,8 @@
 #include "../Database/Journal.h"
 
 FileOutputStream::FileOutputStream(FILE* file, uint32_t byteOffset)
-	: mFileHandle(file), mByteOffset(byteOffset) {
+		: mFileHandle(file), mByteOffset(byteOffset) {
+	assert(file != nullptr);
 	if (mByteOffset > 0) {
 		fseek(mFileHandle, mByteOffset, SEEK_SET);
 	}
@@ -39,7 +40,7 @@ uint32_t FileOutputStream::writeEvents(const Timestamp* t, MutableString events)
 	// Add a EOF-marker
 	fwrite(&Journal::JournalEof, 1, 1, mFileHandle);
 
-	// Flush the data before marking the commit as "comitted".
+	// Flush the data before marking the commit as "committed".
 	fflush(mFileHandle);
 
 	// If any bytes where already written then make sure to remove the previous EOF-marker
@@ -47,15 +48,23 @@ uint32_t FileOutputStream::writeEvents(const Timestamp* t, MutableString events)
 		replaceWithNL(mByteOffset - 1);
 	}
 
-	// Flush the data so that the commit is solidified
+	// Flush the data so that the commit is solidified. Please note that flushing do not necessarily mean that
+	// the data is actually written to the HDD. Some HDDs have an internal cache where the OS is writing the data to.
+	// If the power is dropped before the HDD can store it on the actual hard-drive then the data might be lost. This
+	// can be fixed in the OS to NOT internally cache the data before saving it.
 	fflush(mFileHandle);
 
 	return events.length + offset * newLines + Journal::JournalEofLen;
 }
 
+uint32_t FileOutputStream::writeTimedEvents(MutableString events) {
+	Timestamp now;
+	return writeEvents(&now, events);
+}
+
 void FileOutputStream::replaceWithNL(uint32_t pos) {
 	// Replace a character somewhere on the stream with a new-line character
-	auto currentPos = ftell(mFileHandle) + 1;
+	const auto currentPos = ftell(mFileHandle) + 1;
 	fseek(mFileHandle, pos, SEEK_SET);
 	fwrite(&FileUtils::NL, FileUtils::NL_SIZE, 1, mFileHandle);
 	fseek(mFileHandle, currentPos, SEEK_SET);

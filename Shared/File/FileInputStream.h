@@ -33,13 +33,16 @@ public:
 	// Close the input stream
 	void close();
 
+	/**
+	 * @return Number of bytes left until we've reached the end of the journal. Useful when streaming extremely large
+	 *         journals from the HDD.
+	 */
 	const inline uint32_t bytesLeft() const { return mFileSize - mByteOffset; }
 
 private:
 	FILE* const mFile;
 	uint32_t mFileSize;
 	uint32_t mByteOffset;
-
 	uint32_t mSeekAfterRead;
 };
 
