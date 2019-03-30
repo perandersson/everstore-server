@@ -37,22 +37,22 @@ SOCKET socket_accept_blocking(SOCKET serverSocket, uint32_t maxBufferSize) {
 	return socket;
 }
 
-uint32_t socket_recvall(SOCKET socket, char* bytes, uint32_t size) {
-	uint32_t recvd = 0;
+int32_t socket_recvall(SOCKET socket, char* bytes, int32_t size) {
+	int32_t recvd = 0;
 	while (recvd != size) {
 		int32_t t = (int32_t) recv(socket, bytes, size - recvd, 0);
-		if (t <= 0) return recvd;
-		recvd += (uint32_t) t;
+		if (t <= 0) return t;
+		recvd += t;
 	}
 	return recvd;
 }
 
-uint32_t socket_sendall(SOCKET socket, const char* bytes, uint32_t size) {
-	uint32_t sent = 0;
+int32_t socket_sendall(SOCKET socket, const char* bytes, int32_t size) {
+	int32_t sent = 0;
 	while (sent != size) {
 		int32_t t = (int32_t) send(socket, bytes, size - sent, 0);
-		if (t <= 0) return sent;
-		sent += (uint32_t) t;
+		if (t <= 0) return t;
+		sent += t;
 	}
 	return sent;
 }

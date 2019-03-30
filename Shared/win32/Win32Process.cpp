@@ -113,7 +113,7 @@ ESErrorCode process_connect_to_host(const string& name, process_t* p) {
 	return ESERR_NO_ERROR;
 }
 
-uint32_t process_read(process_t* p, _OUT char* bytes, uint32_t size) {
+uint32_t process_read(process_t* p, char* bytes, uint32_t size) {
 	DWORD totalBytes = 0;
 	BOOL result;
 	do {

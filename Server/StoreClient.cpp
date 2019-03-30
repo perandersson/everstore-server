@@ -135,7 +135,9 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 		return &INVALID_HEADER;
 
 	// Validate request
-	if (header->size > mMaxBufferSize) return &INVALID_HEADER;
+	if (header->size > (int32_t) mMaxBufferSize) {
+		return &INVALID_HEADER;
+	}
 
 	// Load the request body
 	if (header->size > 0) {
@@ -145,7 +147,9 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 	}
 
 	// Do not allow multipart requests yet!
-	if (header->properties != ESPROP_NONE) return &INVALID_HEADER;
+	if (header->properties != ESPROP_NONE) {
+		return &INVALID_HEADER;
+	}
 	return header;
 }
 

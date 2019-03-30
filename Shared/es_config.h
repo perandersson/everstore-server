@@ -47,9 +47,6 @@
 #include <memory>
 #include <cassert>
 
-// Used to declare that the parameter is an output parameter
-#define _OUT
-
 using namespace std;
 
 #endif

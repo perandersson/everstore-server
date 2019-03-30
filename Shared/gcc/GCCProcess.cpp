@@ -133,7 +133,7 @@ ESErrorCode process_connect_to_host(const string& name, process_t* p) {
 	return p->pipe < 0 ? ESERR_PIPE_CONNECT : ESERR_NO_ERROR;
 }
 
-uint32_t process_read(process_t* p, _OUT char* bytes, uint32_t size) {
+uint32_t process_read(process_t* p, char* bytes, uint32_t size) {
 	return socket_recvall(p->pipe, bytes, size);
 }
 

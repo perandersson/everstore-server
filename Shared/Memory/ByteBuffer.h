@@ -8,7 +8,7 @@
 class ByteBuffer
 {
 public:
-	ByteBuffer(uint32_t initialSize);
+	explicit ByteBuffer(uint32_t initialSize);
 
 	~ByteBuffer();
 

@@ -30,7 +30,7 @@ ESErrorCode process_connect_to_host(const string& name, process_t* p);
 
 uint32_t process_write(process_t* p, const char* bytes, uint32_t size);
 
-uint32_t process_read(process_t* p, _OUT char* bytes, uint32_t size);
+uint32_t process_read(process_t* p, char* bytes, uint32_t size);
 
 // Share a socket between the host and the child process
 ESErrorCode process_share_socket(process_t* p, SOCKET hostSocket, mutex_t hostSocketLock);

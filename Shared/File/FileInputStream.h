@@ -28,7 +28,7 @@ public:
 	ESErrorCode readBytes(ByteBuffer* memory, uint32_t size);
 
 	// Read the journal-specific bytes from this file stream. The actual size will be clamped to the file size.
-	ESErrorCode readJournalBytes(ByteBuffer* memory, uint32_t size, _OUT uint32_t* journalDataSize);
+	ESErrorCode readJournalBytes(ByteBuffer* memory, uint32_t size, uint32_t* journalDataSize);
 
 	// Close the input stream
 	void close();
