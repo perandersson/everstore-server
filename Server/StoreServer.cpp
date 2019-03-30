@@ -4,23 +4,7 @@ StoreServer::StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBuf
                          Authenticator* authenticator)
 		: mPort(port), mMaxConnections(maxConnections), mMaxBufferSize(maxBufferSize), mServerSocket(INVALID_SOCKET),
 		  mIpcHost(host), mAuthenticator(authenticator) {
-	// Prepare socket configuration
-	memset(&mAddr, 0, sizeof(sockaddr_in));
-	mAddr.sin_family = AF_INET;
-	mAddr.sin_addr.s_addr = INADDR_ANY;
-	mAddr.sin_port = htons(mPort);
 
-	// Prepare server configuration
-	mConfiguration.endian = ES_BIG_ENDIAN;
-	mConfiguration.version = VERSION;
-	mConfiguration.authenticate = mAuthenticator->required() ? TRUE : FALSE;
-	if (is_little_endian()) {
-		mConfiguration.endian = ES_LITTLE_ENDIAN;
-	}
-}
-
-StoreServer::~StoreServer() {
-	StoreServer::close();
 }
 
 ESErrorCode StoreServer::listen() {
@@ -28,7 +12,13 @@ ESErrorCode StoreServer::listen() {
 	if (mServerSocket == INVALID_SOCKET)
 		return ESERR_SOCKET_CONFIGURE;
 
-	if (::bind(mServerSocket, (struct sockaddr*) &mAddr, sizeof(mAddr)) == -1) {
+	// Prepare socket configuration
+	sockaddr_in addr;
+	memset(&addr, 0, sizeof(sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_port = htons(mPort);
+	if (::bind(mServerSocket, (struct sockaddr*) &addr, sizeof(addr)) == -1) {
 		socket_close(mServerSocket);
 		mServerSocket = INVALID_SOCKET;
 		return ESERR_SOCKET_BIND;
@@ -49,7 +39,16 @@ ESErrorCode StoreServer::acceptClient() {
 		return ESERR_SOCKET_CONFIGURE;
 	}
 
-	if (!socket_sendall(socket, &mConfiguration)) {
+	// Prepare server configuration
+	ServerConfiguration configuration;
+	configuration.endian = ES_BIG_ENDIAN;
+	configuration.version = VERSION;
+	configuration.authenticate = mAuthenticator->required() ? TRUE : FALSE;
+	if (is_little_endian()) {
+		configuration.endian = ES_LITTLE_ENDIAN;
+	}
+
+	if (!socket_sendall(socket, &configuration)) {
 		Log::Write(Log::Error, "Could not send server properties to client: %d", socket);
 		socket_close(socket);
 		return ESERR_SOCKET_DISCONNECTED;
@@ -61,10 +60,10 @@ ESErrorCode StoreServer::acceptClient() {
 		return err;
 	}
 
-	// Garbage collect any running client processes
+	// Garbage collect any client processes that's closed but not removed
 	garbageCollect();
 
-	StoreClient* client = new StoreClient(socket, mIpcHost, mMaxBufferSize);
+	auto const client = new StoreClient(socket, mIpcHost, mMaxBufferSize);
 	err = mIpcHost->onClientConnected(socket, client->clientLock());
 	if (isError(err)) {
 		socket_close(socket);
@@ -73,6 +72,7 @@ ESErrorCode StoreServer::acceptClient() {
 
 	err = client->start();
 	if (err != ESERR_NO_ERROR) {
+		delete client;
 		socket_close(socket);
 		return err;
 	}
@@ -111,7 +111,10 @@ ESErrorCode StoreServer::authenticate(SOCKET socket) {
 }
 
 void StoreServer::close() {
+	// Close all running connections
 	disconnectAllClients();
+
+	// Close the socket used when listening for incoming requests
 	if (mServerSocket != INVALID_SOCKET) {
 		socket_close(mServerSocket);
 		mServerSocket = INVALID_SOCKET;
@@ -134,6 +137,7 @@ void StoreServer::garbageCollect() {
 	for (; it != e; ++it) {
 		auto client = *it;
 		if (!client->running()) {
+			mIpcHost->onClientDisconnected(client->handle());
 			removables.push_back(it);
 		}
 	}

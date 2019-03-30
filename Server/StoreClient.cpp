@@ -1,21 +1,25 @@
 #include "StoreClient.h"
 
 StoreClient::StoreClient(SOCKET client, IpcHost* host, uint32_t maxBufferSize)
-		: mClientSocket(client), mIpcHost(host), mMaxBufferSize(maxBufferSize), mClientLock(INVALID_LOCK) {
-	mRunning.store(true, memory_order_relaxed);
+		: mClientSocket(client), mIpcHost(host), mMaxBufferSize(maxBufferSize), mClientLock(INVALID_LOCK),
+		  mRunning(true) {
 	const string mutexName = string("everstore_mutex_") + StringUtils::toString(client);
 	mClientLock = mutex_create(mutexName);
 }
 
 StoreClient::~StoreClient() {
-	if (mClientLock != INVALID_LOCK) {
-		mutex_destroy(mClientLock);
-		mClientLock = INVALID_LOCK;
-	}
+	assert(!running());
+
 	if (mClientSocket != INVALID_SOCKET) {
 		socket_close(mClientSocket);
 		mClientSocket = INVALID_SOCKET;
 	}
+
+	if (mClientLock != INVALID_LOCK) {
+		mutex_destroy(mClientLock);
+		mClientLock = INVALID_LOCK;
+	}
+	
 	mThread.join();
 }
 
@@ -28,22 +32,26 @@ ESErrorCode StoreClient::start() {
 }
 
 void StoreClient::run() {
+	Log::Write(Log::Info, "Thread for StoreClient(%p) is starting up", this);
+
 	// Memory for this client
 	ByteBuffer memory(mMaxBufferSize);
 
 	//ByteBuffer byteBuffer;
 	ESErrorCode err = ESERR_NO_ERROR;
-	while (running() && !isErrorCodeFatal(err)) {
+	while (mRunning && !isErrorCodeFatal(err)) {
 		// Read message header. If the request header turns out to be invalid, then that means 
-		// that the client is in a bad state. Force a disconnect on the client.
+		// that:
+		// 1. The client is in a bad state. Force a disconnect on the client.
+		// 2. The client has disconnected in a nice way and is marked to be stopped.
 		ESHeader* header = loadHeaderFromClient(&memory);
 		if (header->type == REQ_INVALID || isInternalRequestType(header->type)) {
-			stop();
-			return;
+			mRunning = false;
+			break;
 		}
 
 		// Prepare the request header and put it into the memory buffer
-		const auto workerId = ChildProcessID(header->workerId);
+		const auto workerId = header->workerId;
 		const auto requestUID = header->requestUID;
 		header->client = mClientSocket;
 
@@ -74,8 +82,10 @@ void StoreClient::run() {
 		}
 	}
 
+	Log::Write(Log::Info, "Thread for StoreClient(%p) is shutting down", this);
+
 	if (isError(err)) {
-		Log::Write(Log::Error, "Unhandled error occurred for StoreClient(%d): %s (%d)", this, parseErrorCode(err), err);
+		Log::Write(Log::Error, "Unhandled error occurred for StoreClient(%p): %s (%d)", this, parseErrorCode(err), err);
 	}
 }
 
@@ -174,8 +184,5 @@ ESErrorCode StoreClient::sendBytesToClient(const ByteBuffer* memory) {
 }
 
 void StoreClient::stop() {
-	socket_close(mClientSocket);
-	mIpcHost->onClientDisconnected(mClientSocket);
-	mClientSocket = INVALID_SOCKET;
-	mRunning.store(false, memory_order_relaxed);
+	mRunning = false;
 }

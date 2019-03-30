@@ -21,6 +21,7 @@ void IpcHost::close() {
 		client->waitAndClose();
 		delete client;
 	}
+	mProcesses.clear();
 }
 
 ESErrorCode IpcHost::send(const ESHeader* message) {
@@ -80,7 +81,7 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 	activeSocket.m = lock;
 	mActiveSockets.push_back(activeSocket);
 
-	Log::Write(Log::Info, "Client %d is now fully connected", socket);
+	Log::Write(Log::Info, "Notifying all child-processes that SOCKET(%p) has connected", socket);
 	const uint32_t numProcesses = mProcesses.size() + 1;
 	for (uint32_t i = 1u; i < numProcesses; ++i) {
 		auto process = mProcesses[i - 1u];
@@ -110,7 +111,7 @@ ESErrorCode IpcHost::onClientConnected(SOCKET socket, mutex_t lock) {
 }
 
 ESErrorCode IpcHost::onClientDisconnected(SOCKET socket) {
-	Log::Write(Log::Info, "Client %d has disconnected", socket);
+	Log::Write(Log::Info, "Notifying all child-processes that SOCKET(%p) has disconnected", socket);
 	auto it = mActiveSockets.begin();
 	const auto end = mActiveSockets.end();
 	for (; it != end; ++it) {

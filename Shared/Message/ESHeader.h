@@ -27,12 +27,12 @@ struct ESHeader {
 
 	union {
 		SOCKET client;
-		uint32_t workerId;
+		ChildProcessID workerId;
 	};
 
 	ESHeader() : type(REQ_INVALID), size(0), requestUID(0), properties(ESPROP_NONE), workerId(0) {}
 	ESHeader(ESRequestType type, int32_t size, uint32_t requestUID, ESHeaderProperties properties, ChildProcessID workerId) :
-		type(type), size(size), requestUID(requestUID), properties(properties), workerId(workerId.value) {}
+		type(type), size(size), requestUID(requestUID), properties(properties), workerId(workerId) {}
 	~ESHeader(){}
 };
 

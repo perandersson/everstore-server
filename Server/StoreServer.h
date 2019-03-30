@@ -23,13 +23,14 @@ struct ServerConfiguration
 	char authenticate;
 };
 
+// TODO: Replace version into int32_t and Endian into char (TRUE, FALSE)
+static_assert(sizeof(ServerConfiguration) == 3, "Expected the server configuration to be 3 bytes");
+
 class StoreServer
 {
 public:
 	StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host,
 	            Authenticator* authenticator);
-
-	~StoreServer();
 
 	ESErrorCode listen();
 
@@ -55,10 +56,7 @@ private:
 	const uint32_t mMaxConnections;
 	const uint32_t mMaxBufferSize;
 
-	ServerConfiguration mConfiguration;
-
 	SOCKET mServerSocket;
-	sockaddr_in mAddr;
 	IpcHost* mIpcHost;
 	Authenticator* mAuthenticator;
 	list<StoreClient*> mClients;

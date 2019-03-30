@@ -37,18 +37,23 @@ ESErrorCode Store::start() {
 
 	// Initialize the event store
 	ESErrorCode err = initialize();
-	if (isError(err)) return err;
+	if (isError(err)) {
+		return err;
+	}
 
 	// Lock the application
 	FileLock lock(applicationLockPath);
 	lock.addRef();
 
 	// Listen for any incomming connections
-	while (mRunning.load() && !isErrorCodeFatal(err)) {
+	while (mRunning && !isErrorCodeFatal(err)) {
 		err = mServer->acceptClient();
 
 		if (IsErrorButNotFatal(err)) {
-			Log::Write(Log::Error, "Failed to accept a new client: %s (%d)", parseErrorCode(err), err);
+			// Only log this as an error if the server is actually running. An error is otherwise expected
+			if (mRunning) {
+				Log::Write(Log::Error, "Failed to accept a new client: %s (%d)", parseErrorCode(err), err);
+			}
 			err = ESERR_NO_ERROR;
 		}
 	}

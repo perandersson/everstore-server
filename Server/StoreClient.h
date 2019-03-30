@@ -16,7 +16,11 @@ public:
 	// Start the client thread
 	ESErrorCode start();
 
-	// Check to see if this client is running
+	/**
+	 * Is the client running or not?
+	 *
+	 * @return <code>true</code> if this client is running
+	 */
 	inline bool running() const { return mRunning; }
 
 	inline SOCKET handle() const { return mClientSocket; }
