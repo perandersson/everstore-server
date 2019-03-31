@@ -3,11 +3,11 @@
 
 #ifdef WIN32
 
-#include "win32/Win32Process.h"
+#include "Win32/Win32Process.h"
 
 #else
 
-#include "gcc/GCCProcess.h"
+#include "Unix/GCCProcess.h"
 
 #endif
 

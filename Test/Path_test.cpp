@@ -35,4 +35,28 @@ TEST_SUITE(Path)
 		assertTrue(result.hash > 0u);
 		assertEquals(Path::StrPathDelim + string("test") + Path::StrPathDelim + string("asdf"), result.value);
 	}
+
+	UNIT_TEST(DirectoryFromFileAtRoot) {
+		const Path path("/path");
+		const Path result = path.GetDirectory();
+		assertEquals(Path("/"), result);
+	}
+
+	UNIT_TEST(DirectoryFromFileAtDepth2) {
+		const Path path("/path/to/file");
+		const Path result = path.GetDirectory();
+		assertEquals(Path("/path/to"), result);
+	}
+
+	UNIT_TEST(DirectoryFromDepth2) {
+		const Path path("/path/to/");
+		const Path result = path.GetDirectory();
+		assertEquals(Path("/path/to"), result);
+	}
+
+	UNIT_TEST(DirectoryFromRelativePath) {
+		const Path path("path");
+		const Path result = path.GetDirectory();
+		assertEquals(Path::GetWorkingDirectory(), result);
+	}
 }

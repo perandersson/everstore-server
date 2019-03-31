@@ -51,7 +51,7 @@ void process_init(process_t* p) {
 	p->pipe = INVALID_PIPE;
 }
 
-ESErrorCode process_start(const string& asd, const string& command, const string& currentDirectory,
+ESErrorCode process_start(const string& name, const string& command, const string& currentDirectory,
 		const vector<string>& arguments, uint32_t pipeMaxBufferSize, process_t* p) {
 	const auto pipeName = PIPE_NAME_PREFIX + name;
 	// Open the pipe first

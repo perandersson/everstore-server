@@ -55,3 +55,26 @@ ifstream Path::OpenStream() const {
 	file.open(fileName.c_str());
 	return file;
 }
+
+Path Path::GetDirectory() const {
+	const auto idx = value.find_last_of('/');
+	if (idx == string::npos) {
+		return GetWorkingDirectory();
+	} else if (idx == 0) {
+		return Path("/");
+	}
+	return Path(value.substr(0, idx));
+}
+
+Path Path::GetWorkingDirectory() {
+#if defined(_WIN32)
+	char buffer[MAX_PATH];
+	GetModuleFileName(nullptr, buffer, MAX_PATH);
+	string::size_type pos = string(buffer).find_last_of("\\/");
+	return Path(string(buffer).substr(0, pos));
+#else
+	char directory[1024];
+	getcwd(directory, sizeof(directory));
+	return Path(string(directory));
+#endif
+}

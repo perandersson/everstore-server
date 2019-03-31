@@ -53,9 +53,6 @@ private:
 	// Send a message over the IPC pipe
 	ESErrorCode sendToAll(const ESHeader* header);
 
-	// Send a message over the IPC pipe
-	ESErrorCode sendToAll(const ByteBuffer* bytes);
-
 private:
 	const string mRootDir;
 	const Path mConfigPath;

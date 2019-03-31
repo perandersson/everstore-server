@@ -3,11 +3,11 @@
 
 #ifdef WIN32
 
-#include "win32/Win32Mutex.h"
+#include "Win32/Win32Mutex.h"
 
 #else
 
-#include "gcc/GCCMutex.h"
+#include "Unix/GCCMutex.h"
 
 #endif
 

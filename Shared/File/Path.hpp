@@ -5,6 +5,10 @@
 #include <cstdio>
 #include <fstream>
 
+/**
+ * Represents a path in the file-system. Path-delimiter is always '/' (forward-slash) from the <code>Path</code>'s
+ * point of view. The path will be automatically converted at places where it's necessary.
+ */
 struct Path
 {
 	/**
@@ -49,6 +53,18 @@ struct Path
 	 * @return
 	 */
 	ifstream OpenStream() const;
+
+	/**
+	 * Figure out the directory where this path is located
+	 *
+	 * @return
+	 */
+	Path GetDirectory() const;
+
+	/**
+	 * @return
+	 */
+	static Path GetWorkingDirectory();
 
 	/**
 	 *

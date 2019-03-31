@@ -165,18 +165,6 @@ ESErrorCode IpcHost::sendToAll(const ESHeader* header) {
 	return error;
 }
 
-ESErrorCode IpcHost::sendToAll(const ByteBuffer* bytes) {
-	ESErrorCode error = ESERR_NO_ERROR;
-	// Send message to all processes
-	for (auto process : mProcesses) {
-		error = process->child().sendTo(bytes);
-		if (isError(error)) {
-			return error;
-		}
-	}
-	return error;
-}
-
 IpcChildProcess* IpcHost::createProcess() {
 	IpcChildProcess* process = new IpcChildProcess(ChildProcessID(mProcesses.size() + 1), mMaxBufferSize);
 	mProcesses.push_back(process);
