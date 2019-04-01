@@ -8,7 +8,6 @@
 #include "../LinkedList.h"
 #include "../File/FileInputStream.h"
 #include "../File/FileOutputStream.h"
-#include "../Ipc/ChildProcessID.h"
 #include "OpenTransactions.hpp"
 #include "../File/Path.hpp"
 
@@ -25,7 +24,7 @@ public:
 
 	Journal(const Path& path);
 
-	Journal(const Path& path, ChildProcessID childProcessId);
+	Journal(const Path& path, ProcessID childProcessId);
 
 	~Journal();
 

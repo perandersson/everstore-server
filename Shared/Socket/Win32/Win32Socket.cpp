@@ -53,10 +53,13 @@ ESErrorCode OsSocket::SetBufferSize(OsSocket* socket, uint32_t sizeInBytes) {
 	if (IsInvalid(socket)) {
 		return ESERR_SCCKET_DESTROYED;
 	}
-	int flag = sizeInBytes;
-	if (setsockopt(socket->socket, IPPROTO_TCP, SO_SNDBUF, (const char*) &flag, sizeof(int)) != 0)
+	DWORD flag = sizeInBytes;
+	auto error = WSAGetLastError();
+	if (setsockopt(socket->socket, SOL_SOCKET, SO_SNDBUF, (const char*)&flag, sizeof(int)) != 0) {
+		error = WSAGetLastError();
 		return ESERR_SOCKET_CONFIGURE;
-	if (setsockopt(socket->socket, IPPROTO_TCP, SO_RCVBUF, (const char*) &flag, sizeof(int)) != 0)
+	}
+	if (setsockopt(socket->socket, SOL_SOCKET, SO_RCVBUF, (const char*) &flag, sizeof(int)) != 0)
 		return ESERR_SOCKET_CONFIGURE;
 	return ESERR_NO_ERROR;
 }

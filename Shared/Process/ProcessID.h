@@ -1,5 +1,5 @@
-#ifndef _EVERSTORE_CHILD_PROCESS_ID_H_
-#define _EVERSTORE_CHILD_PROCESS_ID_H_
+#ifndef _EVERSTORE_PROCESS_ID_H_
+#define _EVERSTORE_PROCESS_ID_H_
 
 #include "../es_config.h"
 #include "../StringUtils.h"
@@ -28,5 +28,7 @@ struct ProcessID
 	// Converts this id value to a string
 	inline const string ToString() const { return StringUtils::toString(value); }
 };
+
+static_assert(sizeof(ProcessID) == 4, "Expected the ProcessID type to be 4 bytes");
 
 #endif

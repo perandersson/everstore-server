@@ -135,6 +135,15 @@ public:
 	static Socket* CreateBlocking(uint32_t bufferSizeInBytes);
 
 	/**
+	 * Get a socket from the supplied parent process
+	 *
+	 * @param process
+	 * @param bufferSizeInBytes
+	 * @return
+	 */
+	static Socket* LoadFromProcess(Process* process, uint32_t bufferSizeInBytes);
+
+	/**
 	 * @return <code>true</code> if the server is running on an os with little endian
 	 */
 	inline static bool IsLittleEndian() {
@@ -144,7 +153,7 @@ public:
 
 	inline uint32_t GetBufferSize() const { return mBufferSize; }
 
-	inline OsSocket* GetHandle() { return &mSocket; }
+	inline OsSocket::Ref GetHandle() { return mSocket.socket; }
 
 private:
 	OsSocket mSocket;

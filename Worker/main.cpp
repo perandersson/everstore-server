@@ -22,7 +22,7 @@ void printWorkerProperties(const Config& config) {
 	Log::Write(Log::Info, "logLevel = %d", config.logLevel);
 }
 
-int start(ChildProcessID idx, const Config& config) {
+int start(ProcessID idx, const Config& config) {
 	// Register so that we get events when a signal is being sent to us. This makes it possible for us to
 	// gracefully shutdown the application.
 	signal(SIGINT, handleSingal);
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 	printWorkerProperties(p);
 
 	// Start the worker
-	const ChildProcessID id(atoi(argv[1]));
+	const ProcessID id(atoi(argv[1]));
 	Log::SetChildProcessID(id);
 	return start(id, p);
 }

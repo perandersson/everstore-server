@@ -20,6 +20,8 @@ class Process
 public:
 	~Process();
 
+	inline ProcessID GetID() const { return mId; }
+
 	inline int32_t Read(char* buffer, uint32_t size) { return OsProcess::Read(&mProcess, buffer, size); }
 
 	inline int32_t Write(const char* buffer, uint32_t size) { return OsProcess::Write(&mProcess, buffer, size); }
@@ -64,9 +66,10 @@ public:
 	inline OsProcess* GetHandle() { return &mProcess; }
 
 private:
-	Process();
+	Process(ProcessID id);
 
 private:
+	const ProcessID mId;
 	OsProcess mProcess;
 };
 

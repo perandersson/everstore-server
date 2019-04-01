@@ -2,11 +2,12 @@
 #define _EVERSTORE_STORE_CLIENT_H_
 
 #include "../Shared/everstore.h"
+#include "Ipc/IpcHost.h"
 
 class StoreClient
 {
 public:
-	StoreClient(SOCKET client, IpcHost* host, uint32_t maxBufferSize);
+	StoreClient(Socket* client, IpcHost* host, uint32_t maxBufferSize);
 
 	~StoreClient();
 
@@ -23,9 +24,9 @@ public:
 	 */
 	inline bool running() const { return mRunning; }
 
-	inline SOCKET handle() const { return mClientSocket; }
+	inline Socket* handle() const { return mClientSocket; }
 
-	inline mutex_t clientLock() const { return mClientLock; }
+	inline Mutex* clientLock() const { return mClientLock; }
 
 private:
 	// 
@@ -43,10 +44,10 @@ private:
 	ESErrorCode sendBytesToClient(const ByteBuffer* memory);
 
 private:
-	SOCKET mClientSocket;
+	Socket* mClientSocket;
 	IpcHost* mIpcHost;
 	uint32_t mMaxBufferSize;
-	mutex_t mClientLock;
+	Mutex* mClientLock;
 	atomic_bool mRunning;
 	thread mThread;
 };

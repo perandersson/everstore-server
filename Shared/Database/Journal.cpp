@@ -20,10 +20,10 @@ Journal::Journal(const Path& path)
 	mJournalSize = FileUtils::getFileSize(mFile);
 }
 
-Journal::Journal(const Path& path, ChildProcessID workerId) :
+Journal::Journal(const Path& path, ProcessID workerId) :
 		mPath(path),
 		mFile(path.OpenOrCreate("r+b")),
-		mFileLock(path.value + string(".") + workerId.toString() + string(".lock")),
+		mFileLock(path.value + string(".") + workerId.ToString() + string(".lock")),
 		mTimeSinceLastUsed(chrono::system_clock::now()),
 		mJournalSize(0) {
 	// The journal size is assumed to be the file size. Only one journal instance can exists for the same file and

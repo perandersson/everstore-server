@@ -6,7 +6,7 @@
 #define EVERSTORE_LOG_HPP
 
 #include <string>
-#include "../Ipc/ChildProcessID.h"
+#include "../Process/ProcessID.h"
 
 class Logger
 {
@@ -86,7 +86,7 @@ public:
 	 *
 	 * @param id
 	 */
-	static void SetChildProcessID(ChildProcessID id);
+	static void SetChildProcessID(ProcessID id);
 
 	/**
 	 * Write something to the log

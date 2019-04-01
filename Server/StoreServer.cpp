@@ -2,40 +2,34 @@
 
 StoreServer::StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host,
                          Authenticator* authenticator)
-		: mPort(port), mMaxConnections(maxConnections), mMaxBufferSize(maxBufferSize), mServerSocket(INVALID_SOCKET),
+		: mPort(port), mMaxConnections(maxConnections), mMaxBufferSize(maxBufferSize), mServerSocket(nullptr),
 		  mIpcHost(host), mAuthenticator(authenticator) {
+}
 
+StoreServer::~StoreServer() {
+	if (mServerSocket != nullptr) {
+		delete mServerSocket;
+		mServerSocket = nullptr;
+	}
 }
 
 ESErrorCode StoreServer::listen() {
-	mServerSocket = socket_create_blocking(mMaxBufferSize);
-	if (mServerSocket == INVALID_SOCKET)
+	mServerSocket = Socket::CreateBlocking(mMaxBufferSize);
+	if (mServerSocket == nullptr)
 		return ESERR_SOCKET_CONFIGURE;
 
-	// Prepare socket configuration
-	sockaddr_in addr;
-	memset(&addr, 0, sizeof(sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(mPort);
-	if (::bind(mServerSocket, (struct sockaddr*) &addr, sizeof(addr)) == -1) {
-		socket_close(mServerSocket);
-		mServerSocket = INVALID_SOCKET;
-		return ESERR_SOCKET_BIND;
+	const auto err = mServerSocket->Listen(Port(mPort), mMaxConnections);
+	if (isError(err)) {
+		delete mServerSocket;
+		mServerSocket = nullptr;
+		return err;
 	}
-
-	if (::listen(mServerSocket, mMaxConnections) == -1) {
-		socket_close(mServerSocket);
-		mServerSocket = INVALID_SOCKET;
-		return ESERR_SOCKET_LISTEN;
-	}
-
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode StoreServer::acceptClient() {
-	SOCKET socket = socket_accept_blocking(mServerSocket, mMaxBufferSize);
-	if (socket == INVALID_SOCKET) {
+	auto const newSocket = mServerSocket->AcceptBlocking();
+	if (newSocket == nullptr) {
 		return ESERR_SOCKET_CONFIGURE;
 	}
 
@@ -44,36 +38,37 @@ ESErrorCode StoreServer::acceptClient() {
 	configuration.endian = ES_BIG_ENDIAN;
 	configuration.version = VERSION;
 	configuration.authenticate = mAuthenticator->required() ? 1 : 0;
-	if (is_little_endian()) {
+	if (Socket::IsLittleEndian()) {
 		configuration.endian = ES_LITTLE_ENDIAN;
 	}
 
-	if (!socket_sendall(socket, &configuration)) {
+	const auto sentBytes = newSocket->SendAll((const char*) &configuration, sizeof configuration);
+	if (sentBytes != sizeof configuration) {
 		Log::Write(Log::Error, "Could not send server properties to client: %d", socket);
-		socket_close(socket);
+		delete newSocket;
 		return ESERR_SOCKET_DISCONNECTED;
 	}
 
-	ESErrorCode err = authenticate(socket);
+	ESErrorCode err = authenticate(newSocket);
 	if (isError(err)) {
-		socket_close(socket);
+		delete newSocket;
 		return err;
 	}
 
 	// Garbage collect any client processes that's closed but not removed
 	garbageCollect();
 
-	auto const client = new StoreClient(socket, mIpcHost, mMaxBufferSize);
-	err = mIpcHost->onClientConnected(socket, client->clientLock());
+	auto const client = new StoreClient(newSocket, mIpcHost, mMaxBufferSize);
+	err = mIpcHost->onClientConnected(newSocket, client->clientLock());
 	if (isError(err)) {
-		socket_close(socket);
+		delete newSocket;
 		return err;
 	}
 
 	err = client->start();
 	if (err != ESERR_NO_ERROR) {
 		delete client;
-		socket_close(socket);
+		delete newSocket;
 		return err;
 	}
 
@@ -81,25 +76,35 @@ ESErrorCode StoreServer::acceptClient() {
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode StoreServer::authenticate(SOCKET socket) {
-	if (!mAuthenticator->required()) return ESERR_NO_ERROR;
+ESErrorCode StoreServer::authenticate(Socket* newSocket) {
+	if (!mAuthenticator->required()) {
+		return ESERR_NO_ERROR;
+	}
 
 	Log::Write(Log::Error, "Client: %d is authenticating", socket);
 	ESHeader header;
-	if (socket_recvall(socket, &header) == 0 || header.type != REQ_AUTHENTICATE)
-		return ESERR_AUTHENTICATION_FAILED;
-
-	Authentication::Request request;
-	if (socket_recvall(socket, &request) == 0)
-		return ESERR_AUTHENTICATION_FAILED;
-
-	string username;
-	if (socket_recvstring<32>(socket, &username, request.usernameLength) == 0) {
+	auto recvBytes = newSocket->ReceiveAll((char*) &header, sizeof header);
+	if (recvBytes != sizeof header || header.type != REQ_AUTHENTICATE) {
 		return ESERR_AUTHENTICATION_FAILED;
 	}
 
+	Authentication::Request request;
+	recvBytes = newSocket->ReceiveAll((char*) &request, sizeof request);
+	if (recvBytes != sizeof request) {
+		return ESERR_AUTHENTICATION_FAILED;
+	}
+
+	// Read the username, but limit the length to 32 bytes
+	string username;
+	recvBytes = newSocket->ReceiveString<32>(&username, request.usernameLength);
+	if (recvBytes != request.usernameLength) {
+		return ESERR_AUTHENTICATION_FAILED;
+	}
+
+	// Read the password, but limit the length to 32 bytes
 	string password;
-	if (socket_recvstring<32>(socket, &password, request.passwordLength) == 0) {
+	recvBytes = newSocket->ReceiveString<32>(&password, request.passwordLength);
+	if (recvBytes != request.passwordLength) {
 		return ESERR_AUTHENTICATION_FAILED;
 	}
 
@@ -115,9 +120,8 @@ void StoreServer::close() {
 	disconnectAllClients();
 
 	// Close the socket used when listening for incoming requests
-	if (mServerSocket != INVALID_SOCKET) {
-		socket_close(mServerSocket);
-		mServerSocket = INVALID_SOCKET;
+	if (mServerSocket != nullptr) {
+		mServerSocket->Destroy();
 	}
 }
 

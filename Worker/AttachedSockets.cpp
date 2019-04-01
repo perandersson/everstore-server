@@ -1,41 +1,46 @@
 #include "AttachedSockets.h"
 
-AttachedConnection gAttachedSocket = {INVALID_SOCKET, INVALID_LOCK};
+AttachedConnection gAttachedSocket = {nullptr, nullptr};
 
 AttachedSockets::AttachedSockets() {
 
 }
 
 AttachedSockets::~AttachedSockets() {
-	for (auto& attachedSocket : mSockets) {
-		socket_close(attachedSocket.second->socket);
-		mutex_destroy(attachedSocket.second->lock);
-		delete attachedSocket.second;
+	for (auto& pair : mSockets) {
+		delete pair.second->socket;
+		delete pair.second->lock;
 	}
 }
 
-AttachedConnection* AttachedSockets::get(SOCKET s) {
-	auto it = mSockets.find(s);
-	if (it == mSockets.end()) return &gAttachedSocket;
+AttachedConnection* AttachedSockets::get(OsSocket::Ref socketRef) {
+	auto it = mSockets.find(socketRef);
+	if (it == mSockets.end()) {
+		return &gAttachedSocket;
+	}
 	return it->second;
 }
 
-void AttachedSockets::add(SOCKET hostSocket, SOCKET clientSocket, mutex_t lock) {
+void AttachedSockets::add(OsSocket::Ref socketFromHost, Socket* clientSocket, Mutex* lock) {
 	auto a = new AttachedConnection();
 	a->socket = clientSocket;
 	a->lock = lock;
-	mSockets.insert(make_pair(hostSocket, a));
+	mSockets.insert(make_pair(socketFromHost, a));
 }
 
-void AttachedSockets::remove(SOCKET hostSocket) {
-	auto it = mSockets.find(hostSocket);
+void AttachedSockets::remove(OsSocket::Ref socketFromHost) {
+	auto it = mSockets.find(socketFromHost);
 	if (it != mSockets.end()) {
-		socket_close(it->second->socket);
-		mutex_destroy(it->second->lock);
+		delete it->second->socket;
+		delete it->second->lock;
 		mSockets.erase(it);
 	}
 }
 
 void AttachedSockets::clear() {
+	for (auto& pair : mSockets) {
+		delete pair.second->socket;
+		delete pair.second->lock;
+	}
 	mSockets.clear();
 }

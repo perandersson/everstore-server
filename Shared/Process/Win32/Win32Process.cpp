@@ -10,6 +10,17 @@
 const string gPipeNamePrefix = "\\\\.\\pipe\\everstore";
 const uint32_t gDefaultTimeout = 2000;
 
+namespace
+{
+	string Vector2String(const vector<string>& v) {
+		string result;
+		for (auto& arg : v) {
+			result += (arg + string(" "));
+		}
+		return result;
+	}
+}
+
 ESErrorCode Win32CreateNamedPipe(ProcessID id, HANDLE* p, int32_t bufferSize) {
 	*p = INVALID_HANDLE_VALUE;
 
@@ -50,13 +61,14 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 			TRUE
 	};
 	const auto directory = command.GetDirectory();
-	BOOL result = CreateProcess(nullptr, (char*) command.value.c_str(), &attributes, &attributes, TRUE, 0, nullptr,
+	const auto commandStr = command.value + string(" ") + Vector2String(args);
+	BOOL result = CreateProcess(nullptr, (char*) commandStr.c_str(), &attributes, &attributes, TRUE, 0, nullptr,
 	                            directory.value.c_str(), &process->startupInfo, &process->processInfo);
 	if (!result) {
 		CloseHandle(pipe);
 		free(process);
 		const auto lastError = GetLastError();
-		Log::Write(Log::Error, "Failed to start process '%s' (%d)", command.value.c_str(), lastError);
+		Log::Write(Log::Error, "Failed to start process '%s' (%d)", commandStr.c_str(), lastError);
 		return ESERR_PROCESS_FAILED_TO_START;
 	}
 	process->pipe = pipe;

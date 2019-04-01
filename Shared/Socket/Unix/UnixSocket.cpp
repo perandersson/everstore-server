@@ -98,9 +98,9 @@ ESErrorCode OsSocket::SetBufferSize(OsSocket* socket, uint32_t sizeInBytes) {
 	}
 
 	int flag = sizeInBytes;
-	if (setsockopt(socket->socket, IPPROTO_TCP, SO_SNDBUF, (const char*) &flag, sizeof(int)) != 0)
+	if (setsockopt(socket->socket, SOL_SOCKET, SO_SNDBUF, (const char*) &flag, sizeof(int)) != 0)
 		return ESERR_SOCKET_CONFIGURE;
-	if (setsockopt(socket->socket, IPPROTO_TCP, SO_RCVBUF, (const char*) &flag, sizeof(int)) != 0)
+	if (setsockopt(socket->socket, SOL_SOCKET, SO_RCVBUF, (const char*) &flag, sizeof(int)) != 0)
 		return ESERR_SOCKET_CONFIGURE;
 	return ESERR_NO_ERROR;
 }

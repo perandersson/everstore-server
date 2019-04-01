@@ -1,8 +1,8 @@
 #include "Journals.h"
 
 
-Journals::Journals(ChildProcessID childProcessId, uint32_t maxJournalLifeTime)
-		: mChildProcessId(childProcessId), mMaxJournalLifeTime(maxJournalLifeTime),
+Journals::Journals(ProcessID id, uint32_t maxJournalLifeTime)
+		: mChildProcessId(id), mMaxJournalLifeTime(maxJournalLifeTime),
 		  mJournalsToBeRemoved(offsetof(Journal, link)) {
 	mTimeSinceLastGC = chrono::system_clock::now();
 }

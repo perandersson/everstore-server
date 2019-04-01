@@ -161,3 +161,32 @@ Socket* Socket::CreateBlocking(uint32_t bufferSizeInBytes) {
 
 	return new Socket(handle.socket, bufferSizeInBytes);
 }
+
+Socket* Socket::LoadFromProcess(Process* process, uint32_t bufferSizeInBytes) {
+	OsSocket handle;
+	ESErrorCode error = OsSocket::LoadFromProcess(&handle, process->GetHandle());
+	if (isError(error)) {
+		Log::Write(Log::Error, "Failed to load socket from process: %s (%d)", parseErrorCode(error), error);
+		return nullptr;
+	}
+
+	// Do not save up for bytes until send
+	error = OsSocket::SetNoDelay(&handle);
+	if (isError(error)) {
+		Log::Write(Log::Error, "Failed to disable delay mode on socket. Reason: %s (%d)", parseErrorCode(error),
+		           error);
+		OsSocket::Close(&handle);
+		return nullptr;
+	}
+
+	// Set the buffer size
+	error = OsSocket::SetBufferSize(&handle, bufferSizeInBytes);
+	if (isError(error)) {
+		Log::Write(Log::Error, "Failed to set the socket's buffer size to %d. Reason: %s (%d)", bufferSizeInBytes,
+		           parseErrorCode(error), error);
+		OsSocket::Close(&handle);
+		return nullptr;
+	}
+
+	return new Socket(handle.socket, bufferSizeInBytes);
+}

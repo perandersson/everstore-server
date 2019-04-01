@@ -3,17 +3,15 @@
 
 #include "../Message/ESHeader.h"
 #include "../Memory/ByteBuffer.h"
-#include "../Process.h"
-#include "ChildProcessID.h"
+#include "../Process/Process.hpp"
+#include "../Mutex/Mutex.hpp"
 
 class IpcChild
 {
 public:
-	IpcChild(ChildProcessID id);
+	explicit IpcChild(ProcessID id, Process* process);
 
 	~IpcChild();
-
-	ESErrorCode connectToHost();
 
 	// Send a message over the IPC pipe
 	ESErrorCode sendTo(const ESHeader* header);
@@ -23,19 +21,17 @@ public:
 
 	int32_t read(char* bytes, uint32_t size);
 
-	SOCKET acceptSharedSocket(mutex_t* m);
-
 	// Retrieves this child's unique id
-	inline ChildProcessID id() const { return mId; }
+	inline ProcessID id() const { return mId; }
 
-	inline process_t* process() { return &mProcess; }
+	inline Process* process() { return mProcess; }
 
 	// Close pipe
 	void close();
 
 private:
-	const ChildProcessID mId;
-	process_t mProcess;
+	const ProcessID mId;
+	Process* mProcess;
 	mutex mMutex;
 };
 

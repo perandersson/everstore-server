@@ -23,8 +23,6 @@ ESErrorCode OsMutex::Destroy(OsMutex* mutex) {
 	if (mutex->ptr) {
 		CloseHandle(mutex->ptr);
 	}
-
-	free(mutex);
 	return ESERR_NO_ERROR;
 }
 

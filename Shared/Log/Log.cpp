@@ -59,7 +59,7 @@ void Log::Write(uint32_t level, const char *str, ...) {
     gCurrentLogger->Write(level, std::string(tmp));
 }
 
-void Log::SetChildProcessID(ChildProcessID id) {
+void Log::SetChildProcessID(ProcessID id) {
     char tmp[128];
     sprintf(tmp, "%02d", id);
     gChildProcessID = string(tmp);

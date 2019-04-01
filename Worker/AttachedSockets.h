@@ -5,8 +5,8 @@
 
 struct AttachedConnection
 {
-	SOCKET socket;
-	mutex_t lock;
+	Socket* socket;
+	Mutex* lock;
 };
 
 class AttachedSockets
@@ -16,16 +16,16 @@ public:
 
 	~AttachedSockets();
 
-	AttachedConnection* get(SOCKET s);
+	AttachedConnection* get(OsSocket::Ref socketRef);
 
-	void add(SOCKET hostSocket, SOCKET clientSocket, mutex_t lock);
+	void add(OsSocket::Ref socketFromHost, Socket* clientSocket, Mutex* lock);
 
-	void remove(SOCKET hostSocket);
+	void remove(OsSocket::Ref socketFromHost);
 
 	void clear();
 
 private:
-	unordered_map<SOCKET, AttachedConnection*> mSockets;
+	unordered_map<OsSocket::Ref, AttachedConnection*> mSockets;
 };
 
 

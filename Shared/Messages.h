@@ -42,7 +42,7 @@ struct NewTransaction
 
 	struct Header : ESHeader
 	{
-		Header(uint32_t requestId, ChildProcessID workerId)
+		Header(uint32_t requestId, ProcessID workerId)
 				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 
 		~Header() {}
@@ -79,7 +79,7 @@ struct CommitTransaction
 
 	struct Header : ESHeader
 	{
-		Header(uint32_t requestId, ChildProcessID workerId)
+		Header(uint32_t requestId, ProcessID workerId)
 				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 
 		~Header() {}
@@ -109,7 +109,7 @@ struct RollbackTransaction
 
 	struct Header : ESHeader
 	{
-		Header(uint32_t requestId, ChildProcessID workerId)
+		Header(uint32_t requestId, ProcessID workerId)
 				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 
 		~Header() {}
@@ -134,7 +134,7 @@ struct RequestError
 
 	struct Header : ESHeader
 	{
-		Header(uint32_t requestId, ChildProcessID workerId)
+		Header(uint32_t requestId, ProcessID workerId)
 				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 
 		~Header() {}
@@ -149,7 +149,7 @@ struct ReadJournal
 
 	struct Header : ESHeader
 	{
-		Header(uint32_t requestId, ESHeaderProperties properties, ChildProcessID workerId)
+		Header(uint32_t requestId, ESHeaderProperties properties, ProcessID workerId)
 				: ESHeader(TYPE, sizeof(Response), requestId, properties, workerId) {}
 
 		~Header() {}
@@ -182,7 +182,7 @@ struct JournalExists
 
 	struct Header : ESHeader
 	{
-		Header(uint32_t requestId, ChildProcessID workerId)
+		Header(uint32_t requestId, ProcessID workerId)
 				: ESHeader(TYPE, sizeof(Response), requestId, ESPROP_NONE, workerId) {}
 
 		~Header() {}

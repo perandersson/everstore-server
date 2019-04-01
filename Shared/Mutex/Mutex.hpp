@@ -29,13 +29,13 @@ public:
 	 * @param timeout
 	 * @return
 	 */
-	inline ESErrorCode Lock(uint32_t timeout = 30000u);
+	ESErrorCode Lock(uint32_t timeout = 30000u);
 
 	/**
 	 *
 	 * @return
 	 */
-	inline ESErrorCode Unlock();
+	ESErrorCode Unlock();
 
 	/**
 	 * Share this mutex with the supplied process

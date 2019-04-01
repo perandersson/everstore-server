@@ -81,7 +81,7 @@ ESErrorCode Store::initialize() {
 	mHost = new IpcHost(mConfig.rootDir, mConfig.configPath, mConfig.maxBufferSize);
 
 	// Create worker processes
-	ESErrorCode err = ESERR_NO_ERROR;
+	ESErrorCode err;
 	for (uint32_t i = 0; i < mConfig.numWorkers; ++i) {
 		err = mHost->addWorker();
 		if (isError(err)) return err;

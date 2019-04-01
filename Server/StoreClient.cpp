@@ -1,30 +1,30 @@
 #include "StoreClient.h"
 
-StoreClient::StoreClient(SOCKET client, IpcHost* host, uint32_t maxBufferSize)
-		: mClientSocket(client), mIpcHost(host), mMaxBufferSize(maxBufferSize), mClientLock(INVALID_LOCK),
+StoreClient::StoreClient(Socket* client, IpcHost* host, uint32_t maxBufferSize)
+		: mClientSocket(client), mIpcHost(host), mMaxBufferSize(maxBufferSize), mClientLock(nullptr),
 		  mRunning(true) {
-	const string mutexName = string("everstore_mutex_") + StringUtils::toString(client);
-	mClientLock = mutex_create(mutexName);
+	const string mutexName = string("everstore_mutex_") + StringUtils::toString((int)mClientSocket->GetHandle());
+	mClientLock = Mutex::Create(mutexName);
 }
 
 StoreClient::~StoreClient() {
 	assert(!running());
 
-	if (mClientSocket != INVALID_SOCKET) {
-		socket_close(mClientSocket);
-		mClientSocket = INVALID_SOCKET;
+	if (mClientSocket != nullptr) {
+		delete mClientSocket;
+		mClientSocket = nullptr;
 	}
 
-	if (mClientLock != INVALID_LOCK) {
-		mutex_destroy(mClientLock);
-		mClientLock = INVALID_LOCK;
+	if (mClientLock != nullptr) {
+		delete mClientLock;
+		mClientLock = nullptr;
 	}
-	
+
 	mThread.join();
 }
 
 ESErrorCode StoreClient::start() {
-	if (mClientLock == INVALID_LOCK) {
+	if (mClientLock == nullptr) {
 		return ESERR_CLIENT_MUTEX_FAILED;
 	}
 	mThread = thread(&StoreClient::run, this);
@@ -53,7 +53,7 @@ void StoreClient::run() {
 		// Prepare the request header and put it into the memory buffer
 		const auto workerId = header->workerId;
 		const auto requestUID = header->requestUID;
-		header->client = mClientSocket;
+		header->client = mClientSocket->GetHandle();
 
 		// If no worker is specified then let the host figure it out. Otherwise redirect directly to it
 		if (isRequestTypeInitiallyForHost(header->type)) {
@@ -131,7 +131,7 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 }
 
 ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
-	assert(mClientSocket != INVALID_SOCKET);
+	assert(mClientSocket != nullptr);
 	assert(memory != nullptr);
 
 	// Reset the position of the memory
@@ -141,7 +141,7 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 	ESHeader* header = memory->allocate<ESHeader>();
 
 	// Read the header from client socket stream
-	if (socket_recvall(mClientSocket, (char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
+	if (mClientSocket->ReceiveAll((char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
 		return &INVALID_HEADER;
 
 	// Validate request
@@ -151,7 +151,7 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 
 	// Load the request body
 	if (header->size > 0) {
-		if (socket_recvall(mClientSocket, memory->allocate(header->size), header->size) != header->size) {
+		if (mClientSocket->ReceiveAll(memory->allocate(header->size), header->size) != header->size) {
 			return &INVALID_HEADER;
 		}
 	}
@@ -164,7 +164,7 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 }
 
 ESErrorCode StoreClient::sendBytesToClient(const ByteBuffer* memory) {
-	assert(mClientSocket != INVALID_SOCKET);
+	assert(mClientSocket != nullptr);
 	assert(memory != nullptr);
 
 	// The current offset indicates how much memory we've written to the memory
@@ -172,9 +172,9 @@ ESErrorCode StoreClient::sendBytesToClient(const ByteBuffer* memory) {
 
 	// It's important to lock before doing this because any of the sub-processes might be using this socket.
 	// Note sub-processes is ever only sending data over the socket and is never reading data.
-	mutex_lock(mClientLock);
-	const uint32_t sentBytes = socket_sendall(mClientSocket, memory->ptr(), size);
-	mutex_unlock(mClientLock);
+	mClientLock->Lock();
+	const uint32_t sentBytes = mClientSocket->SendAll(memory->ptr(), size);
+	mClientLock->Unlock();
 
 	// Verify that we've sent all the data to the client
 	if (sentBytes != size) {

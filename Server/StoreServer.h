@@ -4,6 +4,7 @@
 #include "../Shared/everstore.h"
 #include "StoreClient.h"
 #include "Auth/Authenticator.h"
+#include "Ipc/IpcHost.h"
 
 enum Endian : uint8_t
 {
@@ -32,13 +33,15 @@ public:
 	StoreServer(uint16_t port, uint32_t maxConnections, uint32_t maxBufferSize, IpcHost* host,
 	            Authenticator* authenticator);
 
+	~StoreServer();
+
 	ESErrorCode listen();
 
 	void close();
 
 	ESErrorCode acceptClient();
 
-	ESErrorCode authenticate(SOCKET socket);
+	ESErrorCode authenticate(Socket* newSocket);
 
 private:
 	/**
@@ -56,7 +59,7 @@ private:
 	const uint32_t mMaxConnections;
 	const uint32_t mMaxBufferSize;
 
-	SOCKET mServerSocket;
+	Socket* mServerSocket;
 	IpcHost* mIpcHost;
 	Authenticator* mAuthenticator;
 	list<StoreClient*> mClients;

@@ -6,14 +6,17 @@
 #include "../Shared/File/Path.hpp"
 #include "../Shared/Socket/Socket.hpp"
 
-Worker::Worker(ChildProcessID childProcessId, const Config& config)
-		: mIpcChild(childProcessId), mJournals(childProcessId, config.maxJournalLifeTime),
+Worker::Worker(ProcessID id, const Config& config)
+		: mId(id), mIpcChild(nullptr), mJournals(id, config.maxJournalLifeTime),
 		  mNextTransactionTypeBit(1),
 		  mConfig(config) {
 }
 
 Worker::~Worker() {
-
+	if (mIpcChild != nullptr) {
+		delete mIpcChild;
+		mIpcChild = nullptr;
+	}
 }
 
 ESErrorCode Worker::start() {
@@ -49,7 +52,7 @@ ESErrorCode Worker::start() {
 				err = handleHostMessage(header);
 			} else {
 				const AttachedConnection* attachedSocket = mAttachedSockets.get(header->client);
-				if (attachedSocket->socket != INVALID_SOCKET) {
+				if (attachedSocket->socket != nullptr) {
 					err = handleMessage(header, attachedSocket, &memory);
 				} else {
 					err = ESERR_SOCKET_NOT_ATTACHED;
@@ -94,9 +97,9 @@ ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, cons
 	// The current offset indicates how much memory we've written to the memory
 	const uint32_t size = memory->offset();
 
-	mutex_lock(connection->lock);
-	const uint32_t recv = socket_sendall(connection->socket, memory->ptr(), size);
-	mutex_unlock(connection->lock);
+	connection->lock->Lock();
+	const uint32_t recv = connection->socket->SendAll(memory->ptr(), size);
+	connection->lock->Unlock();
 
 	// Verify that we've sent all the data to the client
 	if (recv != size) return ESERR_SOCKET_SEND;
@@ -110,10 +113,11 @@ ESErrorCode Worker::initialize() {
 	}
 
 	Log::Write(Log::Info, "Opening pipe to host");
-	ESErrorCode err = mIpcChild.connectToHost();
-	if (isError(err)) {
-		return err;
+	auto process = Process::ConnectToHost(mId, mConfig.maxBufferSize);
+	if (process == nullptr) {
+		return ESERR_PROCESS_CREATE_CHILD;
 	}
+	mIpcChild = new IpcChild(mId, process);
 
 	const auto path = mConfig.rootDir + Path::StrPathDelim + mConfig.journalDir;
 	Log::Write(Log::Info, "Changing working directory to: %s", path.c_str());
@@ -133,13 +137,15 @@ ESErrorCode Worker::initialize() {
 }
 
 void Worker::release() {
-	mIpcChild.close();
+	if (mIpcChild != nullptr) {
+		mIpcChild->close();
+	}
 	mAttachedSockets.clear();
 	Socket::Shutdown();
 }
 
 bool Worker::performConsistencyCheck() {
-	const string lockSufix(string(".log.") + id().toString() + string(".lock"));
+	const string lockSufix(string(".log.") + id().ToString() + string(".lock"));
 	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir, lockSufix);
 	for (auto& file : files) {
 		const Path journalFile = Path(file.substr(0, file.length() - lockSufix.length()));
@@ -195,10 +201,15 @@ ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* co
 }
 
 ESErrorCode Worker::newConnection(const ESHeader* header) {
-	mutex_t m;
-	SOCKET newSocket = mIpcChild.acceptSharedSocket(&m);
-	if (newSocket == INVALID_SOCKET)
-		return ESERR_PROCESS_ATTACH_SHARED_SOCKET;
+	auto const newSocket = Socket::LoadFromProcess(process(), mConfig.maxBufferSize);
+	if (!newSocket) {
+		return ESERR_SOCKET_NOT_ATTACHED;
+	}
+
+	auto const m = Mutex::LoadFromProcess(process());
+	if (!m) {
+		return ESERR_MUTEX_ATTACH;
+	}
 
 	mAttachedSockets.add(header->client, newSocket, m);
 	Log::Write(Log::Info, "New client %d mapped to %d on child process", header->client, newSocket);
@@ -511,7 +522,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 	memory->memorize();
 
 	// Read the header from host process
-	if (mIpcChild.read((char*) header, sizeof(ESHeader)) != sizeof(ESHeader)) {
+	if (mIpcChild->read((char*) header, sizeof(ESHeader)) != sizeof(ESHeader)) {
 		return &INVALID_HEADER;
 	}
 
@@ -522,7 +533,7 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 
 	// Load the request body
 	if (header->size > 0) {
-		if (mIpcChild.read(memory->allocate(header->size), header->size) != header->size) {
+		if (mIpcChild->read(memory->allocate(header->size), header->size) != header->size) {
 			return &INVALID_HEADER;
 		}
 	}

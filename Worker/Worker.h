@@ -4,11 +4,12 @@
 #include "../Shared/everstore.h"
 #include "Journals.h"
 #include "AttachedSockets.h"
+#include "../Shared/Ipc/IpcChild.h"
 
 class Worker
 {
 public:
-	Worker(ChildProcessID childProcessId, const Config& config);
+	Worker(ProcessID id, const Config& config);
 
 	~Worker();
 
@@ -59,12 +60,13 @@ private:
 	ESErrorCode readAndValidatePath(uint32_t length, ByteBuffer* memory, Path* path);
 
 	// Retrieves this child's unique id
-	inline const ChildProcessID id() const { return mIpcChild.id(); }
+	inline const ProcessID id() const { return mId; }
 
-	inline process_t* process() { return mIpcChild.process(); }
+	inline Process* process() { return mIpcChild->process(); }
 
 private:
-	IpcChild mIpcChild;
+	const ProcessID mId;
+	IpcChild* mIpcChild;
 	atomic_bool mRunning;
 	Journals mJournals;
 	AttachedSockets mAttachedSockets;

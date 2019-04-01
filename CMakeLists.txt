@@ -14,13 +14,13 @@ file(GLOB ALL_SHARED_FILES Shared/*.cpp Shared/*.h
         Shared/Ipc/*.* Shared/Message/*.* Shared/Network/*.* Shared/Log/*.*
         Shared/Mutex/*.* Shared/Process/*.* Shared/Socket/*.*)
 if (WIN32)
-    file(GLOB ALL_OS_SHARED_FILES Shared/Win32/*.* Shared/Network/Win32/*.* Shared/Mutex/Win32/*.*
+    file(GLOB ALL_OS_SHARED_FILES Shared/Network/Win32/*.* Shared/Mutex/Win32/*.*
             Shared/Process/Win32/*.* Shared/Socket/Win32/*.*)
 elseif (APPLE)
-    file(GLOB ALL_OS_SHARED_FILES Shared/Unix/*.* Shared/Network/Unix/*.* Shared/Mutex/Unix/*.*
+    file(GLOB ALL_OS_SHARED_FILES Shared/Network/Unix/*.* Shared/Mutex/Unix/*.*
             Shared/Process/Unix/*.* Shared/Socket/Unix/*.*)
 else ()
-    file(GLOB ALL_OS_SHARED_FILES Shared/Unix/*.* Shared/Network/Unix/*.* Shared/Mutex/Unix/*.*
+    file(GLOB ALL_OS_SHARED_FILES Shared/Network/Unix/*.* Shared/Mutex/Unix/*.*
             Shared/Process/Unix/*.* Shared/Socket/Unix/*.*)
 endif ()
 
