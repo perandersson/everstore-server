@@ -10,7 +10,12 @@
 
 struct OsSocket
 {
+	typedef SOCKET Ref;
+	static constexpr auto Invalid = INVALID_SOCKET;
 
+	Ref socket;
+
+	static bool IsInvalid(const OsSocket* s) { return s->socket == INVALID_SOCKET; }
 };
 
 #endif //EVERSTORE_WIN32SOCKET_HPP

@@ -29,7 +29,7 @@ struct OsProcess
 
 	static int32_t Read(OsProcess* process, char* bytes, uint32_t size);
 
-	static bool IsInvalid(OsProcess* process) { return process == nullptr; }
+	static bool IsInvalid(const OsProcess* process) { return process == nullptr || !process->running; }
 };
 
 

@@ -30,7 +30,18 @@ public:
 
 	ESErrorCode Destroy();
 
-	static bool IsInvalid(Process* process) { return process == nullptr || OsProcess::IsInvalid(&process->mProcess); }
+	/**
+	 * @return <code>true</code> if this process is destroyed
+	 */
+	inline bool IsDestroyed() const { return OsProcess::IsInvalid(&mProcess); }
+
+	/**
+	 * Check to see if the supplied process is destroyed
+	 *
+	 * @param p The process we want to validate
+	 * @return
+	 */
+	static bool IsDestroyed(Process* p) { return p == nullptr || OsProcess::IsInvalid(&p->mProcess); }
 
 	/**
 	 * Start a new process

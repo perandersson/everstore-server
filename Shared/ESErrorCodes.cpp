@@ -7,6 +7,7 @@ const char* _ES_FATAL_ERROR_CODE_STRING[ESERR_FATAL_COUNT - ESERR_FATAL] = {
 		"Could not set the current path to the journal directory. Make sure that the journal directory exists.",
 
 		// Socket
+		"An unknown socket error has occurred",
 		"Could not initialize socket.",
 		"Could not configure socket.",
 		"Could not bind socket",

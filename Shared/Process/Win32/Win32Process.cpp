@@ -65,7 +65,7 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 }
 
 ESErrorCode OsProcess::Destroy(OsProcess* process) {
-	if (process == nullptr) {
+	if (process == nullptr || !process->running) {
 		return ESERR_PROCESS_DESTROYED;
 	}
 
@@ -90,7 +90,7 @@ ESErrorCode OsProcess::Destroy(OsProcess* process) {
 }
 
 ESErrorCode OsProcess::WaitForClosed(OsProcess* process, uint32_t timeout) {
-	if (process == nullptr) {
+	if (process == nullptr || !process->running) {
 		return ESERR_PROCESS_DESTROYED;
 	}
 
@@ -109,7 +109,7 @@ ESErrorCode OsProcess::WaitForClosed(OsProcess* process, uint32_t timeout) {
 }
 
 int32_t OsProcess::Write(OsProcess* p, const char* bytes, uint32_t size) {
-	if (p == nullptr) {
+	if (p == nullptr || !p->running) {
 		return -1;
 	}
 
@@ -128,7 +128,7 @@ int32_t OsProcess::Write(OsProcess* p, const char* bytes, uint32_t size) {
 }
 
 int32_t OsProcess::Read(OsProcess* p, char* bytes, uint32_t size) {
-	if (p == nullptr) {
+	if (p == nullptr || !p->running) {
 		return -1;
 	}
 

@@ -50,6 +50,19 @@ public:
 	void Destroy();
 
 	/**
+	 * @return <code>true</code> if this mutex is destroyed
+	 */
+	inline bool IsDestroyed() const { return OsMutex::IsInvalid(&mMutex); }
+
+	/**
+	 * Check to see if the supplied mutex is destroyed
+	 *
+	 * @param m The mutex we want to validate
+	 * @return
+	 */
+	static bool IsDestroyed(Mutex* m) { return m == nullptr || OsMutex::IsInvalid(&m->mMutex); }
+
+	/**
 	 * Create a new mutex
 	 *
 	 * @param name The name of the mutex
