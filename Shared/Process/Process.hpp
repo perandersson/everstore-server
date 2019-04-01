@@ -54,6 +54,13 @@ public:
 	 */
 	static Process* Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize);
 
+	/**
+	 *
+	 * @param id
+	 * @return
+	 */
+	static Process* ConnectToHost(ProcessID id, int32_t bufferSize);
+
 	inline OsProcess* GetHandle() { return &mProcess; }
 
 private:

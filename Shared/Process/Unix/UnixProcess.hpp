@@ -25,6 +25,8 @@ struct OsProcess
 
 	static ESErrorCode WaitForClosed(OsProcess* process, uint32_t timeout);
 
+	static ESErrorCode ConnectToHost(ProcessID id, int32_t bufferSize, OsProcess* process);
+
 	static int32_t Write(OsProcess* process, const char* bytes, uint32_t size);
 
 	static int32_t Read(OsProcess* process, char* bytes, uint32_t size);

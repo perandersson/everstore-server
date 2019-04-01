@@ -108,6 +108,25 @@ ESErrorCode OsProcess::WaitForClosed(OsProcess* process, uint32_t timeout) {
 	return ESERR_NO_ERROR;
 }
 
+ESErrorCode OsProcess::ConnectToHost(ProcessID id, int32_t bufferSize, OsProcess* process) {
+	process->running = false;
+	process->pipe = INVALID_HANDLE_VALUE;
+
+	SECURITY_ATTRIBUTES sec;
+	sec.bInheritHandle = TRUE;
+	sec.lpSecurityDescriptor = nullptr;
+	sec.nLength = sizeof(SECURITY_ATTRIBUTES);
+
+	const auto pipeName = gPipeNamePrefix + id.ToString();
+	process->pipe = CreateFile(pipeName.c_str(), GENERIC_READ | GENERIC_WRITE, TRUE, &sec, OPEN_EXISTING, 0, nullptr);
+	if (process->pipe == INVALID_HANDLE_VALUE) {
+		return ESERR_PIPE_CONNECT;
+	}
+
+	process->running = true;
+	return ESERR_NO_ERROR;
+}
+
 int32_t OsProcess::Write(OsProcess* p, const char* bytes, uint32_t size) {
 	if (p == nullptr || !p->running) {
 		return -1;
