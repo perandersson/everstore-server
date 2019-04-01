@@ -10,9 +10,9 @@
 
 struct Port
 {
-	const uint32_t value;
+	const uint16_t value;
 
-	explicit Port(const uint32_t value)
+	explicit Port(const uint16_t value)
 			: value(value) {
 	}
 
@@ -21,8 +21,6 @@ struct Port
 	inline bool operator!=(const Port& rhs) const { return value != rhs.value; }
 
 	inline bool operator==(const Port& rhs) const { return value == rhs.value; }
-
-	inline uint32_t AsIndex() const { return value - 1u; }
 
 	inline bool IsValid() const { return value > 0u; }
 

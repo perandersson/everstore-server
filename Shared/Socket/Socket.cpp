@@ -4,6 +4,7 @@
 
 #include "Socket.hpp"
 #include "../Log/Log.hpp"
+#include "../Process/Process.hpp"
 
 Socket::Socket(OsSocket::Ref socket, uint32_t bufferSize)
 		: mSocket{socket}, mBufferSize(bufferSize) {
@@ -27,14 +28,6 @@ void Socket::Shutdown() {
 #ifdef _WIN32
 	WSACleanup();
 #endif
-}
-
-ESErrorCode Socket::Destroy() {
-	// Ignore if the socket is already destroyed
-	if (IsDestroyed()) {
-		return ESERR_NO_ERROR;
-	}
-	return Close(mSocket.socket);
 }
 
 ESErrorCode Socket::Listen(Port port, uint32_t maxConnections) {
@@ -72,23 +65,23 @@ Socket* Socket::AcceptBlocking() {
 	}
 
 	// Make sure that the socket is in blocking mode
-	ESErrorCode error = SetBlocking(s);
+	ESErrorCode error = OsSocket::SetBlocking(&mSocket);
 	if (isError(error)) {
-		Close(s);
+		OsSocket::Close(&mSocket);
 		return nullptr;
 	}
 
 	// Do not save up for bytes until send
-	error = SetNoDelay(s);
+	error = OsSocket::SetNoDelay(&mSocket);
 	if (isError(error)) {
-		Close(s);
+		OsSocket::Close(&mSocket);
 		return nullptr;
 	}
 
 	// Set the buffer size
-	error = SetBufferSize(s, mBufferSize);
+	error = OsSocket::SetBufferSize(&mSocket, mBufferSize);
 	if (isError(error)) {
-		Close(s);
+		OsSocket::Close(&mSocket);
 		return nullptr;
 	}
 
@@ -124,43 +117,51 @@ int32_t Socket::SendAll(const char* bytes, uint32_t size) {
 	return totalSend;
 }
 
+ESErrorCode Socket::ShareWithProcess(Process* process) {
+	if (IsDestroyed()) {
+		return ESERR_SCCKET_DESTROYED;
+	}
+	return OsSocket::ShareWithProcess(&mSocket, process->GetHandle());
+}
+
 Socket* Socket::CreateBlocking(uint32_t bufferSizeInBytes) {
-	OsSocket::Ref s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (s == OsSocket::Invalid) {
+	OsSocket handle;
+	handle.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (handle.socket == OsSocket::Invalid) {
 		Log::Write(Log::Error, "Failed to create a new socket");
 		return nullptr;
 	}
 
 	// Make sure that the socket is in blocking mode
-	ESErrorCode error = SetBlocking(s);
+	ESErrorCode error = OsSocket::SetBlocking(&handle);
 	if (isError(error)) {
 		Log::Write(Log::Error, "Failed to enable blocking mode on socket. Reason: %s (%d)", parseErrorCode(error),
 		           error);
-		Close(s);
+		OsSocket::Close(&handle);
 		return nullptr;
 	}
 
 	// Do not save up for bytes until send
-	error = SetNoDelay(s);
+	error = OsSocket::SetNoDelay(&handle);
 	if (isError(error)) {
 		Log::Write(Log::Error, "Failed to disable delay mode on socket. Reason: %s (%d)", parseErrorCode(error),
 		           error);
-		Close(s);
+		OsSocket::Close(&handle);
 		return nullptr;
 	}
 
 	// Set the buffer size
-	error = SetBufferSize(s, bufferSizeInBytes);
+	error = OsSocket::SetBufferSize(&handle, bufferSizeInBytes);
 	if (isError(error)) {
 		Log::Write(Log::Error, "Failed to set the socket's buffer size to %d. Reason: %s (%d)", bufferSizeInBytes,
 		           parseErrorCode(error), error);
-		Close(s);
+		OsSocket::Close(&handle);
 		return nullptr;
 	}
 
-	return new Socket(s, bufferSizeInBytes);
+	return new Socket(handle.socket, bufferSizeInBytes);
 }
-
+/*
 ESErrorCode Socket::SetBufferSize(OsSocket::Ref socket, uint32_t sizeInBytes) {
 	if (socket == OsSocket::Invalid) {
 		return ESERR_SCCKET_DESTROYED;
@@ -208,13 +209,10 @@ ESErrorCode Socket::SetTimeout(OsSocket::Ref socket, uint32_t millis) {
 
 #ifdef _WIN32
 	const DWORD timeout = millis;
-
 	if (setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*) &timeout, sizeof(timeout)) != 0)
 		return ESERR_SOCKET_CONFIGURE;
-
 	if (setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (const char*) &timeout, sizeof(timeout)) != 0)
 		return ESERR_SOCKET_CONFIGURE;
-
 	return ESERR_NO_ERROR;
 #else
 	struct timeval timeout;
@@ -260,3 +258,4 @@ ESErrorCode Socket::Close(OsSocket::Ref socket) {
 #endif
 	return ESERR_NO_ERROR;
 }
+*/

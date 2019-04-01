@@ -18,6 +18,8 @@
 
 #endif
 
+class Process;
+
 class Socket
 {
 public:
@@ -30,31 +32,31 @@ public:
 	/**
 	 * @return
 	 */
-	inline ESErrorCode SetBlocking() { return SetBlocking(mSocket.socket); }
+	inline ESErrorCode SetBlocking() { return OsSocket::SetBlocking(&mSocket); }
 
 	/**
 	 * @param millis
 	 * @return
 	 */
-	inline ESErrorCode SetTimeout(uint32_t millis) { return SetTimeout(mSocket.socket, millis); }
+	inline ESErrorCode SetTimeout(uint32_t millis) { return OsSocket::SetTimeout(&mSocket, millis); }
 
 	/**
 	 * @return
 	 */
-	inline ESErrorCode SetNoDelay() { return SetNoDelay(mSocket.socket); }
+	inline ESErrorCode SetNoDelay() { return OsSocket::SetNoDelay(&mSocket); }
 
 	/**
 	 * @param sizeInBytes
 	 * @return
 	 */
-	inline ESErrorCode SetBufferSize(uint32_t sizeInBytes) { return SetBufferSize(mSocket.socket, sizeInBytes); }
+	inline ESErrorCode SetBufferSize(uint32_t sizeInBytes) { return OsSocket::SetBufferSize(&mSocket, sizeInBytes); }
 
 	/**
 	 * Destroy this socket's internal resources
 	 *
 	 * @remark This is automatically done when this instance is deleted
 	 */
-	ESErrorCode Destroy();
+	inline ESErrorCode Destroy() { return OsSocket::Close(&mSocket); }
 
 	/**
 	 * @return <code>true</code> if this socket is destroyed
@@ -117,6 +119,12 @@ public:
 	int32_t SendAll(const char* bytes, uint32_t size);
 
 	/**
+	 * @param process
+	 * @return
+	 */
+	ESErrorCode ShareWithProcess(Process* process);
+
+	/**
 	 * Create a new blocking socket
 	 *
 	 * @param bufferSizeInBytes
@@ -138,16 +146,6 @@ public:
 
 private:
 	Socket(OsSocket::Ref socket, uint32_t bufferSize);
-
-	static ESErrorCode SetBufferSize(OsSocket::Ref socket, uint32_t sizeInBytes);
-
-	static ESErrorCode SetBlocking(OsSocket::Ref socket);
-
-	static ESErrorCode SetTimeout(OsSocket::Ref socket, uint32_t millis);
-
-	static ESErrorCode SetNoDelay(OsSocket::Ref socket);
-
-	static ESErrorCode Close(OsSocket::Ref socket);
 
 private:
 	OsSocket mSocket;

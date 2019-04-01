@@ -1,6 +1,8 @@
 #include "Win32Socket.h"
 #include "../Socket.h"
 #include "process.h"
+#include "../Socket/Win32/Win32Socket.hpp"
+
 
 ESErrorCode socket_setblocking(SOCKET socket) {
 	unsigned long param = 0;
