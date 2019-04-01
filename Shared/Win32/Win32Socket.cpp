@@ -2,18 +2,6 @@
 #include "../Socket.h"
 #include "process.h"
 
-ESErrorCode socket_init() {
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		return ESERR_SOCKET_INIT;
-	}
-	return ESERR_NO_ERROR;
-}
-
-void socket_cleanup() {
-	WSACleanup();
-}
-
 ESErrorCode socket_setblocking(SOCKET socket) {
 	unsigned long param = 0;
 	if (ioctlsocket(socket, FIONBIO, &param) == 0)

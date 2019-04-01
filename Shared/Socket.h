@@ -13,12 +13,6 @@
 
 #endif
 
-// Initialize 
-ESErrorCode socket_init();
-
-// Cleanup the socket library
-void socket_cleanup();
-
 // Make the supplied socket blocking
 ESErrorCode socket_setblocking(SOCKET socket);
 

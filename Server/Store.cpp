@@ -1,6 +1,7 @@
 #include "Store.h"
 #include "Auth/FixedUserAuthenticator.hpp"
 #include "../Shared/File/Path.hpp"
+#include "../Shared/Socket/Socket.hpp"
 
 Store::Store(const Config& config)
 		: mConfig(config), mRunning(false), mHost(nullptr), mServer(nullptr), mAuthenticator(nullptr) {
@@ -69,9 +70,9 @@ ESErrorCode Store::start() {
 
 ESErrorCode Store::initialize() {
 	// Initialize sockets
-	auto err = socket_init();
-	if (isError(err))
-		return err;
+	if (!Socket::Initialize()) {
+		return ESERR_SOCKET_INIT;
+	}
 
 	// Create a new authenticator
 	mAuthenticator = new FixedUserAuthenticator(string("admin"), string("passwd"));
@@ -80,6 +81,7 @@ ESErrorCode Store::initialize() {
 	mHost = new IpcHost(mConfig.rootDir, mConfig.configPath, mConfig.maxBufferSize);
 
 	// Create worker processes
+	ESErrorCode err = ESERR_NO_ERROR;
 	for (uint32_t i = 0; i < mConfig.numWorkers; ++i) {
 		err = mHost->addWorker();
 		if (isError(err)) return err;
@@ -107,7 +109,7 @@ void Store::release() {
 	if (mHost != nullptr) {
 		mHost->close();
 	}
-	socket_cleanup();
+	Socket::Shutdown();
 }
 
 bool Store::performConsistencyCheck() {

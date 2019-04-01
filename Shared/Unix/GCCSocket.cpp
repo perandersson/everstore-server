@@ -3,13 +3,6 @@
 #include "GCCSocket.h"
 #include "../Process.h"
 
-ESErrorCode socket_init() {
-	return ESERR_NO_ERROR;
-}
-
-void socket_cleanup() {
-}
-
 ESErrorCode socket_setblocking(SOCKET socket) {
 	unsigned long param = 0;
 	return ioctl(socket, FIONBIO, &param) == -1 ? ESERR_SOCKET_CONFIGURE : ESERR_NO_ERROR;

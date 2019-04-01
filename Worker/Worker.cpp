@@ -4,6 +4,7 @@
 #include "../Shared/Database/Transaction.h"
 #include "../Shared/Bits.hpp"
 #include "../Shared/File/Path.hpp"
+#include "../Shared/Socket/Socket.hpp"
 
 Worker::Worker(ChildProcessID childProcessId, const Config& config)
 		: mIpcChild(childProcessId), mJournals(childProcessId, config.maxJournalLifeTime),
@@ -103,13 +104,13 @@ ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, cons
 }
 
 ESErrorCode Worker::initialize() {
-	ESErrorCode err = socket_init();
-	if (isError(err)) {
-		return err;
+	// Initialize sockets
+	if (!Socket::Initialize()) {
+		return ESERR_SOCKET_INIT;
 	}
 
 	Log::Write(Log::Info, "Opening pipe to host");
-	err = mIpcChild.connectToHost();
+	ESErrorCode err = mIpcChild.connectToHost();
 	if (isError(err)) {
 		return err;
 	}
@@ -134,7 +135,7 @@ ESErrorCode Worker::initialize() {
 void Worker::release() {
 	mIpcChild.close();
 	mAttachedSockets.clear();
-	socket_cleanup();
+	Socket::Shutdown();
 }
 
 bool Worker::performConsistencyCheck() {
