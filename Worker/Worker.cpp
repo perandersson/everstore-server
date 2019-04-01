@@ -296,7 +296,7 @@ ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConn
 	}
 
 	// Send response
-	const auto commitSuccess = err != ESERR_JOURNAL_TRANSACTION_CONFLICT ? TRUE : FALSE;
+	const auto commitSuccess = err != ESERR_JOURNAL_TRANSACTION_CONFLICT ? 1 : 0;
 	const CommitTransaction::Header responseHeader(header->requestUID, id());
 	const CommitTransaction::Response response(commitSuccess, journal->journalSize());
 	memory->reset();
@@ -330,7 +330,7 @@ ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedCo
 
 	// Write the response
 	const RollbackTransaction::Header responseHeader(header->requestUID, id());
-	const RollbackTransaction::Response response(TRUE);
+	const RollbackTransaction::Response response(1);
 	memory->reset();
 	memory->write(&responseHeader);
 	memory->write(&response);

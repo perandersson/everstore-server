@@ -191,7 +191,7 @@ ESErrorCode _gcc_socket_share(process_t* p, SOCKET hostSocket, mutex_t hostSocke
 
 ESErrorCode process_share_socket(process_t* p, SOCKET hostSocket, mutex_t hostSocketLock) {
 	ESErrorCode err;
-	const ESHeader header(REQ_NEW_CONNECTION, 0, 0, FALSE, hostSocket);
+	const ESHeader header(REQ_NEW_CONNECTION, 0, 0, 0, hostSocket);
 	if (process_write(p, (char*)&header, sizeof(header)) == 0)
 		return ESSER_PROCESS_SHARE_SOCKET;
 

@@ -51,7 +51,9 @@ int main(int argc, char** argv) {
 	// gracefully shutdown the application.
 	signal(SIGINT, handleSingal);
 	signal(SIGTERM, handleSingal);
+#if defined(_WIN32)
 	signal(SIGBREAK, handleSingal);
+#endif
 
 	// Start the server
 	const auto err = gEventStore->start();

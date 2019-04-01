@@ -41,9 +41,9 @@ set(OSX_GCC_DEFINITIONS "${GCC_DEFINITIONS} -stdlib=libc++")
 if (WIN32)
     set(OS_SPECIFIC_LIBS ${MSVC_SPECIFIL_LIBS} "ws2_32")
 elseif (APPLE)
-    set(OS_SPECIFIC_LIBS "pthread" "rt")
-else ()
     set(OS_SPECIFIC_LIBS "pthread")
+else ()
+    set(OS_SPECIFIC_LIBS "pthread" "rt")
 endif ()
 
 # Add configuration for the various compilers
@@ -77,6 +77,11 @@ if (NOT MSVC)
 endif ()
 
 ## Copy test-resources into bin test-directory
+if (WIN32)
+else ()
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+    set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
+    set(LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
+endif ()
+
 file(COPY Test/test-resources DESTINATION "${EXECUTABLE_OUTPUT_PATH}/")
-
-

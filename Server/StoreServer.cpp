@@ -43,7 +43,7 @@ ESErrorCode StoreServer::acceptClient() {
 	ServerConfiguration configuration;
 	configuration.endian = ES_BIG_ENDIAN;
 	configuration.version = VERSION;
-	configuration.authenticate = mAuthenticator->required() ? TRUE : FALSE;
+	configuration.authenticate = mAuthenticator->required() ? 1 : 0;
 	if (is_little_endian()) {
 		configuration.endian = ES_LITTLE_ENDIAN;
 	}

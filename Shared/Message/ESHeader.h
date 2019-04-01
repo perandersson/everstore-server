@@ -4,6 +4,7 @@
 #include "../es_config.h"
 #include "ESRequestType.h"
 #include "../Socket.h"
+#include "../Socket/Socket.hpp"
 #include "../Ipc/ChildProcessID.h"
 
 typedef uint32_t ESHeaderProperties;
@@ -26,13 +27,15 @@ struct ESHeader {
 	ESHeaderProperties properties;
 
 	union {
-		SOCKET client;
+		OsSocket::Ref client;
 		ChildProcessID workerId;
 	};
 
 	ESHeader() : type(REQ_INVALID), size(0), requestUID(0), properties(ESPROP_NONE), workerId(0) {}
 	ESHeader(ESRequestType type, int32_t size, uint32_t requestUID, ESHeaderProperties properties, ChildProcessID workerId) :
 		type(type), size(size), requestUID(requestUID), properties(properties), workerId(workerId) {}
+    ESHeader(ESRequestType type, int32_t size, uint32_t requestUID, ESHeaderProperties properties, OsSocket::Ref socket) :
+            type(type), size(size), requestUID(requestUID), properties(properties), client(socket) {}
 	~ESHeader(){}
 };
 

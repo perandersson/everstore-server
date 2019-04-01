@@ -9,7 +9,7 @@
 
 #else
 
-#include "gcc/GCCSocket.h"
+#include "Unix/GCCSocket.h"
 
 #endif
 

@@ -10,7 +10,7 @@ TEST_SUITE(Path)
 {
 	UNIT_TEST(EmptyPath) {
 		const Path path;
-		assertEquals(0u, path.hash);
+		assertEquals(0u, (uint32_t) path.hash);
 		assertEquals(string(""), path.value);
 	}
 

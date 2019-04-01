@@ -13,11 +13,16 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/un.h>
+#include "../../ESErrorCodes.h"
 
-class UnixSocket
+struct OsProcess;
+
+struct OsSocket
 {
 	typedef int Ref;
 	static constexpr auto Invalid = -1;
+
+	Ref socket;
 
 	static ESErrorCode ShareWithProcess(OsSocket* socket, OsProcess* process);
 
