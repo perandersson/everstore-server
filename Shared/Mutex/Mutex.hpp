@@ -18,7 +18,7 @@
 class Process;
 
 /**
- * A specific mutex type used when we a mutex that can be shared between multiple processes
+ * A specific mutex type designed for being shared between multiple processes
  */
 class Mutex
 {
@@ -74,18 +74,15 @@ public:
 	 * Create a new mutex associated with a parent process. Useful when we want to accept a shared process
 	 * from
 	 *
-	 * @param name
 	 * @param process
 	 * @return
 	 */
-	static Mutex* LoadFromProcess(const string& name, Process* process);
+	static Mutex* LoadFromProcess(Process* process);
 
 private:
-	Mutex(const string& name, bool onHost);
+	Mutex();
 
 private:
-	const string mName;
-	const bool mOnHost;
 	OsMutex mMutex;
 };
 

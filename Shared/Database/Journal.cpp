@@ -5,6 +5,10 @@
 #include "../Memory/ByteBufferInputStream.h"
 #include "../AutoClosable.h"
 
+// constexpr char when using C++11 on GCC will require us to define the actual type.
+// Only "int" is supported as constexpr.
+constexpr char Journal::JournalEof;
+
 Journal::Journal(const Path& path)
 		: mPath(path),
 		  mFile(path.OpenOrCreate("r+b")),

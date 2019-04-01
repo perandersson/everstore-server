@@ -100,6 +100,7 @@ ESErrorCode OsSocket::Close(OsSocket* socket) {
 	}
 
 	const auto ret = closesocket(socket->socket);
+	socket->socket = Invalid;
 	if (ret != 0) {
 		return ESERR_SOCKET;
 	}

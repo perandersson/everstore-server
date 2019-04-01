@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(everstore)
+set (CMAKE_CXX_STANDARD 11)
 
 # Default configuration types
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
@@ -59,21 +60,21 @@ endif ()
 add_executable(everstore-server ${ALL_SERVER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore-server ${OS_SPECIFIC_LIBS})
 if (NOT MSVC)
-    set_target_properties(everstore-server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+    #set_target_properties(everstore-server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # Server executable
 add_executable(everstore-worker ${ALL_WORKER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore-worker ${OS_SPECIFIC_LIBS})
 if (NOT MSVC)
-    set_target_properties(everstore-worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+    #set_target_properties(everstore-worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # Server tests
 add_executable(everstore-tests ${ALL_TEST_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore-tests ${OS_SPECIFIC_LIBS})
 if (NOT MSVC)
-    set_target_properties(everstore-tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+    #set_target_properties(everstore-tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 ## Copy test-resources into bin test-directory

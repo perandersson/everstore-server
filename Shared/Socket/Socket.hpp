@@ -23,6 +23,8 @@ class Process;
 class Socket
 {
 public:
+	Socket(OsSocket::Ref socket, uint32_t bufferSize);
+
 	~Socket();
 
 	static bool Initialize();
@@ -143,9 +145,6 @@ public:
 	inline uint32_t GetBufferSize() const { return mBufferSize; }
 
 	inline OsSocket* GetHandle() { return &mSocket; }
-
-private:
-	Socket(OsSocket::Ref socket, uint32_t bufferSize);
 
 private:
 	OsSocket mSocket;

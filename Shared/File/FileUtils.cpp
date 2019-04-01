@@ -7,17 +7,25 @@ const char FileUtils::SPACE = ' ';
 const int FileUtils::SPACE_SIZE = 1;
 const char FileUtils::NL = '\n';
 const int FileUtils::NL_SIZE = 1;
+
 #ifdef WIN32
+
 const char FileUtils::PATH_DELIM = '\\';
+
 #else
+
 const char FileUtils::PATH_DELIM = '/';
+
 #endif
 
 #ifdef WIN32
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <io.h>
+
 #else
+
 #include <sys/stat.h>
 
 #endif
@@ -77,17 +85,17 @@ void _win32_find_files(const string& path, const string& endsWith, vector<string
 }
 
 #else
+
 #include <dirent.h>
 
-void _gcc_find_files(string path, const string& endsWith, vector<string>& paths)
-{
-	DIR *dir;
-	struct dirent *entry;
+void _gcc_find_files(string path, const string& endsWith, vector<string>& paths) {
+	DIR* dir;
+	struct dirent* entry;
 
 	if (!(dir = opendir(path.c_str())))
 		return;
 
-	while((entry = readdir(dir))) {
+	while ((entry = readdir(dir))) {
 		if (entry->d_type == DT_DIR) {
 			if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
 				continue;
@@ -131,10 +139,10 @@ string FileUtils::getTempDirectory() {
 }
 
 string FileUtils::getTempFile() {
-	static constexpr int firstChar = (int)'a';
+	static constexpr int firstChar = (int) 'a';
 	string path = getTempDirectory() + string(1, FileUtils::PATH_DELIM);
 	for (auto i = 0U; i < 20U; ++i) {
-		path += (char)(firstChar + (rand() % 22));
+		path += (char) (firstChar + (rand() % 22));
 	}
 	return path;
 }
@@ -153,7 +161,7 @@ bool FileUtils::copyFile(const Path& srcFile, const Path& destFile) {
 
 	const uint32_t fileSize = FileUtils::getFileSize(file);
 
-	char* t = (char*)malloc(fileSize + 1);
+	char* t = (char*) malloc(fileSize + 1);
 	memset(t, 0, fileSize + 1);
 	fread(t, fileSize, 1, file);
 	fclose(file);

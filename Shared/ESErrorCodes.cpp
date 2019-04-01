@@ -33,6 +33,8 @@ const char* _ES_FATAL_ERROR_CODE_STRING[ESERR_FATAL_COUNT - ESERR_FATAL] = {
 		"Could not create lock file. Make sure that your application has the neccessary system rights to be able to write to the data directory",
 
 		// Mutex
+		"Could not create mutex",
+		"Mutex is destroyed",
 		"Could not share mutex",
 		"Could not attach to shared mutex",
 		"Could not lock mutex.",
