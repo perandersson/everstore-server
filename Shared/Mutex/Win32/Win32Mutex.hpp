@@ -17,7 +17,7 @@ struct OsMutex
 {
 	HANDLE ptr;
 
-	static OsMutex* Create(const string& name);
+	static ESErrorCode Create(const string& name, OsMutex* mutex);
 
 	static ESErrorCode Destroy(OsMutex* mutex);
 
@@ -26,6 +26,8 @@ struct OsMutex
 	static ESErrorCode Unlock(OsMutex* mutex);
 
 	static ESErrorCode ShareWith(OsMutex* mutex, OsProcess* process);
+
+	static ESErrorCode LoadFromProcess(OsMutex* mutex, OsProcess* process);
 
 	inline static bool IsInvalid(const OsMutex* mutex) { return mutex == nullptr || mutex->ptr == INVALID_HANDLE_VALUE; }
 };

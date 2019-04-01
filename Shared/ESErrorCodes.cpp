@@ -19,6 +19,7 @@ const char* _ES_FATAL_ERROR_CODE_STRING[ESERR_FATAL_COUNT - ESERR_FATAL] = {
 		"Could not share socket from host to client.",
 		"Child process failed to inherit socket from host.",
 		"Failed to stop the currently running process for some reason",
+		"Failed to start a new process",
 
 		// Pipe
 		"Could not read data from pipe. Pipe might be closed or the request type was invalid.",

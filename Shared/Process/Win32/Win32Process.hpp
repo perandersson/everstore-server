@@ -18,11 +18,12 @@ struct OsProcess
 	bool running;
 	HANDLE pipe;
 
-	static OsProcess* Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize);
+	static ESErrorCode Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize,
+	                         OsProcess* result);
 
 	static ESErrorCode Destroy(OsProcess* process);
 
-	static ESErrorCode WaitForClosed(OsProcess* process, uint32_t timeout = UINT32_MAX);
+	static ESErrorCode WaitForClosed(OsProcess* process, uint32_t timeout);
 
 	static int32_t Write(OsProcess* process, const char* bytes, uint32_t size);
 

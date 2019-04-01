@@ -4,9 +4,10 @@
 
 #include "Mutex.hpp"
 #include "../Process/Process.hpp"
+#include "../Log/Log.hpp"
 
-Mutex::Mutex(const string& name, bool onHost, OsMutex* mutex)
-		: mName(name), mOnHost(onHost), mMutex(mutex) {
+Mutex::Mutex(const string& name, bool onHost)
+		: mName(name), mOnHost(onHost) {
 
 }
 
@@ -15,41 +16,40 @@ Mutex::~Mutex() {
 }
 
 ESErrorCode Mutex::Lock(uint32_t timeout) {
-	if (mMutex == nullptr) {
-		return ESERR_MUTEX_ALREADY_DESTROYED;
-	}
-
-	return OsMutex::Lock(mMutex, timeout);
+	return OsMutex::Lock(&mMutex, timeout);
 }
 
 ESErrorCode Mutex::Unlock() {
-	if (mMutex == nullptr) {
-		return ESERR_MUTEX_ALREADY_DESTROYED;
-	}
-
-	return OsMutex::Unlock(mMutex);
+	return OsMutex::Unlock(&mMutex);
 }
 
-void Mutex::ShareWith(Process* process) {
-
+ESErrorCode Mutex::ShareWith(Process* process) {
+	return OsMutex::ShareWith(&mMutex, process->GetHandle());
 }
 
 void Mutex::Destroy() {
-	if (mMutex) {
-		OsMutex::Destroy(mMutex);
-		mMutex = nullptr;
-	}
+	OsMutex::Destroy(&mMutex);
 }
 
 Mutex* Mutex::Create(const string& name) {
-	auto const mutex = OsMutex::Create(name);
-	if (!mutex) {
+	auto const result = new Mutex(name, true);
+	const auto error = OsMutex::Create(name, &result->mMutex);
+	if (isError(error)) {
+		delete result;
+		Log::Write(Log::Error, "Failed to create a mutex: %s (%d)", parseErrorCode(error), error);
 		return nullptr;
 	}
 
-	return new Mutex(name, true, mutex);
+	return result;
 }
 
-Mutex* Mutex::LoadFromProcess(const string& name) {
-	return nullptr;
+Mutex* Mutex::LoadFromProcess(const string& name, Process* process) {
+	auto const result = new Mutex(name, false);
+	const auto error = OsMutex::LoadFromProcess(&result->mMutex, process->GetHandle());
+	if (isError(error)) {
+		delete result;
+		Log::Write(Log::Error, "Failed to load a mutex from parent process: %s (%d)", parseErrorCode(error), error);
+		return nullptr;
+	}
+	return result;
 }

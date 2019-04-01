@@ -42,7 +42,7 @@ public:
 	 *
 	 * @param process The process we are sharing this mutex with
 	 */
-	void ShareWith(Process* process);
+	ESErrorCode ShareWith(Process* process);
 
 	/**
 	 * Destroy this mutex's internal resources. This is automatically called in the destructor
@@ -58,20 +58,22 @@ public:
 	static Mutex* Create(const string& name);
 
 	/**
-	 * Get a shared mutex
+	 * Create a new mutex associated with a parent process. Useful when we want to accept a shared process
+	 * from
 	 *
 	 * @param name
+	 * @param process
 	 * @return
 	 */
-	static Mutex* LoadFromProcess(const string& name);
+	static Mutex* LoadFromProcess(const string& name, Process* process);
 
 private:
-	Mutex(const string& name, bool onHost, OsMutex* mutex);
+	Mutex(const string& name, bool onHost);
 
 private:
 	const string mName;
 	const bool mOnHost;
-	OsMutex* mMutex;
+	OsMutex mMutex;
 };
 
 

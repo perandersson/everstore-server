@@ -5,17 +5,14 @@
 #include "Win32Mutex.hpp"
 #include "../../Process/Win32/Win32Process.hpp"
 
-OsMutex* OsMutex::Create(const string& name) {
+ESErrorCode OsMutex::Create(const string& name, OsMutex* mutex) {
 	SECURITY_ATTRIBUTES attributes = {
 			sizeof(SECURITY_ATTRIBUTES),
 			nullptr,
 			TRUE
 	};
-
-	auto const instance = (OsMutex*) malloc(sizeof(OsMutex));
-	instance->ptr = CreateMutexEx(&attributes, nullptr, 0, MUTEX_ALL_ACCESS);
-
-	return instance;
+	mutex->ptr = CreateMutexEx(&attributes, nullptr, 0, MUTEX_ALL_ACCESS);
+	return ESERR_NO_ERROR;
 }
 
 ESErrorCode OsMutex::Destroy(OsMutex* mutex) {
@@ -71,5 +68,13 @@ ESErrorCode OsMutex::ShareWith(OsMutex* mutex, OsProcess* process) {
 		return ESERR_MUTEX_SHARE;
 	}
 
+	return ESERR_NO_ERROR;
+}
+
+ESErrorCode OsMutex::LoadFromProcess(OsMutex* mutex, OsProcess* process) {
+	auto bytesRead = OsProcess::Read(process, (char*) &mutex->ptr, sizeof(mutex->ptr));
+	if (bytesRead != sizeof(mutex->ptr)) {
+		return ESERR_PROCESS_ATTACH_SHARED_SOCKET;
+	}
 	return ESERR_NO_ERROR;
 }

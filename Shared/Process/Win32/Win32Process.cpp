@@ -30,14 +30,17 @@ ESErrorCode Win32CreateNamedPipe(ProcessID id, HANDLE* p, int32_t bufferSize) {
 }
 
 
-OsProcess* OsProcess::Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize) {
+ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize,
+                             OsProcess* process) {
+	memset(process, 0, sizeof(OsProcess));
+
 	// Start by creating a pipe that we the sub-process will be connecting to. This must be done before the process
 	// is actually started
 	HANDLE pipe;
 	auto error = Win32CreateNamedPipe(id, &pipe, bufferSize);
 	if (isError(error)) {
 		Log::Write(Log::Error, "Failed to create named pipe: %s (%d)", parseErrorCode(error), error);
-		return nullptr;
+		return error;
 	}
 
 	// Start the process itself
@@ -46,7 +49,6 @@ OsProcess* OsProcess::Start(ProcessID id, const Path& command, const vector<stri
 			nullptr,
 			TRUE
 	};
-	auto process = (OsProcess*) malloc(sizeof(OsProcess));
 	const auto directory = command.GetDirectory();
 	BOOL result = CreateProcess(nullptr, (char*) command.value.c_str(), &attributes, &attributes, TRUE, 0, nullptr,
 	                            directory.value.c_str(), &process->startupInfo, &process->processInfo);
@@ -55,11 +57,11 @@ OsProcess* OsProcess::Start(ProcessID id, const Path& command, const vector<stri
 		free(process);
 		const auto lastError = GetLastError();
 		Log::Write(Log::Error, "Failed to start process '%s' (%d)", command.value.c_str(), lastError);
-		return nullptr;
+		return ESERR_PROCESS_FAILED_TO_START;
 	}
 	process->pipe = pipe;
 	process->running = true;
-	return process;
+	return ESERR_NO_ERROR;
 }
 
 ESErrorCode OsProcess::Destroy(OsProcess* process) {
@@ -84,8 +86,6 @@ ESErrorCode OsProcess::Destroy(OsProcess* process) {
 		// TODO: Double-check that this does not turn into a memory-leak
 		process->running = false;
 	}
-
-	free(process);
 	return ESERR_NO_ERROR;
 }
 
