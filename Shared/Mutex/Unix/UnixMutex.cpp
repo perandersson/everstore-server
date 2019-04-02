@@ -25,7 +25,7 @@ ESErrorCode OsMutex::Create(const string& name, OsMutex* mutex) {
 #ifdef __APPLE__
 	const int fd = open(mutex->name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 #else
-	const int fd = shm_open(m->name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	const int fd = shm_open(mutex->name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 #endif
 	if (fd == -1) {
 		return ESERR_MUTEX_CREATE;

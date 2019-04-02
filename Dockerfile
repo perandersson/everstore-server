@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu AS builder
 
 ##
 ## 1. Install basic ubuntu tools needed to build everstore
@@ -8,39 +8,35 @@ FROM ubuntu
 ## 5. Copy files to appropriate directories
 ##
 
-RUN apt-get update && \
-    apt-get install -y wget && \
-    apt-get install -y unzip && \
-    apt-get install -y gcc g++ build-essential && \
-    \
-    wget https://cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz && \
-    tar -C /opt -xf cmake-3.3.2-Linux-x86_64.tar.gz && \
-    rm cmake-3.3.2-Linux-x86_64.tar.gz && \
-    ln -s /opt/cmake-3.3.2-Linux-x86_64/bin/cmake /usr/bin/cmake && \
-    ln -s /opt/cmake-3.3.2-Linux-x86_64/bin/ccmake /usr/bin/ccmake && \
-    \
-    wget https://github.com/perandersson/everstore/archive/master.zip && \
-    unzip master.zip -d everstore && \
-    rm master.zip && \
-    cd /everstore/everstore-master && \
-    cmake . && \
-    make && \
-    \
-    apt-get remove -y wget build-essential unzip g++ && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    \
-    cd /everstore/everstore-master/bin && \
-    cp everstore-server /everstore && \
-    cp everstore-worker /everstore && \
-    cd /everstore && \
-    rm -rf everstore-master && \
-    ln -s /everstore/everstore-server /usr/bin/everstore-server && \
-    ln -s /everstore/everstore-worker /usr/bin/everstore-worker
+# Install Development Tools
+RUN apt-get update
+RUN apt-get install -y wget unzip
+RUN apt-get install -y gcc g++ build-essential libidn11
+
+# Install CMAKE
+RUN wget https://cmake.org/files/v3.6/cmake-3.6.3-Linux-x86_64.tar.gz && \
+    tar -C /opt -xf cmake-3.6.3-Linux-x86_64.tar.gz && \
+    rm cmake-3.6.3-Linux-x86_64.tar.gz && \
+    ln -s /opt/cmake-3.6.3-Linux-x86_64/bin/cmake /usr/bin/cmake && \
+    ln -s /opt/cmake-3.6.3-Linux-x86_64/bin/ccmake /usr/bin/ccmake
+
+# Copy the source code
+COPY . /src
+
+# Compile the code
+WORKDIR /src
+RUN cmake . && make
+
+# Run unit tests
+RUN /src/bin/everstore-tests
 
 ##
-## Start everstore
+## Create an image containing only the server and workers
 ##
 
-WORKDIR /everstore
-ENTRYPOINT ["./everstore-server"]
+FROM scratch
+COPY --from=builder /src/bin/everstore-server /
+COPY --from=builder /src/bin/everstore-worker /
+
+WORKDIR /
+ENTRYPOINT ["everstore-server"]
