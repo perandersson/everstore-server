@@ -65,6 +65,7 @@ ESErrorCode AcceptBlockingUnixSocket(const int listener, int* result, uint32_t b
 	flag = bufferSize;
 	setsockopt(*result, IPPROTO_TCP, SO_SNDBUF, (const char*) &flag, sizeof(int));
 	setsockopt(*result, IPPROTO_TCP, SO_RCVBUF, (const char*) &flag, sizeof(int));
+	*result = newSocket;
 	return ESERR_NO_ERROR;
 }
 
@@ -92,22 +93,21 @@ ESErrorCode CreateUnixSocket(int* unixSocket, uint32_t bufferSize) {
 }
 
 ESErrorCode UnixCreatePipe(ProcessID id, int* unixSocket, int32_t bufferSize) {
-	// Unlink any pre-existing unix sockets. This ensures that we remove any unix sockets that was not removed
-	// properly. (can happen if the application crashes)
-	const string name = gPipeNamePrefix + id.ToString();
-	unlink(name.c_str());
-
 	// Create a unix socket
 	auto const error = CreateUnixSocket(unixSocket, bufferSize);
 	if (isError(error)) {
 		return error;
 	}
 
+	// Unlink any pre-existing unix sockets. This ensures that we remove any unix sockets that was not removed
+	// properly. (can happen if the application crashes)
+	const string name = gPipeNamePrefix + id.ToString();
+	unlink(name.c_str());
+
 	// Start listening for data and stuff over the unix socket
 	struct sockaddr_un addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	unlink(name.c_str());
 	strcpy(addr.sun_path, name.c_str());
 	if (::bind(*unixSocket, (struct sockaddr*) &(addr), sizeof(addr)) < 0) {
 		::close(*unixSocket);
@@ -151,6 +151,8 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 		// if an error has occurred (i.e. the command is not found)
 		Log::Write(Log::Debug, "Starting '%s'", command.value.c_str());
 		const auto result = execvp(command.value.c_str(), (char**) argv);
+
+		// If the server failed to replace the new/forked process with a new process then shut it down
 		Log::Write(Log::Error, "Failed to start process '%s'. Reason: %d", command.value.c_str(), result);
 		abort();
 	}
@@ -164,14 +166,11 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 		}
 		return err;
 	}
+	result->running = true;
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode OsProcess::Destroy(OsProcess* process) {
-	if (IsInvalid(process)) {
-		return ESERR_PROCESS_DESTROYED;
-	}
-
 	// Close the unix socket
 	if (process->unixSocket != InvalidPipe) {
 		::close(process->unixSocket);
@@ -186,6 +185,7 @@ ESErrorCode OsProcess::Destroy(OsProcess* process) {
 		WaitForClosed(process, TimeoutMillis);
 		process->handle = InvalidProcess;
 	}
+	process->running = false;
 	return ESERR_NO_ERROR;
 }
 
@@ -217,6 +217,7 @@ ESErrorCode OsProcess::ConnectToHost(ProcessID id, int32_t bufferSize, OsProcess
 	}
 
 	process->unixSocket = unixSocket;
+	process->running = true;
 	return ESERR_NO_ERROR;
 }
 

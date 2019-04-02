@@ -17,6 +17,7 @@ struct OsProcess
 
 	pid_t handle;
 	int unixSocket;
+	bool running;
 
 	static ESErrorCode Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize,
 	                         OsProcess* result);
@@ -31,7 +32,7 @@ struct OsProcess
 
 	static int32_t Read(OsProcess* process, char* bytes, uint32_t size);
 
-	static bool IsInvalid(const OsProcess* process) { return process == nullptr || process->handle == InvalidProcess; }
+	static bool IsInvalid(const OsProcess* process) { return process == nullptr || !process->running; }
 };
 
 

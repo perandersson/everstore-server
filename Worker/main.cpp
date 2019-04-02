@@ -55,10 +55,11 @@ int main(int argc, char** argv) {
 	const string configFileName(argv[2]);
 	const auto p = Config::readFromConfigFile(rootPath, Path(configFileName));
 	Log::SetLogLevel(p.logLevel);
+
+	const ProcessID id(atoi(argv[1]));
+	Log::SetChildProcessID(id);
 	printWorkerProperties(p);
 
 	// Start the worker
-	const ProcessID id(atoi(argv[1]));
-	Log::SetChildProcessID(id);
 	return start(id, p);
 }
