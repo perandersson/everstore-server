@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(everstore)
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 # Default configuration types
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
@@ -77,12 +77,13 @@ if (NOT MSVC)
     #set_target_properties(everstore-tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
-## Copy test-resources into bin test-directory
-if (WIN32)
-else ()
+# If we are running on a platform NOT windows then set the output directory to "bin" so that
+# we can know, beforehand, that we have the necessary permissions
+if (NOT WIN32)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
     set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
     set(LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
 endif ()
 
+## Copy test-resources into bin test-directory
 file(COPY Test/test-resources DESTINATION "${EXECUTABLE_OUTPUT_PATH}/")

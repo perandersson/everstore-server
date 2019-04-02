@@ -45,10 +45,10 @@ int32_t UnixSocketSendAll(int unixSocket, const char* bytes, uint32_t size) {
 	return totalSend;
 }
 
-ESErrorCode AcceptBlockingUnixSocket(const int* listener, int* result, uint32_t bufferSize) {
+ESErrorCode AcceptBlockingUnixSocket(const int listener, int* result, uint32_t bufferSize) {
 	// Accept the incoming Unix Socket
 	*result = OsProcess::InvalidPipe;
-	OsSocket::Ref newSocket = accept(*listener, nullptr, nullptr);
+	OsSocket::Ref newSocket = accept(listener, nullptr, nullptr);
 	if (newSocket == OsSocket::Invalid) {
 		return ESERR_SOCKET_ACCEPT;
 	}
@@ -68,7 +68,7 @@ ESErrorCode AcceptBlockingUnixSocket(const int* listener, int* result, uint32_t 
 	return ESERR_NO_ERROR;
 }
 
-ESErrorCode CreateUnixSocket(const int* unixSocket, uint32_t bufferSize) {
+ESErrorCode CreateUnixSocket(int* unixSocket, uint32_t bufferSize) {
 	int sd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sd == OsProcess::InvalidPipe) {
 		Log::Write(Log::Error, "Failed to create a new unix socket");
@@ -77,35 +77,38 @@ ESErrorCode CreateUnixSocket(const int* unixSocket, uint32_t bufferSize) {
 
 	// Make sure that the socket is in blocking mode
 	unsigned long param = 0;
-	ioctl(*unixSocket, FIONBIO, &param);
+	ioctl(sd, FIONBIO, &param);
 
 	// Do not save up for bytes until send
 	int flag = 1;
-	setsockopt(*unixSocket, IPPROTO_TCP, TCP_NODELAY, (const char*) &flag, sizeof(int));
+	setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char*) &flag, sizeof(int));
 
 	// Set the buffer size
 	flag = bufferSize;
-	setsockopt(*unixSocket, IPPROTO_TCP, SO_SNDBUF, (const char*) &flag, sizeof(int));
-	setsockopt(*unixSocket, IPPROTO_TCP, SO_RCVBUF, (const char*) &flag, sizeof(int));
+	setsockopt(sd, SOL_SOCKET, SO_SNDBUF, (const char*) &flag, sizeof(int));
+	setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char*) &flag, sizeof(int));
+	*unixSocket = sd;
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode UnixCreatePipe(ProcessID id, int* unixSocket, int32_t bufferSize) {
+	// Unlink any pre-existing unix sockets. This ensures that we remove any unix sockets that was not removed
+	// properly. (can happen if the application crashes)
 	const string name = gPipeNamePrefix + id.ToString();
-
 	unlink(name.c_str());
-	struct sockaddr_un addr;
 
+	// Create a unix socket
 	auto const error = CreateUnixSocket(unixSocket, bufferSize);
 	if (isError(error)) {
 		return error;
 	}
 
+	// Start listening for data and stuff over the unix socket
+	struct sockaddr_un addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
 	unlink(name.c_str());
 	strcpy(addr.sun_path, name.c_str());
-
 	if (::bind(*unixSocket, (struct sockaddr*) &(addr), sizeof(addr)) < 0) {
 		::close(*unixSocket);
 		return ESERR_PIPE_LISTEN;
@@ -124,8 +127,8 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 	memset(result, 0, sizeof(OsProcess));
 
 	// Start by opening the memory pipe
-	OsSocket::Ref pipe;
-	ESErrorCode err = UnixCreatePipe(id, &pipe, bufferSize);
+	OsSocket::Ref unixSocket;
+	ESErrorCode err = UnixCreatePipe(id, &unixSocket, bufferSize);
 	if (isError(err)) {
 		return err;
 	}
@@ -153,9 +156,8 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 	}
 
 	// Connect to the pipe and discard the main unix socket for this process. We don't need it anymore
-	int tmp = result->unixSocket;
-	err = AcceptBlockingUnixSocket(&tmp, &result->unixSocket, bufferSize);
-	::close(tmp);
+	err = AcceptBlockingUnixSocket(unixSocket, &result->unixSocket, bufferSize);
+	::close(unixSocket);
 	if (isError(err)) {
 		if (result->unixSocket != InvalidPipe) {
 			::close(result->unixSocket);
@@ -189,6 +191,32 @@ ESErrorCode OsProcess::Destroy(OsProcess* process) {
 
 ESErrorCode OsProcess::WaitForClosed(OsProcess* process, uint32_t timeout) {
 	// TODO: Implement this
+	return ESERR_NO_ERROR;
+}
+
+ESErrorCode OsProcess::ConnectToHost(ProcessID id, int32_t bufferSize, OsProcess* process) {
+	const string name = gPipeNamePrefix + id.ToString();
+	int unixSocket;
+	process->handle = InvalidProcess;
+	process->unixSocket = InvalidPipe;
+
+	// Start by creating a unix socket
+	ESErrorCode error = CreateUnixSocket(&unixSocket, bufferSize);
+	if (isError(error)) {
+		return error;
+	}
+
+	// Then connect to it
+	struct sockaddr_un addr;
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, name.c_str());
+	if (::connect(unixSocket, (struct sockaddr*) &(addr), sizeof(addr)) < 0) {
+		::close(unixSocket);
+		return ESERR_PIPE_CONNECT;
+	}
+
+	process->unixSocket = unixSocket;
 	return ESERR_NO_ERROR;
 }
 

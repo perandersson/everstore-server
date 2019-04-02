@@ -12,7 +12,8 @@ const char* _ES_FATAL_ERROR_CODE_STRING[ESERR_FATAL_COUNT - ESERR_FATAL] = {
 		"Could not configure socket.",
 		"Could not bind socket",
 		"Failed when trying to listen for connections on socket. Socket might be in use by an already running server instance or another application.",
-		"Could not accept incomming connections.",
+		"Could not accept incoming connections.",
+		"Socket is already destroyed",
 
 		// Process
 		"Could not create child process. You might be out of memory.",
