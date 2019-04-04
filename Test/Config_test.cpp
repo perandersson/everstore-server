@@ -1,17 +1,17 @@
 #include "../Shared/everstore.h"
 #include "test/Test.h"
 
-TEST_SUITE(Properties)
+TEST_SUITE(Config)
 {
 	UNIT_TEST(defaultValuesForNonExistentPropertiesFile) {
-		const string rootDir(".");
+		const Path rootDir(Path::GetWorkingDirectory());
 		const Path configFilename("test-resources/filenotfound.properties");
 
 		const Config p = Config::readFromConfigFile(rootDir, configFilename);
 
 		assertEquals(rootDir, p.rootDir);
 		assertEquals(configFilename, p.configPath);
-		assertEquals(string(DEFAULT_JOURNAL_DIR), p.journalDir);
+		assertEquals(Path(string(DEFAULT_JOURNAL_DIR)), p.journalDir);
 		assertEquals((uint32_t) DEFAULT_NUM_WORKERS, p.numWorkers);
 		assertEquals((uint32_t) DEFAULT_MAX_CONNECTIONS, p.maxConnections);
 		assertEquals((uint16_t) DEFAULT_PORT, p.port);
@@ -21,10 +21,10 @@ TEST_SUITE(Properties)
 	}
 
 	UNIT_TEST(overrideAllPropertiesFromFile) {
-		const Config p = Config::readFromConfigFile(string("."),
+		const Config p = Config::readFromConfigFile(Path(Path::GetWorkingDirectory()),
 		                                            Path("test-resources/override_all.properties"));
 
-		assertEquals(string("path/to/journal"), p.journalDir);
+		assertEquals(Path(string("path/to/journal")), p.journalDir);
 		assertEquals(1U, p.numWorkers);
 		assertEquals(2U, p.maxConnections);
 		assertEquals((uint16_t) 1234, p.port);
@@ -32,10 +32,10 @@ TEST_SUITE(Properties)
 	}
 
 	UNIT_TEST(overrideOnePropertyFromFile) {
-		const Config p = Config::readFromConfigFile(string("."),
+		const Config p = Config::readFromConfigFile(Path(Path::GetWorkingDirectory()),
 			Path("test-resources/override_one.properties"));
 
-		assertEquals(string(DEFAULT_JOURNAL_DIR), p.journalDir);
+		assertEquals(Path(string(DEFAULT_JOURNAL_DIR)), p.journalDir);
 		assertEquals((uint32_t) DEFAULT_NUM_WORKERS, p.numWorkers);
 		assertEquals((uint32_t) DEFAULT_MAX_CONNECTIONS, p.maxConnections);
 		assertEquals((uint16_t) DEFAULT_PORT, p.port);

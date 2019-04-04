@@ -88,8 +88,16 @@ struct Path
 			return Path(rhs);
 		if (rhs.value.empty())
 			return *this;
-		if (rhs.value[0] == '/')
+		if (value.size() == 1 && value[0] == '/') {
+			if (rhs.value[0] == '/') {
+				return Path(rhs);
+			} else {
+				return Path(value + rhs.value);
+			}
+		}
+		if (rhs.value[0] == '/') {
 			return Path(value + rhs.value);
+		}
 		return Path(value + StrPathDelim + rhs.value);
 	}
 

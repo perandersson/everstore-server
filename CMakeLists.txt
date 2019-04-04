@@ -35,8 +35,8 @@ set(MSVC_DEFINITIONS "/fp:fast /W4 /D_CRT_SECURE_NO_WARNINGS=1 /wd4201 /wd4100 /
 set(MSVC_SPECIFIL_LIBS "legacy_stdio_definitions.lib")
 
 # Default GCC for Linux and GCC for OSX compiler properties
-set(GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11")
-set(OSX_GCC_DEFINITIONS "${GCC_DEFINITIONS} -stdlib=libc++")
+set(GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11 -static")
+set(OSX_GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11 -stdlib=libc++")
 
 # Configure libs
 if (WIN32)
@@ -44,7 +44,7 @@ if (WIN32)
 elseif (APPLE)
     set(OS_SPECIFIC_LIBS "pthread")
 else ()
-    set(OS_SPECIFIC_LIBS "pthread" "rt")
+    set(OS_SPECIFIC_LIBS "rt" "pthread")
 endif ()
 
 # Add configuration for the various compilers
@@ -59,22 +59,22 @@ endif ()
 # Server executable
 add_executable(everstore-server ${ALL_SERVER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore-server ${OS_SPECIFIC_LIBS})
-if (NOT MSVC)
-    #set_target_properties(everstore-server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+if (LINUX AND NOT APPLE)
+    set_target_properties(everstore-server PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # Server executable
 add_executable(everstore-worker ${ALL_WORKER_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore-worker ${OS_SPECIFIC_LIBS})
-if (NOT MSVC)
-    #set_target_properties(everstore-worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+if (LINUX AND NOT APPLE)
+    set_target_properties(everstore-worker PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # Server tests
 add_executable(everstore-tests ${ALL_TEST_FILES} ${ALL_SHARED_FILES} ${ALL_OS_SHARED_FILES})
 target_link_libraries(everstore-tests ${OS_SPECIFIC_LIBS})
-if (NOT MSVC)
-    #set_target_properties(everstore-tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+if (LINUX AND NOT APPLE)
+    set_target_properties(everstore-tests PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
 endif ()
 
 # If we are running on a platform NOT windows then set the output directory to "bin" so that

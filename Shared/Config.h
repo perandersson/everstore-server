@@ -37,9 +37,9 @@ using std::string;
 
 struct Config
 {
-	const string rootDir;
+	const Path rootDir;
 	const Path configPath;
-	const string journalDir;
+	const Path journalDir;
 	const uint32_t numWorkers;
 	const uint32_t maxConnections;
 	const uint16_t port;
@@ -47,7 +47,7 @@ struct Config
 	const uint32_t maxBufferSize;
 	const uint32_t logLevel;
 
-	Config(const string& rootDir, const Path& configPath, const string& journalDir, const uint32_t numWorkers,
+	Config(const Path& rootDir, const Path& configPath, const Path& journalDir, const uint32_t numWorkers,
 	       const uint32_t maxConnections,
 	       const uint16_t port, const uint32_t maxJournalLifeTime, uint32_t maxBufferSize, uint32_t logLevel) :
 			rootDir(rootDir), configPath(configPath), journalDir(journalDir), numWorkers(numWorkers),
@@ -55,10 +55,10 @@ struct Config
 			maxBufferSize(maxBufferSize), logLevel(logLevel) {}
 
 	// Converts the supplied command string into a currently-working directory string
-	static string getWorkingDirectory(char* command);
+	static Path getWorkingDirectory(char* command);
 
 	// Read the application properties from the supplied config filename
-	static Config readFromConfigFile(const string& rootDir, const Path& configPath);
+	static Config readFromConfigFile(const Path& rootDir, const Path& configPath);
 };
 
 #endif

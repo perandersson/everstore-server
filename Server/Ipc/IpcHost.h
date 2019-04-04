@@ -14,7 +14,7 @@ struct ActiveSocket
 class IpcHost
 {
 public:
-	IpcHost(const string& rootDir, const Path& configPath, uint32_t maxBufferSize);
+	IpcHost(const Path& rootDir, const Path& configPath, uint32_t maxBufferSize);
 
 	~IpcHost() = default;
 
@@ -58,7 +58,7 @@ private:
 	ESErrorCode ShareSocketAndMutex(Socket* socket, Mutex* lock, Process* process);
 
 private:
-	const string mRootDir;
+	const Path mRootDir;
 	const Path mConfigPath;
 	const uint32_t mMaxBufferSize;
 

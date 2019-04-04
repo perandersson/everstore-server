@@ -114,8 +114,7 @@ void Store::release() {
 
 bool Store::performConsistencyCheck() {
 	const string lockSufix(".lock");
-	auto files = FileUtils::findFilesEndingWith(mConfig.rootDir + Path::StrPathDelim + mConfig.journalDir,
-	                                            lockSufix);
+	auto files = FileUtils::findFilesEndingWith((mConfig.rootDir + mConfig.journalDir).value, lockSufix);
 	for (auto& file : files) {
 		const uint32_t del = file.find_last_of('.');
 		const uint32_t del2 = file.find_last_of('.', del - 1);
@@ -132,6 +131,6 @@ bool Store::performConsistencyCheck() {
 }
 
 void Store::prepareDirectories() {
-	FileUtils::createFolder(mConfig.rootDir + string(1, FileUtils::PATH_DELIM) + mConfig.journalDir);
+	FileUtils::createFolder((mConfig.rootDir + mConfig.journalDir).value);
 	FileUtils::createFolder(FileUtils::getTempDirectory());
 }

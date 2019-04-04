@@ -5,16 +5,16 @@
 
 using namespace std;
 
-string Config::getWorkingDirectory(char* command) {
+Path Config::getWorkingDirectory(char* command) {
 	string result(command);
 	auto idx = result.find_last_of('/');
 	if (idx == -1)
 		idx = result.find_last_of('\\');
-	return result.substr(0, idx);
+	return Path(result.substr(0, idx));
 }
 
-Config Config::readFromConfigFile(const string& rootDir, const Path& configPath) {
-	string journalDir = DEFAULT_JOURNAL_DIR;
+Config Config::readFromConfigFile(const Path& rootDir, const Path& configPath) {
+	Path journalDir(string(DEFAULT_JOURNAL_DIR));
 	uint32_t numWorkers = DEFAULT_NUM_WORKERS;
 	uint32_t maxConnections = DEFAULT_MAX_CONNECTIONS;
 	uint16_t port = DEFAULT_PORT;
@@ -36,7 +36,7 @@ Config Config::readFromConfigFile(const string& rootDir, const Path& configPath)
 				const auto value = keyValuePair[1];
 
 				if (key == string("journalDir")) {
-					journalDir = value;
+					journalDir = Path(value);
 				} else if (key == string("numWorkers")) {
 					numWorkers = StringUtils::toUint32(value);
 				} else if (key == string("maxConnections")) {

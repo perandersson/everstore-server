@@ -59,4 +59,25 @@ TEST_SUITE(Path)
 		const Path result = path.GetDirectory();
 		assertEquals(Path::GetWorkingDirectory(), result);
 	}
+
+	UNIT_TEST(AddingPathToEmptyPath) {
+		const Path path;
+		const Path rhs(string("/journals"));
+		const Path result = path + rhs;
+		assertEquals(rhs, result);
+	}
+
+	UNIT_TEST(AddingPathToRootPath) {
+		const Path path(string("/"));
+		const Path rhs(string("/journals"));
+		const Path result = path + rhs;
+		assertEquals(rhs, result);
+	}
+
+	UNIT_TEST(AddingRelativePathToRootPath) {
+		const Path path(string("/"));
+		const Path rhs(string("journals"));
+		const Path result = path + rhs;
+		assertEquals(Path(string("/journals")), result);
+	}
 }

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-IpcHost::IpcHost(const string& rootDir, const Path& configPath, uint32_t maxBufferSize)
+IpcHost::IpcHost(const Path& rootDir, const Path& configPath, uint32_t maxBufferSize)
 		: mRootDir(rootDir), mConfigPath(configPath), mMaxBufferSize(maxBufferSize) {
 }
 

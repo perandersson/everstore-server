@@ -119,9 +119,9 @@ ESErrorCode Worker::initialize() {
 	}
 	mIpcChild = new IpcChild(mId, process);
 
-	const auto path = mConfig.rootDir + Path::StrPathDelim + mConfig.journalDir;
-	Log::Write(Log::Info, "Changing working directory to: %s", path.c_str());
-	if (!FileUtils::setCurrentDirectory(path)) {
+	const auto path = mConfig.rootDir + mConfig.journalDir;
+	Log::Write(Log::Info, "Changing working directory to: %s", path.value.c_str());
+	if (!FileUtils::setCurrentDirectory(path.value)) {
 		return ESERR_FILESYSTEM_CHANGEPATH;
 	}
 
@@ -146,7 +146,7 @@ void Worker::release() {
 
 bool Worker::performConsistencyCheck() {
 	const string lockSufix(string(".log.") + id().ToString() + string(".lock"));
-	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir, lockSufix);
+	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir.value, lockSufix);
 	for (auto& file : files) {
 		const Path journalFile = Path(file.substr(0, file.length() - lockSufix.length()));
 		Log::Write(Log::Info, "Validating consistency for journal: %s", journalFile.value.c_str());

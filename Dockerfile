@@ -25,18 +25,14 @@ COPY . /src
 
 # Compile the code
 WORKDIR /src
-RUN cmake . && make
-
-# Run unit tests
-RUN /src/bin/everstore-tests
+RUN cmake . && make && cd bin && ./everstore-tests
 
 ##
 ## Create an image containing only the server and workers
 ##
 
-FROM scratch
+FROM ubuntu
 COPY --from=builder /src/bin/everstore-server /
 COPY --from=builder /src/bin/everstore-worker /
-
-WORKDIR /
-ENTRYPOINT ["everstore-server"]
+EXPOSE 6929
+ENTRYPOINT ["./everstore-server"]

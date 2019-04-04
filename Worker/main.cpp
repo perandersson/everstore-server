@@ -14,7 +14,7 @@ void handleSingal(int) {
 
 void printWorkerProperties(const Config& config) {
 	Log::Write(Log::Info, "Trying to load configuration from path: \"%s\"", config.configPath.value.c_str());
-	Log::Write(Log::Info, "journalDir = \"%s\"", config.journalDir.c_str());
+	Log::Write(Log::Info, "journalDir = \"%s\"", config.journalDir.value.c_str());
 	Log::Write(Log::Info, "numWorker = %d", config.numWorkers);
 	Log::Write(Log::Info, "maxConnections = %d", config.maxConnections);
 	Log::Write(Log::Info, "port = %d", config.port);

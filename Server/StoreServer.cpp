@@ -81,7 +81,7 @@ ESErrorCode StoreServer::authenticate(Socket* newSocket) {
 		return ESERR_NO_ERROR;
 	}
 
-	Log::Write(Log::Error, "Client: %d is authenticating", socket);
+	Log::Write(Log::Info, "Client: %d is authenticating", socket);
 	ESHeader header;
 	auto recvBytes = newSocket->ReceiveAll((char*) &header, sizeof header);
 	if (recvBytes != sizeof header || header.type != REQ_AUTHENTICATE) {
@@ -111,7 +111,7 @@ ESErrorCode StoreServer::authenticate(Socket* newSocket) {
 	if (!mAuthenticator->login(username, password))
 		return ESERR_AUTHENTICATION_FAILED;
 
-	Log::Write(Log::Error, "Client: %d has authenticated as %s", socket, username.c_str());
+	Log::Write(Log::Info, "Client: %d has authenticated as %s", socket, username.c_str());
 	return ESERR_NO_ERROR;
 }
 
