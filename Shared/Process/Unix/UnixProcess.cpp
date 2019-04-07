@@ -9,12 +9,6 @@
 #include "../../Log/Log.hpp"
 
 const string gPipeNamePrefix = "everstore_pipe_child";
-const uint32_t gDefaultTimeout = 2000;
-
-//
-// Code for handling unix sockets
-// TODO: Merge this code with the normal socket code in the future
-//
 
 int32_t UnixSocketReceiveAll(int unixSocket, char* buffer, uint32_t size) {
 	if (unixSocket == OsProcess::InvalidPipe) {
@@ -39,7 +33,8 @@ int32_t UnixSocketSendAll(int unixSocket, const char* bytes, uint32_t size) {
 	int32_t totalSend = 0;
 	while (totalSend != size) {
 		const auto t = send(unixSocket, bytes, size - totalSend, 0);
-		if (t <= 0) return totalSend;
+		if (t <= 0)
+			return totalSend;
 		totalSend += t;
 	}
 	return totalSend;
@@ -55,16 +50,13 @@ ESErrorCode AcceptBlockingUnixSocket(const int listener, int* result, uint32_t b
 
 	// Make sure that the socket is in blocking mode
 	unsigned long param = 0;
-	ioctl(*result, FIONBIO, &param);
-
-	// Do not save up for bytes until send
-	int flag = 1;
-	setsockopt(*result, IPPROTO_TCP, TCP_NODELAY, (const char*) &flag, sizeof(int));
+	ioctl(newSocket, FIONBIO, &param);
 
 	// Set the buffer size
-	flag = bufferSize;
-	setsockopt(*result, IPPROTO_TCP, SO_SNDBUF, (const char*) &flag, sizeof(int));
-	setsockopt(*result, IPPROTO_TCP, SO_RCVBUF, (const char*) &flag, sizeof(int));
+	int flag = bufferSize;
+	setsockopt(newSocket, SOL_SOCKET, SO_SNDBUF, (const char*) &flag, sizeof(int));
+	setsockopt(newSocket, SOL_SOCKET, SO_RCVBUF, (const char*) &flag, sizeof(int));
+
 	*result = newSocket;
 	return ESERR_NO_ERROR;
 }
@@ -72,7 +64,7 @@ ESErrorCode AcceptBlockingUnixSocket(const int listener, int* result, uint32_t b
 ESErrorCode CreateUnixSocket(int* unixSocket, uint32_t bufferSize) {
 	int sd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sd == OsProcess::InvalidPipe) {
-		Log::Write(Log::Error, "Failed to create a new unix socket");
+		Log::Write(Log::Error, "OsProcess | Failed to create a new unix socket");
 		return ESERR_SOCKET;
 	}
 
@@ -80,14 +72,6 @@ ESErrorCode CreateUnixSocket(int* unixSocket, uint32_t bufferSize) {
 	unsigned long param = 0;
 	ioctl(sd, FIONBIO, &param);
 
-	// Do not save up for bytes until send
-	int flag = 1;
-	setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char*) &flag, sizeof(int));
-
-	// Set the buffer size
-	flag = bufferSize;
-	setsockopt(sd, SOL_SOCKET, SO_SNDBUF, (const char*) &flag, sizeof(int));
-	setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char*) &flag, sizeof(int));
 	*unixSocket = sd;
 	return ESERR_NO_ERROR;
 }
@@ -111,11 +95,14 @@ ESErrorCode UnixCreatePipe(ProcessID id, int* unixSocket, int32_t bufferSize) {
 	strcpy(addr.sun_path, name.c_str());
 	if (::bind(*unixSocket, (struct sockaddr*) &(addr), sizeof(addr)) < 0) {
 		::close(*unixSocket);
+		Log::Write(Log::Error, "OsProcess | Could not bind %s with UnixSocket(%d)", name.c_str(), *unixSocket);
 		return ESERR_PIPE_LISTEN;
 	}
 
 	if (::listen(*unixSocket, 1) < 0) {
 		::close(*unixSocket);
+		Log::Write(Log::Error, "OsProcess | Could not listen for incoming requests on UnixSocket(%d)", name.c_str(),
+		           *unixSocket);
 		return ESERR_PIPE_LISTEN;
 	}
 
@@ -124,7 +111,9 @@ ESErrorCode UnixCreatePipe(ProcessID id, int* unixSocket, int32_t bufferSize) {
 
 ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize,
                              OsProcess* result) {
-	memset(result, 0, sizeof(OsProcess));
+	result->unixSocket = InvalidPipe;
+	result->handle = InvalidProcess;
+	result->running = false;
 
 	// Start by opening the memory pipe
 	OsSocket::Ref unixSocket;
@@ -149,21 +138,19 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 	} else {
 		// Replace this forked process with the child-process executable file. The "execvp" will only return
 		// if an error has occurred (i.e. the command is not found)
-		Log::Write(Log::Debug, "Starting '%s'", command.value.c_str());
 		const auto result = execvp(command.value.c_str(), (char**) argv);
 
 		// If the server failed to replace the new/forked process with a new process then shut it down
-		Log::Write(Log::Error, "Failed to start process '%s'. Reason: %d", command.value.c_str(), result);
+		Log::Write(Log::Error, "OsProcess | Failed to start child process because %d", command.value.c_str(), result);
 		abort();
 	}
 
-	// Connect to the pipe and discard the main unix socket for this process. We don't need it anymore
+	// Connect to the pipe and discard the main unix socket for this process. We don't need it anymore. This is because
+	// each unix socket is a 1 to 1 connection between the parent- and child process
 	err = AcceptBlockingUnixSocket(unixSocket, &result->unixSocket, bufferSize);
 	::close(unixSocket);
 	if (isError(err)) {
-		if (result->unixSocket != InvalidPipe) {
-			::close(result->unixSocket);
-		}
+		::close(result->unixSocket);
 		return err;
 	}
 	result->running = true;
@@ -171,12 +158,6 @@ ESErrorCode OsProcess::Start(ProcessID id, const Path& command, const vector<str
 }
 
 ESErrorCode OsProcess::Destroy(OsProcess* process) {
-	// Close the unix socket
-	if (process->unixSocket != InvalidPipe) {
-		::close(process->unixSocket);
-		process->unixSocket = InvalidPipe;
-	}
-
 	// Kill the child-process if one exists
 	if (process->handle != InvalidProcess) {
 		killpg(process->handle, SIGKILL);
@@ -185,22 +166,32 @@ ESErrorCode OsProcess::Destroy(OsProcess* process) {
 		WaitForClosed(process, TimeoutMillis);
 		process->handle = InvalidProcess;
 	}
+
+	// Close the unix socket
+	if (process->unixSocket != InvalidPipe) {
+		::close(process->unixSocket);
+		process->unixSocket = InvalidPipe;
+	}
+
 	process->running = false;
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode OsProcess::WaitForClosed(OsProcess* process, uint32_t timeout) {
-	// TODO: Implement this
+	// TODO: Using sleep for now, but try to implement this in a smarter way
+	this_thread::sleep_for(chrono::microseconds(1000));
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode OsProcess::ConnectToHost(ProcessID id, int32_t bufferSize, OsProcess* process) {
-	const string name = gPipeNamePrefix + id.ToString();
-	int unixSocket;
-	process->handle = InvalidProcess;
 	process->unixSocket = InvalidPipe;
+	process->handle = InvalidProcess;
+	process->running = false;
+
+	const auto name = gPipeNamePrefix + id.ToString();
 
 	// Start by creating a unix socket
+	int unixSocket;
 	ESErrorCode error = CreateUnixSocket(&unixSocket, bufferSize);
 	if (isError(error)) {
 		return error;
@@ -222,7 +213,8 @@ ESErrorCode OsProcess::ConnectToHost(ProcessID id, int32_t bufferSize, OsProcess
 }
 
 int32_t OsProcess::Write(OsProcess* process, const char* bytes, uint32_t size) {
-	if (IsInvalid(process) || process->unixSocket == InvalidPipe) {
+	if (IsInvalid(process)) {
+		Log::Write(Log::Error, "OsProcess | Cannot write data on a closed process");
 		return -1;
 	}
 
@@ -230,7 +222,8 @@ int32_t OsProcess::Write(OsProcess* process, const char* bytes, uint32_t size) {
 }
 
 int32_t OsProcess::Read(OsProcess* process, char* bytes, uint32_t size) {
-	if (IsInvalid(process) || process->unixSocket == InvalidPipe) {
+	if (IsInvalid(process)) {
+		Log::Write(Log::Debug2, "OsProcess | Cannot read data from a closed process");
 		return -1;
 	}
 

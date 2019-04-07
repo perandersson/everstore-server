@@ -98,5 +98,4 @@ public:
 	static void Write(uint32_t level, const char* str, ...);
 };
 
-
 #endif //EVERSTORE_LOG_HPP

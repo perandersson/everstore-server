@@ -8,6 +8,7 @@
 
 Socket::Socket(OsSocket::Ref socket, uint32_t bufferSize)
 		: mSocket{socket}, mBufferSize(bufferSize) {
+	Log::Write(Log::Info, "Socket(%p) | Socket is now created as SOCKET(%d)", this, socket);
 }
 
 Socket::~Socket() {
@@ -56,36 +57,48 @@ ESErrorCode Socket::Listen(Port port, uint32_t maxConnections) {
 
 Socket* Socket::AcceptBlocking() {
 	if (IsDestroyed()) {
+		Log::Write(Log::Error, "Socket(%p) | Cannot accept a connection on an invalid socket", this);
 		return nullptr;
 	}
 
 	OsSocket::Ref s = accept(mSocket.socket, nullptr, nullptr);
 	if (s == OsSocket::Invalid) {
+		Log::Write(Log::Warn, "Socket(%p) | Failed to accept socket. The socket might've been closed or timed out",
+		           this);
 		return nullptr;
 	}
+
+	auto const newSocket = new Socket(s, mBufferSize);
 
 	// Make sure that the socket is in blocking mode
-	ESErrorCode error = OsSocket::SetBlocking(&mSocket);
+	ESErrorCode error = newSocket->SetBlocking();
 	if (isError(error)) {
-		OsSocket::Close(&mSocket);
+		Log::Write(Log::Warn, "Socket(%p) | Could not set new socket in blocking mode. %s (%d)", this,
+		           parseErrorCode(error), error);
+		delete newSocket;
 		return nullptr;
 	}
 
-	// Do not save up for bytes until send
-	error = OsSocket::SetNoDelay(&mSocket);
+	// Do not save up for bytes until send.
+	// TODO: This should be depending on how much traffic we are processing. If the server is constantly being under load then this should be disabled
+	error = newSocket->SetNoDelay();
 	if (isError(error)) {
-		OsSocket::Close(&mSocket);
+		Log::Write(Log::Warn, "Socket(%p) | Could not set new socket in no-delay mode. %s (%d)", this,
+		           parseErrorCode(error), error);
+		delete newSocket;
 		return nullptr;
 	}
 
 	// Set the buffer size
-	error = OsSocket::SetBufferSize(&mSocket, mBufferSize);
+	error = newSocket->SetBufferSize(mBufferSize);
 	if (isError(error)) {
-		OsSocket::Close(&mSocket);
+		Log::Write(Log::Warn, "Socket(%p) | Could not set new socket's buffer size too %d. %s (%d)", this, mBufferSize,
+		           parseErrorCode(error), error);
+		delete newSocket;
 		return nullptr;
 	}
 
-	return new Socket(s, mBufferSize);
+	return newSocket;
 }
 
 int32_t Socket::ReceiveAll(char* buffer, uint32_t size) {
@@ -111,7 +124,8 @@ int32_t Socket::SendAll(const char* bytes, uint32_t size) {
 	int32_t totalSend = 0;
 	while (totalSend != size) {
 		const auto t = send(mSocket.socket, bytes, size - totalSend, 0);
-		if (t <= 0) return totalSend;
+		if (t <= 0)
+			return totalSend;
 		totalSend += t;
 	}
 	return totalSend;
@@ -121,21 +135,28 @@ ESErrorCode Socket::ShareWithProcess(Process* process) {
 	if (IsDestroyed()) {
 		return ESERR_SCCKET_DESTROYED;
 	}
+
+	if (process == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
 	return OsSocket::ShareWithProcess(&mSocket, process->GetHandle());
 }
 
 Socket* Socket::CreateBlocking(uint32_t bufferSizeInBytes) {
+	Log::Write(Log::Info, "Socket | Creating blocking socket");
+
 	OsSocket handle;
 	handle.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (handle.socket == OsSocket::Invalid) {
-		Log::Write(Log::Error, "Failed to create a new socket");
+		Log::Write(Log::Error, "Socket | Failed to create a new socket");
 		return nullptr;
 	}
 
 	// Make sure that the socket is in blocking mode
 	ESErrorCode error = OsSocket::SetBlocking(&handle);
 	if (isError(error)) {
-		Log::Write(Log::Error, "Failed to enable blocking mode on socket. Reason: %s (%d)", parseErrorCode(error),
+		Log::Write(Log::Error, "Socket | Failed to enable blocking mode on socket. %s (%d)", parseErrorCode(error),
 		           error);
 		OsSocket::Close(&handle);
 		return nullptr;
@@ -144,7 +165,7 @@ Socket* Socket::CreateBlocking(uint32_t bufferSizeInBytes) {
 	// Do not save up for bytes until send
 	error = OsSocket::SetNoDelay(&handle);
 	if (isError(error)) {
-		Log::Write(Log::Error, "Failed to disable delay mode on socket. Reason: %s (%d)", parseErrorCode(error),
+		Log::Write(Log::Error, "Socket | Failed to disable delay mode on socket. %s (%d)", parseErrorCode(error),
 		           error);
 		OsSocket::Close(&handle);
 		return nullptr;
@@ -153,7 +174,7 @@ Socket* Socket::CreateBlocking(uint32_t bufferSizeInBytes) {
 	// Set the buffer size
 	error = OsSocket::SetBufferSize(&handle, bufferSizeInBytes);
 	if (isError(error)) {
-		Log::Write(Log::Error, "Failed to set the socket's buffer size to %d. Reason: %s (%d)", bufferSizeInBytes,
+		Log::Write(Log::Error, "Socket | Failed to set the socket's buffer size to %d. %s (%d)", bufferSizeInBytes,
 		           parseErrorCode(error), error);
 		OsSocket::Close(&handle);
 		return nullptr;
@@ -163,28 +184,15 @@ Socket* Socket::CreateBlocking(uint32_t bufferSizeInBytes) {
 }
 
 Socket* Socket::LoadFromProcess(Process* process, uint32_t bufferSizeInBytes) {
+	if (process == nullptr) {
+		Log::Write(Log::Error, "Socket | Cannot create a socket from an invalid process");
+		return nullptr;
+	}
+
 	OsSocket handle;
 	ESErrorCode error = OsSocket::LoadFromProcess(&handle, process->GetHandle());
 	if (isError(error)) {
-		Log::Write(Log::Error, "Failed to load socket from process: %s (%d)", parseErrorCode(error), error);
-		return nullptr;
-	}
-
-	// Do not save up for bytes until send
-	error = OsSocket::SetNoDelay(&handle);
-	if (isError(error)) {
-		Log::Write(Log::Error, "Failed to disable delay mode on socket. Reason: %s (%d)", parseErrorCode(error),
-		           error);
-		OsSocket::Close(&handle);
-		return nullptr;
-	}
-
-	// Set the buffer size
-	error = OsSocket::SetBufferSize(&handle, bufferSizeInBytes);
-	if (isError(error)) {
-		Log::Write(Log::Error, "Failed to set the socket's buffer size to %d. Reason: %s (%d)", bufferSizeInBytes,
-		           parseErrorCode(error), error);
-		OsSocket::Close(&handle);
+		Log::Write(Log::Error, "Socket | Failed to load socket from process. %s (%d)", parseErrorCode(error), error);
 		return nullptr;
 	}
 

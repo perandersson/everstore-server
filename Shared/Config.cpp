@@ -24,7 +24,6 @@ Config Config::readFromConfigFile(const Path& rootDir, const Path& configPath) {
 
 	ifstream file = configPath.OpenStream();
 	if (file.is_open()) {
-
 		while (!file.eof()) {
 			string line;
 			std::getline(file, line);

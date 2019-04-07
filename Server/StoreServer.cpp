@@ -32,6 +32,7 @@ ESErrorCode StoreServer::acceptClient() {
 	if (newSocket == nullptr) {
 		return ESERR_SOCKET_CONFIGURE;
 	}
+	Log::Write(Log::Info, "StoreServer(%p) | Socket(%p) has been established", this, newSocket);
 
 	// Prepare server configuration
 	ServerConfiguration configuration;
@@ -44,7 +45,7 @@ ESErrorCode StoreServer::acceptClient() {
 
 	const auto sentBytes = newSocket->SendAll((const char*) &configuration, sizeof configuration);
 	if (sentBytes != sizeof configuration) {
-		Log::Write(Log::Error, "Could not send server properties to client: %d", socket);
+		Log::Write(Log::Error, "StoreServer(%p) | Could not send server properties to Socket(%p)", this, newSocket);
 		delete newSocket;
 		return ESERR_SOCKET_DISCONNECTED;
 	}
@@ -81,7 +82,7 @@ ESErrorCode StoreServer::authenticate(Socket* newSocket) {
 		return ESERR_NO_ERROR;
 	}
 
-	Log::Write(Log::Info, "Client: %d is authenticating", socket);
+	Log::Write(Log::Info, "StoreServer(%p) | Socket(%p) is authenticating", this, newSocket);
 	ESHeader header;
 	auto recvBytes = newSocket->ReceiveAll((char*) &header, sizeof header);
 	if (recvBytes != sizeof header || header.type != REQ_AUTHENTICATE) {
@@ -108,10 +109,13 @@ ESErrorCode StoreServer::authenticate(Socket* newSocket) {
 		return ESERR_AUTHENTICATION_FAILED;
 	}
 
-	if (!mAuthenticator->login(username, password))
+	if (!mAuthenticator->login(username, password)) {
+		Log::Write(Log::Error, "StoreServer(%p) | Socket(%p) failed to authenticate with username %s", this, newSocket,
+		           username.c_str());
 		return ESERR_AUTHENTICATION_FAILED;
+	}
 
-	Log::Write(Log::Info, "Client: %d has authenticated as %s", socket, username.c_str());
+	Log::Write(Log::Info, "StoreServer(%p) | Socket(%p) is authenticated", this, newSocket);
 	return ESERR_NO_ERROR;
 }
 
@@ -134,6 +138,7 @@ void StoreServer::disconnectAllClients() {
 }
 
 void StoreServer::garbageCollect() {
+	Log::Write(Log::Debug, "Trying to garbage collect closed connections");
 	// Find all clients that we can remove
 	list<list<StoreClient*>::iterator> removables;
 	auto it = mClients.begin();
@@ -141,6 +146,7 @@ void StoreServer::garbageCollect() {
 	for (; it != e; ++it) {
 		auto client = *it;
 		if (!client->running()) {
+			Log::Write(Log::Info, "Client %d is no longer running", client->handle()->GetHandle());
 			mIpcHost->onClientDisconnected(client->handle());
 			removables.push_back(it);
 		}

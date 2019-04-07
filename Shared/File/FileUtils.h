@@ -39,7 +39,12 @@ struct FileUtils
 
 	static bool fileExists(const string& fileName) {
 		FILE* f = fopen(fileName.c_str(), "r");
-		if (f != NULL) fclose(f);
+		if (f != NULL) {
+			fclose(f);
+		}
+		if (f == nullptr) {
+			errno = 0;
+		}
 		return f != 0;
 	}
 

@@ -24,6 +24,10 @@ void IpcHost::close() {
 }
 
 ESErrorCode IpcHost::send(const ESHeader* message) {
+	if (message == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
 	ESErrorCode err = ESERR_NO_ERROR;
 	const uint32_t numProcesses = mProcesses.size() + 1;
 	for (uint32_t i = 1u; i < numProcesses; ++i) {
@@ -44,7 +48,9 @@ ESErrorCode IpcHost::send(const ESHeader* message) {
 }
 
 ESErrorCode IpcHost::send(const ProcessID id, const ByteBuffer* bytes) {
-	assert(bytes != nullptr);
+	if (bytes == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
 
 	if (!workerExists(id))
 		return ESERR_WORKER_UNKNOWN;
@@ -72,13 +78,17 @@ ESErrorCode IpcHost::addWorker() {
 }
 
 ESErrorCode IpcHost::onClientConnected(Socket* socket, Mutex* lock) {
+	if (socket == nullptr || lock == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
 	ActiveSocket activeSocket;
 	activeSocket.socket = socket;
 	activeSocket.m = lock;
 	mActiveSockets.push_back(activeSocket);
 
-	Log::Write(Log::Info, "Notifying all child-processes that SOCKET(%p) has connected", socket);
 	const uint32_t numProcesses = mProcesses.size() + 1;
+	Log::Write(Log::Info, "Notifying %d child-processes that SOCKET(%p) has connected", numProcesses, socket);
 	for (uint32_t i = 1u; i < numProcesses; ++i) {
 		auto process = mProcesses[i - 1u];
 
@@ -104,6 +114,10 @@ ESErrorCode IpcHost::onClientConnected(Socket* socket, Mutex* lock) {
 }
 
 ESErrorCode IpcHost::onClientDisconnected(Socket* socket) {
+	if (socket == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
 	Log::Write(Log::Info, "Notifying all child-processes that SOCKET(%p) has disconnected", socket);
 	auto it = mActiveSockets.begin();
 	const auto end = mActiveSockets.end();
@@ -162,7 +176,7 @@ IpcChild* IpcHost::createProcess() {
 }
 
 IpcChild* IpcHost::createProcess(ProcessID id) {
-	static const Path command = Path::GetWorkingDirectory() + string("/everstore-worker");
+	static const Path command = Path::GetWorkingDirectory() + Path(string("everstore-worker"));
 
 	// Start the worker process
 	const vector<string> arguments = {
@@ -185,12 +199,19 @@ IpcChild* IpcHost::createProcess(ProcessID id) {
 }
 
 bool IpcHost::workerExists(ProcessID id) {
-	const auto worker = id.value - 1;
+	if (id.IsInvalid()) {
+		return false;
+	}
+	const auto worker = id.AsIndex();
 	auto processes = mProcesses.size();
 	return processes > worker;
 }
 
 ESErrorCode IpcHost::ShareSocketAndMutex(Socket* socket, Mutex* lock, Process* process) {
+	if (socket == nullptr || lock == nullptr || process == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
 	ESHeader header;
 	header.type = REQ_NEW_CONNECTION;
 	header.client = socket->GetHandle();

@@ -33,7 +33,7 @@ using std::string;
 #define DEFAULT_JOURNAL_GC_SECONDS 60
 
 // The default log level used by the server
-#define DEFAULT_LOG_LEVEL Log::Info
+#define DEFAULT_LOG_LEVEL Log::Debug2
 
 struct Config
 {

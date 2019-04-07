@@ -3,13 +3,11 @@
 StoreClient::StoreClient(Socket* client, IpcHost* host, uint32_t maxBufferSize)
 		: mClientSocket(client), mIpcHost(host), mMaxBufferSize(maxBufferSize), mClientLock(nullptr),
 		  mRunning(true) {
-	const string mutexName = string("everstore_mutex_") + StringUtils::toString((int)mClientSocket->GetHandle());
+	const string mutexName = string("everstore_mutex_") + StringUtils::toString((int) mClientSocket->GetHandle());
 	mClientLock = Mutex::Create(mutexName);
 }
 
 StoreClient::~StoreClient() {
-	assert(!running());
-
 	if (mClientSocket != nullptr) {
 		delete mClientSocket;
 		mClientSocket = nullptr;
@@ -32,12 +30,10 @@ ESErrorCode StoreClient::start() {
 }
 
 void StoreClient::run() {
-	Log::Write(Log::Info, "Thread for StoreClient(%p) is starting up", this);
+	Log::Write(Log::Info, "StoreClient(%p) | Starting up thread", this);
 
-	// Memory for this client
+	// Client loop. Keep running as long as the client is alive and no fatal errors has occurred.
 	ByteBuffer memory(mMaxBufferSize);
-
-	//ByteBuffer byteBuffer;
 	ESErrorCode err = ESERR_NO_ERROR;
 	while (mRunning && !isErrorCodeFatal(err)) {
 		// Read message header. If the request header turns out to be invalid, then that means 
@@ -45,6 +41,8 @@ void StoreClient::run() {
 		// 1. The client is in a bad state. Force a disconnect on the client.
 		// 2. The client has disconnected in a nice way and is marked to be stopped.
 		ESHeader* header = loadHeaderFromClient(&memory);
+		Log::Write(Log::Debug2, "StoreClient(%p) | Received message %s (%d)", this,
+		           parseRequestType(header->type), header->type, header->client);
 		if (header->type == REQ_INVALID || isInternalRequestType(header->type)) {
 			mRunning = false;
 			break;
@@ -57,15 +55,16 @@ void StoreClient::run() {
 
 		// If no worker is specified then let the host figure it out. Otherwise redirect directly to it
 		if (isRequestTypeInitiallyForHost(header->type)) {
+			Log::Write(Log::Debug, "StoreClient(%p) | Handling internal message", this);
 			err = handleRequest(header, &memory);
 		} else {
+			Log::Write(Log::Debug, "StoreClient(%p) | Sending request to ProcessID(%d)", this, workerId);
 			err = mIpcHost->send(workerId, &memory);
 		}
 
 		// Notify the client if the supplied request failed
 		if (IsErrorButNotFatal(err)) {
-			Log::Write(Log::Error, "An error occurred while sending data to process %d: %s (%d)", workerId,
-			           parseErrorCode(err), err);
+			Log::Write(Log::Error, "StoreClient(%p) | Error occurred: %s (%d)", this, parseErrorCode(err), err);
 			err = ESERR_NO_ERROR;
 
 			// Reset memory
@@ -82,10 +81,9 @@ void StoreClient::run() {
 		}
 	}
 
-	Log::Write(Log::Info, "Thread for StoreClient(%p) is shutting down", this);
-
+	Log::Write(Log::Info, "StoreClient(%p) | Shutting down thread", this);
 	if (isError(err)) {
-		Log::Write(Log::Error, "Unhandled error occurred for StoreClient(%p): %s (%d)", this, parseErrorCode(err), err);
+		Log::Write(Log::Error, "StoreClient(%p) | Unhandled error occurred: %s (%d)", this, parseErrorCode(err), err);
 	}
 }
 
@@ -131,14 +129,11 @@ ESErrorCode StoreClient::handleRequest(const ESHeader* header, ByteBuffer* bytes
 }
 
 ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
-	assert(mClientSocket != nullptr);
-	assert(memory != nullptr);
-
 	// Reset the position of the memory
 	memory->reset();
 
 	// Get a memory block for the header
-	ESHeader* header = memory->allocate<ESHeader>();
+	auto const header = memory->allocate<ESHeader>();
 
 	// Read the header from client socket stream
 	if (mClientSocket->ReceiveAll((char*) header, sizeof(ESHeader)) != sizeof(ESHeader))
@@ -164,9 +159,6 @@ ESHeader* StoreClient::loadHeaderFromClient(ByteBuffer* memory) {
 }
 
 ESErrorCode StoreClient::sendBytesToClient(const ByteBuffer* memory) {
-	assert(mClientSocket != nullptr);
-	assert(memory != nullptr);
-
 	// The current offset indicates how much memory we've written to the memory
 	const uint32_t size = memory->offset();
 

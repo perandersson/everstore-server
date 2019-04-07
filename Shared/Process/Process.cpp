@@ -14,29 +14,32 @@ Process::~Process() {
 }
 
 ESErrorCode Process::Destroy() {
+	Log::Write(Log::Info, "Process(%p) | Destroying", this);
 	return OsProcess::Destroy(&mProcess);
 }
 
 Process* Process::Start(ProcessID id, const Path& command, const vector<string>& args, int32_t bufferSize) {
-	auto result = new Process(id);
-	const auto error = OsProcess::Start(id, command, args, bufferSize, &result->mProcess);
+	auto process = new Process(id);
+	Log::Write(Log::Info, "Process(%p) | Starting \"%s\" and associate it with ProcessID(%d)", process,
+	           command.value.c_str(), id);
+	const auto error = OsProcess::Start(id, command, args, bufferSize, &process->mProcess);
 	if (isError(error)) {
-		delete result;
-		Log::Write(Log::Error, "Failed to start '%s': %s (%d)", command.value.c_str(), parseErrorCode(error), error);
+		Log::Write(Log::Error, "Process(%p) | %s (%d)", process, parseErrorCode(error), error);
+		delete process;
 		return nullptr;
 	}
-	return result;
+	return process;
 }
 
 Process* Process::ConnectToHost(ProcessID id, int32_t bufferSize) {
-	auto result = new Process(id);
-	const auto error = OsProcess::ConnectToHost(id, bufferSize, &result->mProcess);
+	auto process = new Process(id);
+	Log::Write(Log::Info, "Process(%p) | Connecting to the host process as ProcessID(%d)", process, id);
+	const auto error = OsProcess::ConnectToHost(id, bufferSize, &process->mProcess);
 	if (isError(error)) {
-		delete result;
-		Log::Write(Log::Error, "Failed to connect to host process with ProcessID(%d): %s (%d)", id,
-		           parseErrorCode(error), error);
+		Log::Write(Log::Error, "Process(%p) | %s (%d)", process, parseErrorCode(error), error);
+		delete process;
 		return nullptr;
 	}
 
-	return result;
+	return process;
 }

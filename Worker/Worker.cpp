@@ -31,13 +31,15 @@ ESErrorCode Worker::start() {
 		return err;
 	}
 
+	Log::Write(Log::Info, "Worker(%p) | Listening for data as ProcessID(%d)", this, mId);
+
 	// Memory for this worker
 	ByteBuffer memory(mConfig.maxBufferSize);
 	while (mRunning.load() && !isErrorCodeFatal(err)) {
-		err = ESERR_NO_ERROR;
-
 		// Load the next data block to be processed from the host
 		ESHeader* header = loadHeaderFromHost(&memory);
+		Log::Write(Log::Debug3, "Worker(%p) | Received %s from SOCKET(%d)", this, parseRequestType(header->type),
+		           header->client);
 		if (!isRequestTypeValid(header->type)) {
 			err = ESERR_PIPE_READ;
 			continue;
@@ -46,39 +48,42 @@ ESErrorCode Worker::start() {
 		// Get the request type
 		const ESRequestType type = header->type;
 
-		// Ignore message if an error occurred while parsing it
-		if (!isError(err)) {
-			if (isInternalRequestType(type)) {
-				err = handleHostMessage(header);
-			} else {
-				const AttachedConnection* attachedSocket = mAttachedSockets.get(header->client);
-				if (attachedSocket->socket != nullptr) {
-					err = handleMessage(header, attachedSocket, &memory);
-				} else {
-					err = ESERR_SOCKET_NOT_ATTACHED;
-				}
+		// Process internal messages in a special way
+		if (isInternalRequestType(type)) {
+			err = handleHostMessage(header);
+			continue;
+		}
 
-				// If the error is not fatal then log it, send it to the client and 
-				// continue working on the next message
-				if (IsErrorButNotFatal(err)) {
-					Log::Write(Log::Error, "%s (%d)", parseErrorCode(err), err);
+		const AttachedConnection* attachedSocket = mAttachedSockets.get(header->client);
+		if (attachedSocket->socket != nullptr && attachedSocket->lock != nullptr) {
+			err = handleMessage(header, attachedSocket, &memory);
+		} else {
+			err = ESERR_SOCKET_NOT_ATTACHED;
+		}
 
-					// Send the error to client
-					if (err != ESERR_SOCKET_NOT_ATTACHED) {
-						// Reset memory
-						memory.reset();
+		// If the error is not fatal then log it, send it to the client and
+		// continue working on the next message
+		if (IsErrorButNotFatal(err)) {
+			Log::Write(Log::Warn, "Worker(%p) | %s (%d)", this, parseErrorCode(err), err);
 
-						// Create response header
-						const RequestError::Header responseHeader(type, id());
-						const RequestError::Response response(err);
-						memory.write(&responseHeader);
-						memory.write(&response);
+			// Send the error to client
+			if (err != ESERR_SOCKET_NOT_ATTACHED) {
+				// Reset memory
+				memory.reset();
 
-						// Send the data to the client
-						err = sendBytesToClient(attachedSocket, &memory);
-					}
-				}
+				// Create response header
+				const RequestError::Header responseHeader(type, id());
+				const RequestError::Response response(err);
+				memory.write(&responseHeader);
+				memory.write(&response);
+
+				// Send the data to the client
+				err = sendBytesToClient(attachedSocket, &memory);
 			}
+		}
+
+		if (IsErrorButNotFatal(err)) {
+			Log::Write(Log::Warn, "Worker(%p) | %s (%d)", this, parseErrorCode(err), err);
 		}
 	}
 
@@ -107,12 +112,13 @@ ESErrorCode Worker::sendBytesToClient(const AttachedConnection* connection, cons
 }
 
 ESErrorCode Worker::initialize() {
+	Log::Write(Log::Info, "Worker(%p) | Initializing", this);
+
 	// Initialize sockets
 	if (!Socket::Initialize()) {
 		return ESERR_SOCKET_INIT;
 	}
 
-	Log::Write(Log::Info, "Opening pipe to host");
 	auto process = Process::ConnectToHost(mId, mConfig.maxBufferSize);
 	if (process == nullptr) {
 		return ESERR_PROCESS_CREATE_CHILD;
@@ -120,18 +126,18 @@ ESErrorCode Worker::initialize() {
 	mIpcChild = new IpcChild(mId, process);
 
 	const auto path = mConfig.rootDir + mConfig.journalDir;
-	Log::Write(Log::Info, "Changing working directory to: %s", path.value.c_str());
+	Log::Write(Log::Info, "Worker(%p) | Changing working directory to: %s", this, path.value.c_str());
 	if (!FileUtils::setCurrentDirectory(path.value)) {
 		return ESERR_FILESYSTEM_CHANGEPATH;
 	}
 
-	Log::Write(Log::Info, "Preparing built-in transaction types");
+	Log::Write(Log::Info, "Worker(%p) | Preparing built-in transaction types", this);
 	vector<string> types;
 	types.push_back(Bits::BuiltIn::NewJournalKey);
 	auto mask = transactionTypes(types);
 	assert(mask == Bits::BuiltIn::NewJournalBit);
 
-	Log::Write(Log::Info, "Initialization complete");
+	Log::Write(Log::Info, "Worker(%p) | Initialization complete", this);
 	mRunning = true;
 	return ESERR_NO_ERROR;
 }
@@ -145,14 +151,16 @@ void Worker::release() {
 }
 
 bool Worker::performConsistencyCheck() {
-	const string lockSufix(string(".log.") + id().ToString() + string(".lock"));
-	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir.value, lockSufix);
+	Log::Write(Log::Info, "Worker(%p) | Performing consistency check for journals", this);
+	const string lockSuffix(string(".log.") + id().ToString() + string(".lock"));
+	auto files = FileUtils::findFilesEndingWith(mConfig.journalDir.value, lockSuffix);
 	for (auto& file : files) {
-		const Path journalFile = Path(file.substr(0, file.length() - lockSufix.length()));
-		Log::Write(Log::Info, "Validating consistency for journal: %s", journalFile.value.c_str());
+		const Path journalFile = Path(file.substr(0, file.length() - lockSuffix.length()));
+		Log::Write(Log::Info, "Worker(%p) | Validating consistency for journal: %s", this, journalFile.value.c_str());
 		Journal j(journalFile, id());
 		if (!j.performConsistencyCheck()) {
-			Log::Write(Log::Error, "Consistency check failed for file: %s", journalFile.value.c_str());
+			Log::Write(Log::Error, "Worker(%p) | Consistency check failed for file: %s", this,
+			           journalFile.value.c_str());
 			return false;
 		}
 	}
@@ -162,7 +170,7 @@ bool Worker::performConsistencyCheck() {
 ESErrorCode Worker::handleHostMessage(const ESHeader* header) {
 	switch (header->type) {
 		case REQ_SHUTDOWN:
-			Log::Write(Log::Info, "Host is shutting down");
+			Log::Write(Log::Info, "Worker(%p) | Host is shutting down", this);
 			stop();
 			return ESERR_NO_ERROR;
 		case REQ_NEW_CONNECTION:
@@ -193,7 +201,6 @@ ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* co
 			err = checkIfJournalExists(header, connection, memory);
 			break;
 		default:
-			Log::Write(Log::Warn, "Unknown type: %d", header->type);
 			break;
 	}
 
@@ -201,38 +208,40 @@ ESErrorCode Worker::handleMessage(ESHeader* header, const AttachedConnection* co
 }
 
 ESErrorCode Worker::newConnection(const ESHeader* header) {
+	Log::Write(Log::Debug, "Worker(%p) | A new connection has been established for SOCKET(%p)", this, header->client);
 	auto const newSocket = Socket::LoadFromProcess(process(), mConfig.maxBufferSize);
 	if (!newSocket) {
+		Log::Write(Log::Error, "Failed to attach socket to this process");
 		return ESERR_SOCKET_NOT_ATTACHED;
 	}
 
+	Log::Write(Log::Debug, "Worker(%p) | Fetching mutex associated with SOCKET(%p)", this, header->client);
 	auto const m = Mutex::LoadFromProcess(process());
 	if (!m) {
+		Log::Write(Log::Error, "Failed to attach mutex to this process");
 		return ESERR_MUTEX_ATTACH;
 	}
 
+	Log::Write(Log::Debug, "Worker(%p) | Associating SOCKET(%p) with Mutex(%p)", this, header->client, m);
 	mAttachedSockets.add(header->client, newSocket, m);
-	Log::Write(Log::Info, "New client %d mapped to %d on child process", header->client, newSocket);
+	Log::Write(Log::Info, "Worker(%p) | New SOCKET(%d) mapped to Socket(%p) on child process", this, header->client,
+	           newSocket);
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode Worker::closeConnection(const ESHeader* header) {
 	mAttachedSockets.remove(header->client);
-	Log::Write(Log::Info, "Client %d unmapped from child process", header->client);
+	Log::Write(Log::Info, "Worker(%p) | SOCKET(%d) unmapped from child process", this, header->client);
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
-	assert(header != nullptr);
-	assert(connection != nullptr);
-	assert(memory != nullptr);
-
 	auto request = memory->allocate<NewTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
 	Path journalName;
 	auto err = readAndValidatePath(request->journalStringLength, memory, &journalName);
-	Log::Write(Log::Debug, "Creating new transaction for journal: %s", journalName.value.c_str());
+	Log::Write(Log::Debug, "Worker(%p) | Creating new transaction for journal: %s", this, journalName.value.c_str());
 	if (err != ESERR_NO_ERROR) {
 		return err;
 	}
@@ -257,10 +266,6 @@ ESErrorCode Worker::newTransaction(const ESHeader* header, const AttachedConnect
 
 ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConnection* connection,
                                       ByteBuffer* memory) {
-	assert(header != nullptr);
-	assert(connection != nullptr);
-	assert(memory != nullptr);
-
 	const auto request = memory->allocate<CommitTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
@@ -320,11 +325,6 @@ ESErrorCode Worker::commitTransaction(const ESHeader* header, const AttachedConn
 
 ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedConnection* connection,
                                         ByteBuffer* memory) {
-	assert(header != nullptr);
-	assert(connection != nullptr);
-	assert(memory != nullptr);
-
-	// Read the request from the socket
 	const auto request = memory->allocate<RollbackTransaction::Request>();
 
 	// Get journal name and make sure that it's valid
@@ -351,10 +351,6 @@ ESErrorCode Worker::rollbackTransaction(const ESHeader* header, const AttachedCo
 }
 
 ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection* connection, ByteBuffer* memory) {
-	assert(header != nullptr);
-	assert(connection != nullptr);
-	assert(memory != nullptr);
-
 	const auto requestUID = header->requestUID;
 
 	// Read the request from the socket
@@ -416,9 +412,6 @@ ESErrorCode Worker::readJournal(const ESHeader* header, const AttachedConnection
 
 ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint32_t requestUID, bool includeTimestamp,
                                      FileInputStream* stream, ByteBuffer* memory) {
-	assert(connection != nullptr);
-	assert(memory != nullptr);
-
 	// The amount of bytes left after the header and the response header is written to buffer
 	const auto BYTES_LEFT_AFTER_HEADERS =
 			mConfig.maxBufferSize - sizeof(ReadJournal::Header) - sizeof(ReadJournal::Response);
@@ -466,10 +459,6 @@ ESErrorCode Worker::readJournalParts(const AttachedConnection* connection, uint3
 
 ESErrorCode Worker::checkIfJournalExists(const ESHeader* header, const AttachedConnection* connection,
                                          ByteBuffer* memory) {
-	assert(header != nullptr);
-	assert(connection != nullptr);
-	assert(memory != nullptr);
-
 	// Read the request from the socket
 	const auto request = memory->allocate<JournalExists::Request>();
 
@@ -510,8 +499,6 @@ Bits::Type Worker::transactionTypes(vector<string>& types) {
 }
 
 ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
-	assert(memory != nullptr);
-
 	// Reset the position of the memory
 	memory->reset();
 
@@ -549,6 +536,11 @@ ESHeader* Worker::loadHeaderFromHost(ByteBuffer* memory) {
 }
 
 ESErrorCode Worker::readAndValidatePath(const uint32_t length, ByteBuffer* memory, Path* path) {
+	// Validate arguments
+	if (memory == nullptr || path == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
 	// Validate path length
 	if (length < 2 || length > 1024) {
 		return ESERR_JOURNAL_PATH_INVALID;
@@ -565,7 +557,7 @@ ESErrorCode Worker::readAndValidatePath(const uint32_t length, ByteBuffer* memor
 	string logFilename = string(ptr + 1, length - 1) + logSuffix;
 
 	// Ensure that no illegal characters is part of the journal path
-	if (logFilename.find("..") != -1 || logFilename.find("//") != -1) {
+	if (logFilename.find("..") != string::npos || logFilename.find("//") != string::npos) {
 		return ESERR_JOURNAL_PATH_INVALID;
 	}
 

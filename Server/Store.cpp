@@ -34,7 +34,9 @@ ESErrorCode Store::start() {
 	}
 
 	// Make sure that the journals are consistent
-	if (!performConsistencyCheck()) return ESERR_STORE_CONSISTENCY_CHECK_FAILED;
+	if (!performConsistencyCheck()) {
+		return ESERR_STORE_CONSISTENCY_CHECK_FAILED;
+	}
 
 	// Initialize the event store
 	ESErrorCode err = initialize();
@@ -113,8 +115,8 @@ void Store::release() {
 }
 
 bool Store::performConsistencyCheck() {
-	const string lockSufix(".lock");
-	auto files = FileUtils::findFilesEndingWith((mConfig.rootDir + mConfig.journalDir).value, lockSufix);
+	const string lockSuffix(".lock");
+	auto files = FileUtils::findFilesEndingWith((mConfig.rootDir + mConfig.journalDir).value, lockSuffix);
 	for (auto& file : files) {
 		const uint32_t del = file.find_last_of('.');
 		const uint32_t del2 = file.find_last_of('.', del - 1);

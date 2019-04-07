@@ -31,7 +31,7 @@ RUN cmake . && make && cd bin && ./everstore-tests
 ## Create an image containing only the server and workers
 ##
 
-FROM ubuntu
+FROM debian:stretch-slim
 COPY --from=builder /src/bin/everstore-server /
 COPY --from=builder /src/bin/everstore-worker /
 EXPOSE 6929

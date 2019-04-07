@@ -92,8 +92,10 @@ void _gcc_find_files(string path, const string& endsWith, vector<string>& paths)
 	DIR* dir;
 	struct dirent* entry;
 
-	if (!(dir = opendir(path.c_str())))
+	if (!(dir = opendir(path.c_str()))) {
+		errno = 0;
 		return;
+	}
 
 	while ((entry = readdir(dir))) {
 		if (entry->d_type == DT_DIR) {

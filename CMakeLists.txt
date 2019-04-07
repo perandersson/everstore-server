@@ -35,7 +35,8 @@ set(MSVC_DEFINITIONS "/fp:fast /W4 /D_CRT_SECURE_NO_WARNINGS=1 /wd4201 /wd4100 /
 set(MSVC_SPECIFIL_LIBS "legacy_stdio_definitions.lib")
 
 # Default GCC for Linux and GCC for OSX compiler properties
-set(GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11 -static")
+# TODO: dynamically link libraries for now. -static linking causes "segmentation fault" when using shm_open in worker thread.
+set(GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11 -g -rdynamic")
 set(OSX_GCC_DEFINITIONS "-Wno-unused-const-variable -Wno-unused-variable -funsafe-math-optimizations -Wall -std=c++11 -stdlib=libc++")
 
 # Configure libs

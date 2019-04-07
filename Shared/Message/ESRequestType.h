@@ -36,6 +36,7 @@ bool isExternalRequestType(ESRequestType type);
 bool isInternalRequestType(ESRequestType type);
 bool isRequestTypeInitiallyForHost(ESRequestType type);
 bool isRequestTypeValid(ESRequestType type);
+const char* parseRequestType(ESRequestType type);
 
 
 #endif

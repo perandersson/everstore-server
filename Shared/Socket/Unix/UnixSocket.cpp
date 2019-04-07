@@ -4,12 +4,17 @@
 
 #include "UnixSocket.hpp"
 #include "../../Process/Unix/UnixProcess.hpp"
+#include "../../Log/Log.hpp"
 #include <sys/un.h>
 #include <netinet/tcp.h>
 
 ESErrorCode OsSocket::ShareWithProcess(OsSocket* socket, OsProcess* process) {
 	if (IsInvalid(socket)) {
 		return ESERR_SCCKET_DESTROYED;
+	}
+
+	if (OsProcess::IsInvalid(process)) {
+		return ESERR_PROCESS_DESTROYED;
 	}
 
 	// Prepare memory structures used for sharing a socket with another process
@@ -45,13 +50,22 @@ ESErrorCode OsSocket::ShareWithProcess(OsSocket* socket, OsProcess* process) {
 	// Message are sent with "sendmsg" and data are sent with "send".
 	ssize_t len = sendmsg(process->unixSocket, &message, 0);
 	if (len <= 0) {
+		Log::Write(Log::Error, "OsSocket | Failed to send Socket(%d) to process UnixSocket(%d)", socket->socket,
+		           process->unixSocket);
 		return ESSER_PROCESS_SHARE_SOCKET;
 	}
-
 	return ESERR_NO_ERROR;
 }
 
 ESErrorCode OsSocket::LoadFromProcess(OsSocket* socket, OsProcess* process) {
+	if (socket == nullptr) {
+		return ESERR_INVALID_ARGUMENT;
+	}
+
+	if (OsProcess::IsInvalid(process)) {
+		return ESERR_PROCESS_DESTROYED;
+	}
+
 	socket->socket = Invalid;
 
 	// Prepare the structure used to receive the socket
@@ -63,7 +77,7 @@ ESErrorCode OsSocket::LoadFromProcess(OsSocket* socket, OsProcess* process) {
 	memset(&message, 0, sizeof(struct msghdr));
 	memset(ctrl_buf, 0, CMSG_SPACE(sizeof(int)));
 
-	// For the dummy data/
+	// For the dummy data
 	iov[0].iov_base = data;
 	iov[0].iov_len = sizeof(data);
 
@@ -76,6 +90,7 @@ ESErrorCode OsSocket::LoadFromProcess(OsSocket* socket, OsProcess* process) {
 
 	// Read the actual message sent over the pipe. The socket is part message
 	if (recvmsg(process->unixSocket, &message, 0) <= 0) {
+		Log::Write(Log::Debug, "OsSocket | Failed to read socket data from UnixSocket(%d)", process->unixSocket);
 		return ESERR_PIPE_READ;
 	}
 
@@ -89,6 +104,9 @@ ESErrorCode OsSocket::LoadFromProcess(OsSocket* socket, OsProcess* process) {
 		}
 	}
 
+	if (socket->socket == Invalid) {
+		return ESERR_SOCKET_NOT_ATTACHED;
+	}
 	return ESERR_NO_ERROR;
 }
 
@@ -147,11 +165,10 @@ ESErrorCode OsSocket::SetNoDelay(OsSocket* socket) {
 }
 
 ESErrorCode OsSocket::Close(OsSocket* socket) {
-	if (IsInvalid(socket)) {
-		return ESERR_SCCKET_DESTROYED;
+	if (socket->socket != Invalid) {
+		::close(socket->socket);
+		socket->socket = Invalid;
 	}
 
-	::close(socket->socket);
-	socket->socket = OsSocket::Invalid;
 	return ESERR_NO_ERROR;
 }
