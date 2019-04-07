@@ -7,46 +7,53 @@ Everstore is an high performance append-only event log database with ACID proper
 #### Prerequisites
 
 * docker
-* curl
 
 #### Build
 
-Run the command below to build a docker image called "everstore". 
+Start by checking out the repository
 
+```bash
+git clone https://github.com/perandersson/everstore-server.git
 ```
-bash <(curl -s https://raw.githubusercontent.com/perandersson/everstore/master/install.sh)
+
+Then build the docker image
+
+```bash
+cd everstore-server
+docker build . -t everstore-server:latest
 ```
 
 #### Run
 
-After the image has finished building then you can start it as a daemon process by using the command:
+Start a docker container with the newly built image with:
+
+```bash
+docker run -d --name=everstore-server -p 6929:6929 everstore-server:latest
+```
+
+The default port is `6929` and the default journal directory is located in `/journals` directory. 
+
+You should expose the journals directory from the docker container. This is done by adding a `-v` flag:
 
 ```
-docker run -d -t --name=everstore -p 6929:6929 everstore:latest
-```
-
-The default port is 6929 and the default journal directory is located in /everstore/journals directory. 
-You can expose this directory from the docker container by adding a -v flag (assuming that /everstore/journals is the journals directory):
-
-```
-docker run -d -t --name=everstore -p 6929:6929 -v /path/on/host:/everstore/journals everstore:latest
+docker run -d --name=everstore-server -p 6929:6929 -p /path/on/host:/journals everstore-server:latest
 ```
 
 ### CMake
 
 ### Prerequisites
 
-* CMake 3.2 (or newer)
+* CMake 3.6 (or newer)
 * On Linux: G++ 4.8 (or newer)
 * On Mac: clang
 * On PC: Visual Studio 2013 (or newer)
 
-### Build
+### Build (On Linux)
 
 Download the source code from this GitHub repository and run the command:
 
 ```
-cd /path/to/source/root
+cd /path/to/source
 cmake .
 make
 ```
@@ -79,7 +86,7 @@ cd bin
 
 ### The database must have ACID properties.
 
-To be able to be competetive, the database must have ACID properties.
+To be able to be competitive, the database must have ACID properties.
 
 ### Read-friendly event logs
 
